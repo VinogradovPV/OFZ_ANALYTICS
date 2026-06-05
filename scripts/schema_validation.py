@@ -284,7 +284,12 @@ def validate_no_direct_outputs_exports() -> None:
     """Проверить, что файлы не сохраняются напрямую в корень outputs/exports."""
     if not config.EXPORTS_DIR.exists():
         return
-    direct_files = sorted(path.name for path in config.EXPORTS_DIR.iterdir() if path.is_file())
+    allowed_skeleton_files = {".gitkeep", "README.md", "index.md"}
+    direct_files = sorted(
+        path.name
+        for path in config.EXPORTS_DIR.iterdir()
+        if path.is_file() and path.name not in allowed_skeleton_files
+    )
     assert not direct_files, (
         "В корне outputs/exports не должно быть файлов; используйте подкаталоги analytical_csv/chart_data/technical. "
         f"Найдены: {', '.join(direct_files)}."

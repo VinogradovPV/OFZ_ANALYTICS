@@ -295,7 +295,16 @@ def test_outputs_structure_contract() -> None:
     missing = [path.relative_to(config.PROJECT_ROOT).as_posix() for path in required_directories if not path.exists()]
     assert not missing, f"Отсутствуют директории outputs: {', '.join(missing)}."
 
-    direct_exports = [path.name for path in config.EXPORTS_DIR.iterdir() if path.is_file()] if config.EXPORTS_DIR.exists() else []
+    allowed_skeleton_files = {".gitkeep", "README.md", "index.md"}
+    direct_exports = (
+        [
+            path.name
+            for path in config.EXPORTS_DIR.iterdir()
+            if path.is_file() and path.name not in allowed_skeleton_files
+        ]
+        if config.EXPORTS_DIR.exists()
+        else []
+    )
     assert not direct_exports, f"Файлы не должны лежать напрямую в outputs/exports: {', '.join(direct_exports)}."
 
 

@@ -1,47 +1,48 @@
 # Ограничения построения графиков
 
-Дата формирования: `2026-06-04 19:08:37`.
+Дата формирования: `2026-06-05 12:07:38`.
 
 ## Параметры
 
-- `report_date`: `2026-01-01`
+- `report_date`: `2026-05-01`
 - `retrospective_years`: `4`
-- `period_type`: `year`
+- `period_type`: `month`
 - `aggregation_mode`: `cumulative`
 
 ## Построенные графики
 
-- `outputs/charts/structure/placement_volume/placement_volume_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/risk/target_period/demand_supply_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/risk/target_period/bid_to_cover_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/yield/yield_by_type_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/structure/maturity/maturity_structure_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/structure/format/format_structure_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/structure/format/format_discount_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/structure/format/format_terms_comparison_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/structure/format/format_terms_delta_by_format_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/risk/target_period/risk_quadrant_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/risk/retrospective/risk_quadrant_retrospective_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/yield/boxplot/yield_boxplot_by_ofz_type_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/yield/ofz_pd/yield_boxplot_ofz_pd_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/scatter/demand_cutoff/demand_cutoff_explanation_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/scatter/yield_demand/yield_vs_demand_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/scatter/discount_demand/discount_vs_demand_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/scatter/discount_demand/discount_vs_demand_outliers_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/scatter/discount_demand/discount_vs_demand_logx_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/scatter/yield_discount/yield_vs_discount_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/scatter/yield_discount/yield_vs_discount_outliers_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/scatter/yield_discount/yield_vs_discount_facet_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/scatter/format_terms/format_terms_aggregate_scatter_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/scatter/format_terms/format_terms_scatter_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/risk/outliers/risk_quadrant_retrospective_outliers_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/risk/logx/risk_quadrant_retrospective_logx_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/risk/facet/risk_quadrant_retrospective_facet_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/sankey/structure/sankey_structure_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/sankey/period/sankey_period_maturity_type_format_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/sankey/period/sankey_period_format_type_maturity_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/sankey/period/sankey_period_format_maturity_type_year_cumulative_2026-01-01_retrospective_4.html`
-- `outputs/charts/sankey/target_period/sankey_target_period_year_cumulative_2026-01-01_retrospective_4.html`
+- `outputs/charts/structure/placement_volume/placement_volume_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/risk/target_period/demand_supply_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/risk/target_period/bid_to_cover_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/yield/yield_by_type_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/structure/maturity/maturity_structure_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/structure/format/format_structure_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/structure/format/format_discount_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/structure/format/format_terms_comparison_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/structure/format/format_terms_delta_by_format_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/risk/target_period/risk_quadrant_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/risk/retrospective/risk_quadrant_retrospective_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/risk/target_period/risk_quadrant_demand_to_placement_by_quarter_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/yield/boxplot/yield_boxplot_by_ofz_type_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/yield/ofz_pd/yield_boxplot_ofz_pd_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/scatter/demand_cutoff/demand_cutoff_explanation_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/scatter/yield_demand/yield_vs_demand_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/scatter/discount_demand/discount_vs_demand_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/scatter/discount_demand/discount_vs_demand_outliers_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/scatter/discount_demand/discount_vs_demand_logx_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/scatter/yield_discount/yield_vs_discount_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/scatter/yield_discount/yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/scatter/yield_discount/yield_vs_discount_facet_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/scatter/format_terms/format_terms_aggregate_scatter_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/scatter/format_terms/format_terms_scatter_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/risk/outliers/risk_quadrant_retrospective_outliers_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/risk/logx/risk_quadrant_retrospective_logx_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/risk/facet/risk_quadrant_retrospective_facet_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/sankey/structure/sankey_structure_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/sankey/period/sankey_period_maturity_type_format_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/sankey/period/sankey_period_format_type_maturity_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/sankey/period/sankey_period_format_maturity_type_month_cumulative_2026-05-01_retrospective_4.html`
+- `outputs/charts/sankey/target_period/sankey_target_period_month_cumulative_2026-05-01_retrospective_4.html`
 
 ## Визуальный стандарт
 
@@ -74,7 +75,7 @@
 - Sankey `sankey_period_maturity_type_format` использует `placement_volume` как value потоков; малые категории не удаляются и могут быть визуально тонкими.
 - Sankey `sankey_structure` использует `placement_volume` как value потоков; малые категории не удаляются и могут быть визуально тонкими.
 - Sankey `sankey_target_period` использует `placement_volume` как value потоков; малые категории не удаляются и могут быть визуально тонкими.
-- В boxplot доходности обнаружены ОФЗ-ПК с доходностью около нуля; строки не удаляются автоматически, но помечаются `near_zero_yield_requires_review` и требуют сверки с исходной колонкой доходности.
+- В квадранте риска отчетного года горизонтальная линия показывает медианную доходность отчетного года.
 - График `demand_cutoff_explanation` строится только по целевому отчетному периоду, только по аукционам с валидным спросом и положительным размещением; ретроспективные периоды не включаются.
 - График `format_terms_aggregate_scatter` агрегирует строки до уровня report_period_label × format; доходность и дисконт считаются средневзвешенно по placement_volume.
 - График `format_terms_delta_by_format` рассчитывает дельты только для периодов, где есть оба формата; отсутствующие пары не рисуются как нулевые значения.
@@ -83,8 +84,8 @@
 - График отсечения спроса использует `discount_to_nominal = 100 - cutoff_price`.
 - График покрытия предложения спросом рассчитывает периодный bid-to-cover как `sum(demand_volume) / sum(supply_volume)`, а не как среднее строковых ratios.
 - Для `discount_vs_demand` используется scatter label policy: подписываются только выбросы, top placement_volume, top X/Y, target period и data_quality_flag; максимум подписей ограничен.
-- Из графика отсечения спроса исключены неаукционные строки: 47; анализ строится только по аукционам.
-- Из расчета bid-to-cover исключено строк: 67 (неаукционные форматы, отсутствующий спрос/предложение, нулевое предложение или requires_review).
-- Квадрант риска отчетного года пропущен: нет строк с доходностью, спросом и положительным размещением.
+- Из графика отсечения спроса исключены неаукционные строки: 10; анализ строится только по аукционам.
+- Из расчета bid-to-cover исключено строк: 35 (неаукционные форматы, отсутствующий спрос/предложение, нулевое предложение или requires_review).
+- Квадрант риска отчетного года использует X = `demand_volume / placement_volume`; показатель `bid_to_cover_ratio` в подсказке пересчитывается как `demand_volume / supply_volume`.
 - На ретроспективном квадранте риска по умолчанию подписываются только ключевые выбросы, чтобы избежать наложения подписей. Все остальные значения доступны через hover.
 - Создан отдельный boxplot ОФЗ-ПД: X = период, Y = доходность; на графике показаны min, median, max и n.

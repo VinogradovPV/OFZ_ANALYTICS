@@ -4,7 +4,7 @@
 
 ## Параметры
 
-- `run_id`: `quality_gate_fast_month_cumulative_2026-05-01_r4_20260604_155746`
+- `run_id`: `quality_gate_fast_month_cumulative_2026-05-01_r4_20260605_123132`
 - `mode`: `fast`
 - `report_date`: `2026-05-01`
 - `period_type`: `month`
@@ -33,7 +33,7 @@
 | `charts_structure` | `ok` | Карта графиков и ключевые категории outputs/charts/ найдены; HTML в корне нет. | - |
 | `yield_vs_discount_outputs` | `ok` | Найдены yield_vs_discount main/facet/outliers и CSV-основы. | - |
 | `scripts_structure` | `ok` | scripts/README.md и планы структуры scripts найдены. | - |
-| `run_manifest` | `ok` | Latest manifest найден: 20260601_172810_210cae6b. | - |
+| `run_manifest` | `ok` | Latest manifest найден: 20260604_190842_194415f1. | - |
 | `dashboard_semantic_model` | `ok` | Semantic model v2 найден: version=2.0.0. | - |
 
 ## Интерпретация

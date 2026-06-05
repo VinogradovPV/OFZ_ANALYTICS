@@ -250,7 +250,16 @@ def check_outputs_structure(_context: GateContext) -> GateResult:
         config.DASHBOARDS_DIR,
     ]
     missing = [path.relative_to(config.PROJECT_ROOT).as_posix() for path in required_dirs if not path.exists()]
-    direct_files = [path.name for path in config.EXPORTS_DIR.glob("*") if path.is_file()] if config.EXPORTS_DIR.exists() else []
+    allowed_skeleton_files = {".gitkeep", "README.md", "index.md"}
+    direct_files = (
+        [
+            path.name
+            for path in config.EXPORTS_DIR.glob("*")
+            if path.is_file() and path.name not in allowed_skeleton_files
+        ]
+        if config.EXPORTS_DIR.exists()
+        else []
+    )
     if missing or direct_files:
         parts = []
         if missing:
