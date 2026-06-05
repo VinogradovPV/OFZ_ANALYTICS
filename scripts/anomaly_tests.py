@@ -10,7 +10,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import Any, Callable, Sequence, cast
 
 import pandas as pd
 
@@ -356,11 +356,23 @@ def dataframe_to_markdown(df: pd.DataFrame) -> str:
 
 def format_cell(value: object) -> str:
     """Отформатировать значение для Markdown-таблицы."""
-    if pd.isna(value):
+    if is_missing_cell(value):
         return ""
     if isinstance(value, float):
         return f"{value:.6g}"
     return str(value)
+
+
+def is_missing_cell(value: object) -> bool:
+    """Return True for scalar missing values used in Markdown cells."""
+    try:
+        missing = pd.isna(cast(Any, value))
+    except (TypeError, ValueError):
+        return False
+    try:
+        return bool(missing)
+    except ValueError:
+        return False
 
 
 def escape_markdown_cell(value: object) -> str:
