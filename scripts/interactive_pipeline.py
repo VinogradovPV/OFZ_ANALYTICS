@@ -88,7 +88,11 @@ STAGE_HINTS: tuple[str, ...] = (
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Запустить интерактивный выбор параметров и выбранную команду."""
-    if argv:
+    args = list(sys.argv[1:] if argv is None else argv)
+    if any(arg in {"-h", "--help"} for arg in args):
+        print_help()
+        return 0
+    if args:
         print("interactive_pipeline.py не принимает позиционные аргументы.")
         print("Запустите его без параметров и выберите режим в диалоге.")
         return 2
@@ -111,6 +115,19 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     completed = subprocess.run(command, cwd=PROJECT_ROOT, check=False)
     return int(completed.returncode)
+
+
+def print_help() -> None:
+    """Print non-interactive CLI help for console entry point checks."""
+    print("usage: ofz-interactive [-h]")
+    print("")
+    print("Interactive launcher for OFZ_ANALITICS pipeline.")
+    print("")
+    print("options:")
+    print("  -h, --help  show this help message and exit")
+    print("")
+    print("Run without arguments from the project root:")
+    print(r"  .\.venv\Scripts\python.exe scripts\interactive_pipeline.py")
 
 
 def ask_launcher_choice() -> LauncherChoice:

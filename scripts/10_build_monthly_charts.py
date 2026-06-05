@@ -1084,6 +1084,21 @@ def build_monthly_heatmap_revenue_data(
 
 def build_monthly_heatmap_revenue_data_from_metrics(df: pd.DataFrame) -> pd.DataFrame:
     """Взять выручку из готового monthly metrics layer."""
+    placement_volume = (
+        df["total_placement_volume_bln"]
+        if "total_placement_volume_bln" in df.columns
+        else pd.Series(pd.NA, index=df.index)
+    )
+    auction_count = (
+        df["auction_count"]
+        if "auction_count" in df.columns
+        else pd.Series(0, index=df.index)
+    )
+    data_quality_flag = (
+        df["data_quality_flag"]
+        if "data_quality_flag" in df.columns
+        else pd.Series("", index=df.index)
+    )
     result = pd.DataFrame(
         {
             "report_year": df["report_year"],
@@ -1096,9 +1111,9 @@ def build_monthly_heatmap_revenue_data_from_metrics(df: pd.DataFrame) -> pd.Data
             "Год": df["Год"],
             "month_order": pd.to_numeric(df["month_number"], errors="coerce"),
             "revenue_volume_bln": pd.to_numeric(df["total_revenue_volume_bln"], errors="coerce"),
-            "placement_volume_bln": pd.to_numeric(df.get("total_placement_volume_bln"), errors="coerce"),
-            "auction_count": pd.to_numeric(df.get("auction_count"), errors="coerce").fillna(0),
-            "data_quality_flag": df.get("data_quality_flag", pd.Series("", index=df.index)).fillna("").astype(str),
+            "placement_volume_bln": pd.to_numeric(placement_volume, errors="coerce"),
+            "auction_count": pd.to_numeric(auction_count, errors="coerce").fillna(0),
+            "data_quality_flag": data_quality_flag.fillna("").astype(str),
         }
     )
     return result.dropna(subset=["revenue_volume_bln"])
@@ -1146,7 +1161,12 @@ def build_monthly_heatmap_revenue_data_from_scope(
     data = data.dropna(subset=["month_order"])
     data["month_order"] = data["month_order"].astype(int)
     data["revenue_volume"] = pd.to_numeric(data[revenue_col], errors="coerce")
-    data["placement_volume"] = pd.to_numeric(data.get("placement_volume"), errors="coerce")
+    placement_volume = (
+        data["placement_volume"]
+        if "placement_volume" in data.columns
+        else pd.Series(pd.NA, index=data.index)
+    )
+    data["placement_volume"] = pd.to_numeric(placement_volume, errors="coerce")
     data = data.dropna(subset=["revenue_volume"])
     if data.empty:
         limitations.append(f"Heatmap выручки пропущен: колонка `{revenue_col}` не содержит валидных значений.")

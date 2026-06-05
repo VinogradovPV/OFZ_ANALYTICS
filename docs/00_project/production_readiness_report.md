@@ -116,3 +116,24 @@ Baseline показывал падение `quality_gate.py --fast` только
 Для каждой категории зафиксированы правила git-хранения, пересоздания pipeline, release artifact, локального срока хранения и архивации.
 
 Важно: `.gitignore` не создан и `git init` не выполнялся. Рекомендованный `.gitignore` сохранен только как текст в policy. `outputs/charts/**/*.html` и `outputs/exports/**/*.csv` не исключаются до отдельного решения release policy.
+
+## 2026-06-05 - Python version policy
+
+`pyproject.toml` now declares:
+
+```toml
+requires-python = ">=3.11,<3.15"
+```
+
+Rationale:
+
+- the current `.venv` reports `Python 3.14.5`;
+- `scripts/**/*.py` parse successfully with Python 3.11 syntax rules when read as UTF-8 with optional BOM;
+- installed runtime dependency metadata requires Python `>=3.11` at the strictest point (`pandas` and `numpy`);
+- no project dependency was found that requires Python 3.14 specifically.
+
+Operational rule:
+
+- Python 3.14.5 remains the actually tested production baseline for this stage;
+- Python 3.11-3.13 are allowed by package metadata but must pass `quality_gate.py --fast` before generated outputs are trusted;
+- if a lower supported Python version fails installation or QA, treat that environment as unsupported until fixed.

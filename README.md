@@ -59,6 +59,14 @@ scripts/                          Python-скрипты pipeline
 .\.venv\Scripts\python.exe --version
 ```
 
+Python version policy:
+
+- package metadata supports Python `>=3.11,<3.15`;
+- current production baseline was actually tested on Python `3.14.5`;
+- source syntax was checked as Python 3.11-compatible;
+- runtime dependency metadata requires Python `>=3.11` at the strictest point (`pandas`/`numpy`);
+- if another Python version from the supported range is used, run `quality_gate.py --fast` before relying on outputs.
+
 Установить зависимости:
 
 ```powershell

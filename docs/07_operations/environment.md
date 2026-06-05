@@ -4,6 +4,29 @@
 
 ## Supported Python
 
+Package metadata supports Python `>=3.11,<3.15`.
+
+Actually tested production baseline:
+
+```powershell
+.\.venv\Scripts\python.exe --version
+```
+
+Result on 2026-06-05: `Python 3.14.5`.
+
+Compatibility checks completed in this stage:
+
+- project source files under `scripts/` parse with Python 3.11 syntax rules when read as UTF-8 with optional BOM;
+- installed runtime dependency metadata requires Python `>=3.11` at the strictest point (`pandas` and `numpy`);
+- `pip install -e .`, `pip check`, `compileall` and CLI entry point help were rerun on the current Python 3.14.5 `.venv`.
+
+Policy:
+
+- use Python `3.14.x` to reproduce the current local production baseline exactly;
+- Python `3.11`, `3.12` and `3.13` are allowed by package metadata, but must be validated with `quality_gate.py --fast` before relying on generated outputs;
+- do not mix dependencies from system Python and `.venv`;
+- run all project commands from the project root through `.\.venv\Scripts\python.exe`.
+
 Production baseline проверен на Python `3.14.5` в локальном Windows PowerShell окружении.
 
 Рекомендуемая политика:
