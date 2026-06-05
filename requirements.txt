@@ -1,0 +1,6 @@
+pandas>=2.2
+numpy>=1.26
+openpyxl>=3.1
+plotly>=5.20
+matplotlib>=3.8
+kaleido>=0.2

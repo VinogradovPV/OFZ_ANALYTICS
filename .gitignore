@@ -1,0 +1,32 @@
+# Virtual environment and Python cache
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Logs and local env
+logs/
+*.log
+.env
+*.env
+
+# Generated processed data
+data/processed/
+
+# Generated outputs
+outputs/charts/**
+outputs/exports/**
+outputs/reports/**
+outputs/dashboards/**
+outputs/tmp/**
+outputs/cache/**
+outputs/archive/**
+
+# Keep outputs folder skeleton
+!outputs/
+!outputs/**/
+!outputs/**/.gitkeep
+!outputs/**/README.md
+!outputs/**/index.md
