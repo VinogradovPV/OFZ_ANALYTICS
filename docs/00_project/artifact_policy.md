@@ -327,3 +327,34 @@ Decision:
 - `data/processed/**` is excluded from the first source commit via `.gitignore`;
 - processed CSV/JSON files should be recreated by pipeline stages or preserved in release bundles when a run must be audited;
 - latest runtime files such as `data/processed/run_manifest_latest.json` are working artifacts and can be regenerated.
+
+## 2026-06-05 - GitHub repository and post-push artifact strategy
+
+Version control state after the first push:
+
+- Repository: GitHub / `OFZ_ANALYTICS`;
+- Remote: `https://github.com/VinogradovPV/OFZ_ANALYTICS.git`;
+- Default branch: `main`;
+- Visibility: private;
+- Initial commit: `4fa6d61fa67281c20d5d7a878cd2191e953507bc`;
+- Initial commit message: `Initial source dataset and OFZ analytics pipeline`.
+
+The first commit includes:
+
+- source code and scripts;
+- configuration files and dependency contract;
+- stable project documentation and data contracts;
+- prompt source assets;
+- `data/raw` source dataset;
+- `.gitkeep` files and lightweight navigation files for the `outputs/` skeleton.
+
+The first commit excludes generated artifacts:
+
+- generated HTML charts;
+- generated chart data CSV exports;
+- generated reports;
+- dashboard exports;
+- local archives, cache and temporary outputs;
+- `data/processed` working data.
+
+Generated outputs are recreated by the pipeline. When a specific reporting run must be preserved for audit or delivery, outputs should be packed into a release bundle or stored as an external artifact. The repository keeps reproducibility through source scripts, data contracts, `requirements.txt`, raw file hashes, raw data registry, run manifests and quality reports.

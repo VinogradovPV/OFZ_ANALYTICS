@@ -196,3 +196,9 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-05 | Prepared first commit staging scope after `git add .`; excluded `data/processed` from the source commit. | `git diff --cached --name-only`; generated-output filters for `outputs/charts`, `outputs/exports`, `outputs/reports`, `outputs/dashboards`, `outputs/archive`, `outputs/tmp`; `git check-ignore -v data/processed/ofz_auctions_clean.csv`. | `data/raw` is staged; `data/processed` was removed from the index and added to `.gitignore`; generated outputs are not staged except `.gitkeep` files and navigation `index.md`. | `data/processed` can be recreated by pipeline; release-specific processed outputs should be stored in release bundles or external artifacts when audit retention is required. |
+
+## 2026-06-05 - first push to GitHub
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-05 | Pushed the initial source commit to the private GitHub repository `OFZ_ANALYTICS`. | `git remote -v`; `git branch -vv`; `git status --short --branch`; `git log --oneline --decorate -1`. | Remote is `https://github.com/VinogradovPV/OFZ_ANALYTICS.git`; branch `main` tracks `origin/main`; initial commit `4fa6d61fa67281c20d5d7a878cd2191e953507bc` is present locally and remotely; working tree was clean after push. | Repository visibility is recorded as private by project policy; generated outputs are not committed and should be distributed through release bundles or external artifacts when needed. |
