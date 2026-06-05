@@ -232,3 +232,9 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-05 | Strengthened `docs/00_project/artifact_policy.md` after Git initialization and first pushes. | Policy review against current repository state: `data/raw` tracked, generated outputs ignored, outputs skeleton tracked via `.gitkeep`/`index.md`. | Added explicit source/generated artifact rules, Git tracking policy, release bundle policy, clean outputs protocol, run manifest retention, `outputs/archive` policy, generated-output commit prohibition and skeleton exception. | `scripts/maintenance/cleanup_outputs.py` is referenced as the approved future cleanup interface but is not implemented yet. |
+
+## 2026-06-05 - safe outputs cleanup command
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-05 | Added `scripts/maintenance/cleanup_outputs.py` with dry-run, archive and confirmed delete modes. | `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\cleanup_outputs.py`; `.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --dry-run`; `.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --delete-all`. | Passed: dry-run found 6 top-level working output candidates, about 468.2 MB, and wrote cleanup manifests under `outputs/reports/cleanup/` without archiving or deleting files. `--delete-all` without `--confirm DELETE_OUTPUTS` failed before deletion with an explicit safety message. Cleanup is limited to `outputs/`, preserves `outputs/archive/`, writes manifests and recreates `.gitkeep` skeleton after deletion. | Cleanup reports/manifests under `outputs/` are generated artifacts and are not committed. |

@@ -455,6 +455,7 @@ Allowed protocol:
 .\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --dry-run
 .\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --archive-all
 .\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --delete-all --confirm DELETE_OUTPUTS
+.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --archive-all --delete-all --confirm DELETE_OUTPUTS
 ```
 
 Rules:
@@ -465,6 +466,7 @@ Rules:
 - after cleanup, run the pipeline and quality gate;
 - never delete `data/raw`;
 - never commit generated outputs after regeneration.
+- cleanup reports and manifests under `outputs/` are generated artifacts and are not committed.
 
 Warning: full outputs cleanup deletes generated artifacts except the preserved archive. Run it only after dry-run and archive-policy review.
 
@@ -490,6 +492,8 @@ Allowed storage:
 - GitHub Release asset, if the release process later enables it.
 
 `cleanup_outputs.py` must not delete an archive created in the same cleanup run.
+
+The implemented cleanup command also preserves existing `outputs/archive/` during `--delete-all`. Removing old archives requires a separate, explicit archive-retention step and is not part of this command.
 
 ### Commit prohibition
 

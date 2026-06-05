@@ -99,6 +99,7 @@ Console entry points after editable install:
 .\.venv\Scripts\ofz-interactive.exe
 .\.venv\Scripts\ofz-quality.exe --help
 .\.venv\Scripts\ofz-schema.exe --help
+.\.venv\Scripts\ofz-clean-outputs.exe --help
 ```
 
 Implemented entry points:
@@ -109,12 +110,17 @@ Implemented entry points:
 | `ofz-interactive` | `scripts.interactive_pipeline:main` |
 | `ofz-quality` | `scripts.quality_gate:main` |
 | `ofz-schema` | `scripts.schema_validation:main` |
+| `ofz-clean-outputs` | `scripts.maintenance.cleanup_outputs:main` |
 
-Deferred entry point:
+Safe outputs cleanup:
 
-| Command | Status |
-|---|---|
-| `ofz-clean-outputs` | Deferred until `scripts/maintenance/cleanup_outputs.py` is implemented as a safe dry-run/archive/delete maintenance tool. |
+```powershell
+.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --dry-run
+.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --archive-all
+.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --delete-all --confirm DELETE_OUTPUTS
+```
+
+Deletion is impossible without the exact confirm token. The command only touches paths inside `outputs/`, preserves `outputs/archive/`, writes cleanup manifests and recreates the skeleton with `.gitkeep`.
 
 Ruff, Black, pytest and mypy are not enabled in this release because they are not part of the current production QA contract. The active QA stack is script-based: schema validation, regression tests, smoke tests, HTML chart QA, visual regression fallback and quality gate.
 

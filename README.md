@@ -84,11 +84,22 @@ Editable install and CLI entry points:
 .\.venv\Scripts\ofz-run.exe --help
 .\.venv\Scripts\ofz-quality.exe --help
 .\.venv\Scripts\ofz-schema.exe --help
+.\.venv\Scripts\ofz-clean-outputs.exe --help
 ```
 
-Existing script launch commands remain supported. The `ofz-clean-outputs` entry point is deferred until `scripts/maintenance/cleanup_outputs.py` is implemented as a safe maintenance script with dry-run/archive/delete modes.
+Existing script launch commands remain supported. `ofz-clean-outputs` is a safe maintenance entry point for generated `outputs/`: it defaults to dry-run and requires `--confirm DELETE_OUTPUTS` for deletion.
 
 Environment details are documented in [`docs/07_operations/environment.md`](docs/07_operations/environment.md).
+
+Safe outputs cleanup:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --dry-run
+.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --archive-all
+.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --delete-all --confirm DELETE_OUTPUTS
+```
+
+The cleanup command only works inside `outputs/`, preserves `outputs/archive/`, writes cleanup manifests, and recreates the tracked folder skeleton with `.gitkeep`.
 
 Интерактивная активация `.venv`, если нужна:
 

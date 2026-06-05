@@ -25,6 +25,7 @@ dev = [
 ofz-run = "scripts.run_pipeline:main"
 ofz-interactive = "scripts.interactive_pipeline:main"
 ofz-quality = "scripts.quality_gate:main"
+ofz-clean-outputs = "scripts.maintenance.cleanup_outputs:main"
 ofz-schema = "scripts.schema_validation:main"
 
 [tool.setuptools.packages.find]
