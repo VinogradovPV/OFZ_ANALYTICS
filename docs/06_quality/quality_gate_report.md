@@ -4,7 +4,7 @@
 
 ## Параметры
 
-- `run_id`: `quality_gate_fast_month_cumulative_2026-05-01_r4_20260605_123132`
+- `run_id`: `quality_gate_fast_month_cumulative_2026-05-01_r4_20260605_132511`
 - `mode`: `fast`
 - `report_date`: `2026-05-01`
 - `period_type`: `month`

@@ -1,5 +1,27 @@
 # Production readiness report
 
+## 2026-06-05 - Baseline quality gate after schema fix
+
+Production blocker status: resolved.
+
+Baseline checks after the `schema_validation / volume_bln_units` fix:
+
+```powershell
+.\.venv\Scripts\python.exe -m compileall -q scripts
+.\.venv\Scripts\python.exe scripts\schema_validation.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+.\.venv\Scripts\python.exe scripts\quality_gate.py --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+Result:
+
+- `compileall`: OK;
+- `schema_validation.py`: OK, `Schema validation passed: 16`;
+- `quality_gate.py --fast`: OK;
+- `volume_bln_units`: OK;
+- `no_direct_outputs_exports`: OK with repository skeleton files `.gitkeep`, `README.md` and `index.md` allowed as non-generated navigation files.
+
+Generated outputs remain excluded from Git. The local branch contains the previous source fix commit `20e0921 Fix schema validation volume unit contract`; push may require network access from the user environment if the sandbox cannot reach GitHub.
+
 ## 2026-06-05 - Version control update after first push
 
 The previous artifact-policy baseline in this report described the pre-Git state. The current production-ready version control state is:
