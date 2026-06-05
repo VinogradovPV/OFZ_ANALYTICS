@@ -226,3 +226,9 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-05 | Added `pyproject.toml` with project metadata and editable-install entry points for existing `main()` modules. | `.\.venv\Scripts\python.exe -m pip install -e .`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-quality.exe --help`; `.\.venv\Scripts\ofz-schema.exe --help`. | Passed: editable install built `ofz-analytics==0.1.0`, `compileall` passed, `ofz-quality --help` and `ofz-schema --help` returned CLI help. | `ofz-clean-outputs` is deferred because `scripts/maintenance/cleanup_outputs.py` does not exist yet; Ruff/Black/pytest/mypy are not enabled in the current production QA contract. |
+
+## 2026-06-05 - production artifact policy update
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-05 | Strengthened `docs/00_project/artifact_policy.md` after Git initialization and first pushes. | Policy review against current repository state: `data/raw` tracked, generated outputs ignored, outputs skeleton tracked via `.gitkeep`/`index.md`. | Added explicit source/generated artifact rules, Git tracking policy, release bundle policy, clean outputs protocol, run manifest retention, `outputs/archive` policy, generated-output commit prohibition and skeleton exception. | `scripts/maintenance/cleanup_outputs.py` is referenced as the approved future cleanup interface but is not implemented yet. |

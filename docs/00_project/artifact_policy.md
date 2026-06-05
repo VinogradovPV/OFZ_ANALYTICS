@@ -358,3 +358,139 @@ The first commit excludes generated artifacts:
 - `data/processed` working data.
 
 Generated outputs are recreated by the pipeline. When a specific reporting run must be preserved for audit or delivery, outputs should be packed into a release bundle or stored as an external artifact. The repository keeps reproducibility through source scripts, data contracts, `requirements.txt`, raw file hashes, raw data registry, run manifests and quality reports.
+
+## 2026-06-05 - production Git artifact policy
+
+This section supersedes earlier draft notes that said HTML/CSV outputs should not be ignored until the release process is decided. The release process decision has now been made for the production-ready baseline.
+
+### Source artifacts
+
+Source artifacts are tracked in Git:
+
+- `scripts/**/*.py`;
+- `scripts/**/*.md`;
+- `docs/**/*.md`;
+- `README.md`;
+- `CHANGELOG.md`;
+- `prompts/**`;
+- `.gitignore`;
+- `requirements.txt`;
+- `requirements-dev.txt`;
+- `pyproject.toml`;
+- data contracts and methodology documentation;
+- `data/raw/**`.
+
+`data/raw` is committed as the project source dataset because the files are small, required for reproducibility and approved for repository storage. Pipeline scripts must not modify `data/raw` in place.
+
+### Generated artifacts
+
+Generated artifacts are not tracked in ordinary Git history:
+
+- `outputs/charts/**/*.html`;
+- `outputs/exports/**/*.csv`;
+- `outputs/reports/**`;
+- `outputs/dashboards/**`;
+- `outputs/archive/**`;
+- `outputs/tmp/**`;
+- `outputs/cache/**`;
+- `data/processed/**`;
+- `logs/**`.
+
+Generated artifacts are recreated by the pipeline, archived locally when needed, or packaged as external release artifacts.
+
+### Git tracking policy
+
+The Git repository stores source/config/docs/scripts/contracts/prompts and the small source dataset in `data/raw`.
+
+The repository must not commit generated outputs. Before every commit, check staged files:
+
+```powershell
+git diff --cached --name-only
+git diff --cached --name-only | Select-String "outputs/charts|outputs/exports|outputs/reports|outputs/dashboards|outputs/archive|outputs/tmp|data/processed|logs"
+```
+
+If generated outputs are staged, remove them from the index without deleting local files:
+
+```powershell
+git rm --cached -r outputs/charts outputs/exports outputs/reports outputs/dashboards outputs/archive outputs/tmp data/processed
+```
+
+### Outputs skeleton exception
+
+The empty/structural `outputs/` skeleton may be tracked:
+
+- `outputs/**/.gitkeep`;
+- small `outputs/**/README.md`;
+- small `outputs/**/index.md`.
+
+This exception exists only for navigation and folder discoverability. It does not allow committing generated HTML, CSV, XLSX, JSON or report artifacts from `outputs/`.
+
+### Release bundle policy
+
+If a reporting run must be preserved, create an external release bundle instead of committing outputs individually.
+
+Minimum release bundle contents:
+
+- run manifest `json` and `md`;
+- quality gate report;
+- schema validation report;
+- HTML charts;
+- chart data CSV;
+- dashboard exports and semantic model;
+- executive summary;
+- analytical/monthly/revenue reports;
+- visual regression or fallback HTML inspection report;
+- anomaly/regression/smoke test reports when they were part of the run;
+- data quality summary when available.
+
+The release bundle must record `report_date`, `period_type`, `aggregation_mode`, `retrospective_years`, `run_id`, commit hash and raw file hashes.
+
+### Clean outputs before production run
+
+Before production regeneration, working outputs may be cleaned only through a maintenance script with an explicit safety flow.
+
+Allowed protocol:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --dry-run
+.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --archive-all
+.\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --delete-all --confirm DELETE_OUTPUTS
+```
+
+Rules:
+
+- start with `--dry-run`;
+- archive first if current outputs may be needed for audit;
+- delete only after archive policy is checked;
+- after cleanup, run the pipeline and quality gate;
+- never delete `data/raw`;
+- never commit generated outputs after regeneration.
+
+Warning: full outputs cleanup deletes generated artifacts except the preserved archive. Run it only after dry-run and archive-policy review.
+
+### Run manifest policy
+
+Run manifest is the audit trail of a production run.
+
+Rules:
+
+- release manifests are not deleted;
+- `run_manifest_latest.json` is a working pointer and may be regenerated;
+- if outputs are cleaned, the current manifest must be archived or explicitly marked disposable in the cleanup report;
+- release bundles must include the run manifest and raw file hashes.
+
+### `outputs/archive/` policy
+
+`outputs/archive/` is normally not tracked in Git.
+
+Allowed storage:
+
+- local archive for short-term retention;
+- external release artifact;
+- GitHub Release asset, if the release process later enables it.
+
+`cleanup_outputs.py` must not delete an archive created in the same cleanup run.
+
+### Commit prohibition
+
+Generated outputs are prohibited from ordinary commits. The only allowed tracked files under `outputs/` are skeleton/navigation files described above.
