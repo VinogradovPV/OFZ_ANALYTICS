@@ -220,3 +220,9 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-05 | Stabilized runtime/dev dependency contract and documented Windows PowerShell environment setup. | Reviewed imports in `scripts/`; reviewed installed `.venv` package versions; `.\.venv\Scripts\python.exe -m pip check`; `.\.venv\Scripts\python.exe -m compileall -q scripts`. | Runtime dependencies are bounded by major version in `requirements.txt`; `requirements-dev.txt` installs the runtime stack for project-local QA scripts; environment setup documented in `docs/07_operations/environment.md`. | Lockfile deferred to next release; screenshot backend for visual regression remains fallback-only unless added in a later controlled step. |
+
+## 2026-06-05 - project metadata and CLI entry points
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-05 | Added `pyproject.toml` with project metadata and editable-install entry points for existing `main()` modules. | `.\.venv\Scripts\python.exe -m pip install -e .`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-quality.exe --help`; `.\.venv\Scripts\ofz-schema.exe --help`. | Passed: editable install built `ofz-analytics==0.1.0`, `compileall` passed, `ofz-quality --help` and `ofz-schema --help` returned CLI help. | `ofz-clean-outputs` is deferred because `scripts/maintenance/cleanup_outputs.py` does not exist yet; Ruff/Black/pytest/mypy are not enabled in the current production QA contract. |

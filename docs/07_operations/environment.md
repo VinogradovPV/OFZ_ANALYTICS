@@ -78,6 +78,46 @@ Runtime dependencies:
 No broken requirements found.
 ```
 
+## Editable Install And CLI Entry Points
+
+Project metadata is defined in `pyproject.toml`. Existing script-based commands remain the compatibility contract:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\run_pipeline.py --help
+```
+
+Editable install:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e .
+```
+
+Console entry points after editable install:
+
+```powershell
+.\.venv\Scripts\ofz-run.exe --help
+.\.venv\Scripts\ofz-interactive.exe
+.\.venv\Scripts\ofz-quality.exe --help
+.\.venv\Scripts\ofz-schema.exe --help
+```
+
+Implemented entry points:
+
+| Command | Module |
+|---|---|
+| `ofz-run` | `scripts.run_pipeline:main` |
+| `ofz-interactive` | `scripts.interactive_pipeline:main` |
+| `ofz-quality` | `scripts.quality_gate:main` |
+| `ofz-schema` | `scripts.schema_validation:main` |
+
+Deferred entry point:
+
+| Command | Status |
+|---|---|
+| `ofz-clean-outputs` | Deferred until `scripts/maintenance/cleanup_outputs.py` is implemented as a safe dry-run/archive/delete maintenance tool. |
+
+Ruff, Black, pytest and mypy are not enabled in this release because they are not part of the current production QA contract. The active QA stack is script-based: schema validation, regression tests, smoke tests, HTML chart QA, visual regression fallback and quality gate.
+
 ## Minimal Smoke Run
 
 Минимальная проверка после установки окружения:

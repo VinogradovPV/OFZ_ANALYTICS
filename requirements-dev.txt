@@ -2,3 +2,4 @@
 # Current QA scripts use the runtime stack plus project-local check scripts.
 # Additional linters/formatters/screenshot backends are not required yet.
 -r requirements.txt
+setuptools>=80,<81

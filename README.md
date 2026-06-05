@@ -77,6 +77,17 @@ Dependency check:
 .\.venv\Scripts\python.exe -m pip check
 ```
 
+Editable install and CLI entry points:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\ofz-run.exe --help
+.\.venv\Scripts\ofz-quality.exe --help
+.\.venv\Scripts\ofz-schema.exe --help
+```
+
+Existing script launch commands remain supported. The `ofz-clean-outputs` entry point is deferred until `scripts/maintenance/cleanup_outputs.py` is implemented as a safe maintenance script with dry-run/archive/delete modes.
+
 Environment details are documented in [`docs/07_operations/environment.md`](docs/07_operations/environment.md).
 
 Интерактивная активация `.venv`, если нужна:
