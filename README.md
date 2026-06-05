@@ -65,6 +65,20 @@ scripts/                          Python-скрипты pipeline
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
+Dev/QA dependencies:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+```
+
+Dependency check:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip check
+```
+
+Environment details are documented in [`docs/07_operations/environment.md`](docs/07_operations/environment.md).
+
 Интерактивная активация `.venv`, если нужна:
 
 ```powershell
