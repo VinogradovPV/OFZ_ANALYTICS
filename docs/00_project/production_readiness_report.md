@@ -294,6 +294,10 @@ Release checklist существует:
 
 Рекомендуемые P2-задачи:
 
+Детальный P2 roadmap после production-ready v1 вынесен в отдельный документ:
+
+- `docs/00_project/p2_roadmap_after_production_ready_v1.md`.
+
 1. Добавить screenshot backend для visual regression.
 2. Автоматизировать release bundle creation.
 3. Устранить ссылки на docs archive candidates и выполнить controlled docs archive apply.
