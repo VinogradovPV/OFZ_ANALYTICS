@@ -292,3 +292,8 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-08 | Deferred physical archive of five legacy script archive candidates. | Reference scan across `README.md`, `docs/**`, `scripts/**`, `pyproject.toml`, `run_pipeline.py`, `quality_gate.py`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`. | References still exist for `scripts/cleanup_docs.py`, `scripts/migrate_outputs_structure.py`, `scripts/reorganize_outputs.py`, `scripts/maintenance/migrate_legacy_docs_archive.py` and `scripts/maintenance/reorganize_docs.py`, so no files were moved. Variant A selected: keep files in place and defer physical archive to P2. | No entry points changed. Module decomposition plan was not changed. Physical archive requires a later reference cleanup and explicit approval. |
+## 2026-06-08 - legacy scripts archive decision follow-up
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-08 | Aligned the archive decision artifact with the production cleanup naming convention: `docs/00_project/scripts_archive_decision.md`. | Documentation review against `scripts_inventory_before_cleanup.md` and `production_readiness_report.md`. | The decision is recorded in the required file name, with per-script reference status, production risk and recommendation. `scripts_inventory_before_cleanup.md` and `production_readiness_report.md` were updated. | Physical archive remains deferred to P2. No Python files were moved or deleted. |

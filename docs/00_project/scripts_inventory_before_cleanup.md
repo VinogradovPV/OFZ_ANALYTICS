@@ -132,3 +132,15 @@
 - `quality_gate.py` использует `KEY_SCRIPTS` для py_compile и запускает runtime QA scripts (`schema_validation.py`, `regression_tests.py`, `smoke_tests.py`, `html_chart_qa.py`, `visual_regression.py`, `anomaly_tests.py` при наличии).
 - `scripts/maintenance/cleanup_docs.py` создан как новый production-safe workflow. Старый `scripts/cleanup_docs.py` остается только archive candidate до отдельного решения.
 - `delete_candidate` намеренно не выставлялся: на P1-аудите достаточно inventory и будущего archive plan.
+## 2026-06-08 Archive Decision Update
+
+Physical archive for all five `archive_candidate` scripts is deferred until P2 / post production-ready v1.
+
+Decision document: `docs/00_project/scripts_archive_decision.md`.
+
+Summary:
+
+- all five candidates still have references in README/docs/scripts inventory or migration documentation;
+- no Python files were moved or deleted;
+- recommendation for each candidate is `keep_legacy_until_p2`;
+- future physical archive requires reference cleanup, explicit approval, `compileall` and `ofz-quality --fast`.

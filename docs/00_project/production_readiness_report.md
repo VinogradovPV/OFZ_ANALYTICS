@@ -137,3 +137,28 @@ Operational rule:
 - Python 3.14.5 remains the actually tested production baseline for this stage;
 - Python 3.11-3.13 are allowed by package metadata but must pass `quality_gate.py --fast` before generated outputs are trusted;
 - if a lower supported Python version fails installation or QA, treat that environment as unsupported until fixed.
+## 2026-06-08 - Scripts Archive Decision
+
+Legacy scripts archive was reviewed after the scripts inventory stage.
+
+Decision:
+
+- physical archive is deferred to P2 / post production-ready v1;
+- no scripts were moved or deleted;
+- all five archive candidates remain in place as historical maintenance utilities;
+- `docs/00_project/scripts_archive_decision.md` records references, production risk and recommendation per script.
+
+Archive candidates reviewed:
+
+- `scripts/cleanup_docs.py`;
+- `scripts/migrate_outputs_structure.py`;
+- `scripts/reorganize_outputs.py`;
+- `scripts/maintenance/migrate_legacy_docs_archive.py`;
+- `scripts/maintenance/reorganize_docs.py`.
+
+Verification:
+
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK;
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+
+Generated outputs were not committed or staged.
