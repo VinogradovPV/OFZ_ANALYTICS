@@ -19,6 +19,29 @@ else:
 
 ALLOWED_AGGREGATION_MODES = {"cumulative", "point"}
 MONTHLY_METRICS_CSV = config.PROCESSED_DATA_DIR / "ofz_monthly_metrics.csv"
+BLN_VOLUME_UNIT = "млрд рублей"
+BLN_VOLUME_UNIT_COLUMNS = {
+    "placement_volume_bln": ("placement_volume_bln_unit", "placement_volume_unit"),
+    "revenue_volume_bln": ("revenue_volume_bln_unit", "revenue_volume_unit"),
+    "nominal_revenue_gap_bln": ("nominal_revenue_gap_bln_unit", "nominal_revenue_gap_unit"),
+    "total_nominal_volume_bln": ("total_nominal_volume_bln_unit", "total_nominal_volume_unit"),
+    "total_revenue_volume_bln": ("total_revenue_volume_bln_unit", "revenue_volume_unit"),
+    "total_discount_gap_bln": ("total_discount_gap_bln_unit", "nominal_revenue_gap_unit"),
+    "nominal_volume_bln": ("nominal_volume_bln_unit", "placement_volume_unit"),
+    "discount_gap_bln": ("discount_gap_bln_unit", "nominal_revenue_gap_unit"),
+    "component_volume_bln": ("component_volume_bln_unit", "placement_volume_unit"),
+}
+BLN_VOLUME_RAW_COLUMNS = {
+    "placement_volume_bln": "placement_volume",
+    "revenue_volume_bln": "revenue_volume",
+    "nominal_revenue_gap_bln": "nominal_revenue_gap",
+    "total_nominal_volume_bln": "total_nominal_volume",
+    "total_revenue_volume_bln": "total_revenue_volume",
+    "total_discount_gap_bln": "total_discount_gap",
+    "nominal_volume_bln": "nominal_volume",
+    "discount_gap_bln": "discount_gap",
+    "component_volume_bln": "component_volume",
+}
 
 
 @dataclass(frozen=True)
@@ -317,6 +340,7 @@ def validate_volume_bln_units(params: report_params.ReportParams) -> None:
 
     missing_bln: list[str] = []
     missing_unit: list[str] = []
+    invalid_unit: list[str] = []
     invalid_bln: list[str] = []
     for path in volume_files:
         try:
@@ -334,13 +358,53 @@ def validate_volume_bln_units(params: report_params.ReportParams) -> None:
         else:
             missing_bln.append(path.relative_to(config.PROJECT_ROOT).as_posix())
 
-        unit_columns = [column for column in sample.columns if column.endswith("_unit") or column == "placement_volume_unit"]
-        if not unit_columns:
+        missing_unit_errors, invalid_unit_errors = validate_bln_unit_columns(sample)
+        if missing_unit_errors:
             missing_unit.append(path.relative_to(config.PROJECT_ROOT).as_posix())
+        invalid_unit.extend(
+            f"{path.relative_to(config.PROJECT_ROOT).as_posix()}: {error}"
+            for error in invalid_unit_errors
+        )
 
     assert not missing_bln, f"В chart data с объемами отсутствует `placement_volume_bln`: {', '.join(missing_bln[:10])}."
     assert not missing_unit, f"В chart data с объемами отсутствует колонка единиц измерения: {', '.join(missing_unit[:10])}."
+    assert not invalid_unit, f"В chart data с `*_volume_bln` найдены unit != `{BLN_VOLUME_UNIT}`: {', '.join(invalid_unit[:10])}."
     assert not invalid_bln, f"`*_bln` выглядит как исходные млн рублей, а не млрд: {', '.join(invalid_bln[:10])}."
+
+
+def validate_bln_unit_columns(sample: pd.DataFrame) -> tuple[list[str], list[str]]:
+    """Вернуть ошибки unit-контракта для display-полей в млрд рублей."""
+    missing: list[str] = []
+    invalid: list[str] = []
+    for value_column, unit_candidates in BLN_VOLUME_UNIT_COLUMNS.items():
+        if value_column not in sample.columns:
+            continue
+        explicit_unit_column = unit_candidates[0]
+        alias_unit_columns = unit_candidates[1:]
+        unit_column = None
+        if explicit_unit_column in sample.columns:
+            unit_column = explicit_unit_column
+        else:
+            raw_column = BLN_VOLUME_RAW_COLUMNS.get(value_column)
+            # Legacy exports can contain both raw `*_volume` in млн рублей and display
+            # `*_volume_bln`. In that case the base `*_unit` belongs to the raw field;
+            # strict млрд validation applies only to explicit `_bln_unit` or to aliases
+            # when no raw field is present.
+            if raw_column not in sample.columns:
+                unit_column = next((column for column in alias_unit_columns if column in sample.columns), None)
+        if unit_column is None:
+            generic_units = [column for column in sample.columns if column.endswith("_unit")]
+            if not generic_units:
+                missing.append(f"{value_column}: нет unit-поля")
+            continue
+        values = sample[unit_column].dropna().astype(str).str.strip()
+        if values.empty:
+            missing.append(f"{value_column}: пустой {unit_column}")
+            continue
+        invalid_values = sorted(value for value in values.unique() if value != BLN_VOLUME_UNIT)
+        if invalid_values:
+            invalid.append(f"{value_column}/{unit_column} != {BLN_VOLUME_UNIT}: {', '.join(invalid_values[:3])}")
+    return missing, invalid
 
 
 def require_dataframe(df: pd.DataFrame | None, name: str) -> pd.DataFrame:

@@ -55,3 +55,12 @@
 - Risk quadrant: визуализация 19.
 - Sankey diagram: визуализация 20.
 - Factor decomposition: визуализация 21.
+
+## Data contract alignment
+
+- Visualization builders use the active contracts in `docs/02_data_contracts/`.
+- Axes for nominal placement volumes use `Объем размещения по номиналу, млрд рублей` when the plotted field is a `_volume_bln` display value.
+- Revenue visualizations must expose revenue, nominal-minus-revenue, revenue/nominal ratio and data quality fields in chart data exports.
+- Scatter/bubble charts must preserve bubble-size value, size explanation and label policy fields in chart data exports.
+- Aggregated yield/discount charts must document source column, aggregation method and weight field in chart data exports.
+- Diagnostics from previous visualization improvement stages are no longer the primary contract source; they remain historical evidence until a controlled docs cleanup archives them.

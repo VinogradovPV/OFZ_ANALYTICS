@@ -32,6 +32,16 @@
 - [Raw data registry report](02_data_pipeline/raw_data_registry_report.md)
 - [Schema validation report](02_data_pipeline/schema_validation_report.md)
 
+## 3.1. Data contracts
+
+Папка: [docs/02_data_contracts/](02_data_contracts/)
+
+- [Processed data contract](02_data_contracts/processed_data_contract.md)
+- [Analytical tables contract](02_data_contracts/analytical_tables_contract.md)
+- [Chart data contract](02_data_contracts/chart_data_contract.md)
+- [Dashboard exports contract](02_data_contracts/dashboard_exports_contract.md)
+- [Semantic model v2 contract](02_data_contracts/semantic_model_v2.md)
+
 ## 4. Analytics
 
 Папка: [docs/03_analytics/](03_analytics/)

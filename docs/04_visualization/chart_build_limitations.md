@@ -89,3 +89,13 @@
 - Квадрант риска отчетного года использует X = `demand_volume / placement_volume`; показатель `bid_to_cover_ratio` в подсказке пересчитывается как `demand_volume / supply_volume`.
 - На ретроспективном квадранте риска по умолчанию подписываются только ключевые выбросы, чтобы избежать наложения подписей. Все остальные значения доступны через hover.
 - Создан отдельный boxplot ОФЗ-ПД: X = период, Y = доходность; на графике показаны min, median, max и n.
+
+## Active data contract alignment
+
+- Chart data exports follow `docs/02_data_contracts/chart_data_contract.md`.
+- Display volume fields with suffix `_volume_bln` are measured in `млрд рублей` and must have a matching unit field. Raw source volume fields without `_bln` remain in `млн рублей`.
+- Revenue charts must preserve `revenue_volume_bln`, `nominal_revenue_gap_bln`, `revenue_to_nominal_ratio`, unit fields and `data_quality_flag`; missing revenue is not replaced by zero.
+- Yield charts must distinguish point-level `Доходность, % годовых` from aggregated `Средневзвешенная доходность размещения, % годовых`; aggregate exports must include source column, aggregation method and weight field where applicable.
+- Discount charts use `discount_to_nominal` as the primary source. Fallback `100 - cutoff_price` is allowed only when cutoff price is confirmed as percent of nominal; otherwise discount remains missing and is explained through quality fields.
+- Label policy fields (`label_display`, `label_visible`, `label_reason`, `label_reason_display`, totals and segment visibility fields) are contract fields, not cosmetic-only fields. If a label is hidden due to density, the reason remains in CSV/hover.
+- Diagnostic documents `chart_improvement_diagnostics.md` and `format_revenue_discount_chart_diagnostics.md` have been consolidated into active contracts/strategy docs and should be marked `ready_for_archive` in a later docs cleanup apply step, not deleted in this stage.
