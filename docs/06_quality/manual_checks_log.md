@@ -250,3 +250,9 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-08 | Added cleanup pre-flight to `scripts/interactive_pipeline.py` and translated `docs/07_operations/production_runbook.md` to Russian. | `.\.venv\Scripts\python.exe -m py_compile scripts\interactive_pipeline.py scripts\run_pipeline.py scripts\run_manifest.py scripts\smoke_tests.py`; `.\.venv\Scripts\python.exe scripts\smoke_tests.py`. | Interactive launcher now checks generated `outputs/` before pipeline start and can keep outputs, run dry-run, archive and clean, clean without archive after `DELETE_OUTPUTS_NO_ARCHIVE`, or cancel. Cleanup is delegated to `scripts/maintenance/cleanup_outputs.py`; run manifest records cleanup status/mode/return code for full interactive runs. | Manual interactive path should still be checked by running `.\.venv\Scripts\python.exe scripts\interactive_pipeline.py` in a console before a production run that actually cleans outputs. |
+
+## 2026-06-08 - documentation cleanup inventory workflow
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-08 | Added `scripts/maintenance/cleanup_docs.py` with inventory-first documentation cleanup workflow and created `docs/00_project/docs_inventory_before_cleanup.md`. | `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\cleanup_docs.py`; `.\.venv\Scripts\python.exe scripts\maintenance\cleanup_docs.py --dry-run`. | Passed: dry-run classified 83 markdown documents without moving or deleting files: 44 `keep_active`, 4 `merge_candidate`, 35 `archive_candidate`, 0 `delete_candidate`. Cleanup manifest was generated under `outputs/reports/cleanup/` as a generated artifact. | No archive/delete action was executed in this pass. `docs_inventory_after_cleanup.md` is created only after a future `--archive` run. |
