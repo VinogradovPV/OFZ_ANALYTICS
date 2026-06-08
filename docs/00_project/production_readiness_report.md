@@ -1,25 +1,25 @@
-# Production Readiness Report
+# Отчет о готовности к production
 
 Дата актуализации: 2026-06-08.
 
-## 1. Executive Status
+## 1. Исполнительный статус
 
 Статус проекта: `production-ready candidate`.
 
-Проект готов к повторяемому production-запуску в текущем локальном и Git-контуре при соблюдении runbook и release checklist. Статус обозначен как production-ready candidate, а не окончательный production-ready без оговорок, потому что остаются документированные data warnings, visual regression работает через fallback без screenshot backend, а физическая очистка legacy docs/scripts отложена до P2.
+Проект готов к повторяемому production-запуску в текущем локальном и Git-контуре при соблюдении production runbook и release checklist. Статус обозначен как `production-ready candidate`, а не окончательный `production-ready` без оговорок, потому что остаются документированные предупреждения по данным, visual regression работает через fallback без screenshot backend, а физическая очистка legacy docs/scripts отложена до P2.
 
-## 2. Git Status
+## 2. Статус Git
 
-- Repository URL: `https://github.com/VinogradovPV/OFZ_ANALYTICS.git`.
-- Visibility: private.
-- Default branch: `main`.
-- Last verified commit before this report update: `2ac420b Record final production quality gate`.
-- Working tree status before this report update: clean.
-- Generated outputs policy verified: generated HTML/CSV/reports/dashboard exports are not tracked.
+- URL репозитория: `https://github.com/VinogradovPV/OFZ_ANALYTICS.git`.
+- Видимость: private.
+- Основная ветка: `main`.
+- Последний проверенный commit до обновления этого отчета: `2ac420b Record final production quality gate`.
+- Состояние working tree до обновления этого отчета: clean.
+- Политика generated outputs проверена: generated HTML/CSV/reports/dashboard exports не tracked в Git.
 
-## 3. Artifact Strategy
+## 3. Стратегия артефактов
 
-Source artifacts in Git:
+Source artifacts в Git:
 
 - source code;
 - config;
@@ -28,11 +28,11 @@ Source artifacts in Git:
 - data contracts;
 - prompts;
 - `data/raw`;
-- outputs skeleton files (`.gitkeep`, allowed lightweight `index.md` / `README.md`).
+- skeleton-файлы outputs (`.gitkeep`, допустимые легкие `index.md` / `README.md`).
 
-`data/raw` is tracked in Git as the source dataset because the raw Excel files are small and required for reproducibility.
+`data/raw` tracked в Git как source dataset проекта, потому что исходные Excel-файлы небольшие и нужны для воспроизводимости.
 
-Generated outputs are outside ordinary Git history:
+Generated outputs не входят в обычную Git-историю:
 
 - `outputs/charts/**`;
 - `outputs/exports/**`;
@@ -42,19 +42,19 @@ Generated outputs are outside ordinary Git history:
 - `outputs/tmp/**`;
 - `outputs/cache/**`.
 
-Release bundle policy:
+Политика release bundle:
 
-- generated outputs for a specific reporting run are stored as a release bundle, external artifact or future GitHub Release asset;
-- release bundle should include HTML charts, chart data CSV, dashboard exports, run manifests, QA reports and summaries;
-- generated outputs should not be committed as normal source history.
+- generated outputs конкретного отчетного запуска сохраняются как release bundle, external artifact или будущий GitHub Release asset;
+- release bundle должен включать HTML charts, chart data CSV, dashboard exports, run manifests, QA reports и summaries;
+- generated outputs не должны коммититься как обычная source history.
 
-## 4. Python And Package Status
+## 4. Статус Python и package
 
-- `pyproject.toml`: exists.
-- Package name: `ofz-analytics`.
-- Version: `0.1.0`.
-- Supported Python range: `>=3.11,<3.15`.
-- Tested Python version: `Python 3.14.5`.
+- `pyproject.toml`: существует.
+- Имя package: `ofz-analytics`.
+- Версия: `0.1.0`.
+- Поддерживаемый диапазон Python: `>=3.11,<3.15`.
+- Проверенная версия Python: `Python 3.14.5`.
 
 CLI entry points:
 
@@ -64,32 +64,32 @@ CLI entry points:
 - `ofz-clean-outputs`;
 - `ofz-schema`.
 
-Note: short `ofz-*` commands require activated `.venv` or PATH containing `.venv\Scripts`. Direct executable checks through `.\.venv\Scripts\ofz-*.exe` passed.
+Примечание: короткие команды `ofz-*` требуют активированной `.venv` или PATH, содержащего `.venv\Scripts`. Прямые проверки через `.\.venv\Scripts\ofz-*.exe` прошли.
 
-## 5. Docs Cleanup Status
+## 5. Статус очистки docs
 
-Docs inventory:
+Инвентаризация docs:
 
 - `keep_active`: 51;
 - `archive_candidate`: 35;
 - `merge_candidate`: 4;
 - `delete_candidate`: 0.
 
-Control documents:
+Контрольные документы:
 
 - `docs/00_project/docs_inventory_before_cleanup.md`;
 - `docs/00_project/docs_cleanup_apply_decision.md`.
 
-Decision:
+Решение:
 
-- physical docs archive is deferred;
-- unresolved references still exist for part of archive/merge candidates;
-- no `--delete-archived` before production-ready v1;
-- archive apply requires a separate controlled stage after references are resolved.
+- физическое архивирование docs отложено;
+- для части archive/merge candidates остаются нерешенные ссылки;
+- `--delete-archived` запрещен до production-ready v1;
+- archive apply требует отдельного controlled stage после устранения ссылок.
 
-## 6. Scripts Cleanup Status
+## 6. Статус очистки scripts
 
-Scripts inventory:
+Инвентаризация scripts:
 
 - `keep_active`: 32;
 - `refactor_candidate`: 5;
@@ -97,12 +97,12 @@ Scripts inventory:
 - `delete_candidate`: 0;
 - `unknown`: 0.
 
-Control documents:
+Контрольные документы:
 
 - `docs/00_project/scripts_inventory_before_cleanup.md`;
 - `docs/00_project/scripts_archive_decision.md`.
 
-Five archive candidates:
+Пять archive candidates:
 
 - `scripts/cleanup_docs.py`;
 - `scripts/migrate_outputs_structure.py`;
@@ -110,27 +110,27 @@ Five archive candidates:
 - `scripts/maintenance/migrate_legacy_docs_archive.py`;
 - `scripts/maintenance/reorganize_docs.py`.
 
-Decision:
+Решение:
 
-- recommendation for all five: `keep_legacy_until_p2`;
-- physical archive deferred;
-- no moved/deleted scripts;
-- future physical archive requires reference cleanup, explicit approval, `compileall` and `ofz-quality --fast`.
+- рекомендация для всех пяти: `keep_legacy_until_p2`;
+- физическое архивирование отложено;
+- scripts не переносились и не удалялись;
+- будущий physical archive требует cleanup ссылок, явного подтверждения, `compileall` и `ofz-quality --fast`.
 
-## 7. Module Decomposition Status
+## 7. Статус module decomposition
 
-Plan exists:
+План существует:
 
 - `docs/03_pipeline/module_decomposition_plan.md`.
 
-Status:
+Статус:
 
-- planning-only;
-- no physical moves in production-ready v1;
-- decomposition is P2-only;
-- wrapper compatibility is mandatory for future moves.
+- только планирование;
+- в production-ready v1 физические переносы не выполняются;
+- декомпозиция является P2-only;
+- для будущих переносов обязательна wrapper compatibility.
 
-Primary candidates:
+Основные кандидаты:
 
 - `scripts/06_build_charts.py`;
 - `scripts/10_build_monthly_charts.py`;
@@ -139,9 +139,9 @@ Primary candidates:
 - `scripts/quality_gate.py`;
 - `scripts/07_dashboard_exports.py`.
 
-## 8. Data Contracts Status
+## 8. Статус data contracts
 
-Active data contracts:
+Активные data contracts:
 
 - `docs/02_data_contracts/processed_data_contract.md`;
 - `docs/02_data_contracts/analytical_tables_contract.md`;
@@ -149,25 +149,25 @@ Active data contracts:
 - `docs/02_data_contracts/dashboard_exports_contract.md`;
 - `docs/02_data_contracts/semantic_model_v2.md`.
 
-Contract highlights:
+Ключевые правила contracts:
 
-- `*_volume_bln` fields require unit fields with value `млрд рублей`;
-- revenue fields include `revenue_volume_bln`, `nominal_revenue_gap_bln`, `revenue_to_nominal_ratio`;
-- yield fields distinguish generic yield from weighted average placement yield;
-- discount fields define source column, fallback formula and unit `п.п.`;
-- label and quality fields are documented for chart data exports.
+- поля `*_volume_bln` требуют unit-поля со значением `млрд рублей`;
+- revenue fields включают `revenue_volume_bln`, `nominal_revenue_gap_bln`, `revenue_to_nominal_ratio`;
+- yield fields различают обычную доходность и средневзвешенную доходность размещения;
+- discount fields фиксируют source column, fallback formula и unit `п.п.`;
+- label fields и quality fields документированы для chart data exports.
 
-## 9. Quality Gate Status
+## 9. Статус quality gate
 
-Final production quality gate was executed for:
+Финальный production quality gate выполнен для параметров:
 
 ```powershell
 --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-Results:
+Результаты:
 
-- `pip install -e .`: OK after escalated rerun because sandboxed pip could not write to `%TEMP%`;
+- `pip install -e .`: OK после escalated rerun, потому что sandboxed pip не смог записать во `%TEMP%`;
 - `pip check`: OK;
 - `compileall`: OK;
 - `schema_validation`: OK, 16/16;
@@ -175,64 +175,64 @@ Results:
 - `regression_tests`: OK, 14 checks;
 - `anomaly_tests`: completed with documented data warnings;
 - `html_chart_qa`: OK;
-- `visual_regression`: OK via fallback static HTML / Plotly JSON inspection;
+- `visual_regression`: OK через fallback static HTML / Plotly JSON inspection;
 - `quality_gate --fast`: OK;
 - `quality_gate --full`: OK.
 
-Note: a first parallel fast/full gate run caused a transient `.pyc` permission conflict in `scripts/__pycache__`. Sequential rerun passed.
+Примечание: первый параллельный запуск fast/full gate вызвал временный `.pyc` permission conflict в `scripts/__pycache__`. Последовательный rerun прошел.
 
-## 10. Fixed Blockers
+## 10. Исправленные blockers
 
-Fixed blockers:
+Исправленные blockers:
 
-- `schema_validation / volume_bln_units` production blocker fixed in generators and data contracts;
-- generated outputs excluded from Git with skeleton preserved;
-- `data/raw` strategy fixed and documented;
-- `.gitignore` and Git artifact strategy implemented;
-- CLI entry points added and verified;
-- cleanup outputs workflow added through `ofz-clean-outputs`;
-- production runbook and release checklist created.
+- production blocker `schema_validation / volume_bln_units` исправлен в generators и data contracts;
+- generated outputs исключены из Git с сохранением skeleton;
+- стратегия `data/raw` зафиксирована и документирована;
+- `.gitignore` и Git artifact strategy внедрены;
+- CLI entry points добавлены и проверены;
+- cleanup outputs workflow добавлен через `ofz-clean-outputs`;
+- production runbook и release checklist созданы.
 
-## 11. Remaining Warnings
+## 11. Оставшиеся warnings
 
-Remaining warnings are data/operations warnings, not blocking execution failures:
+Оставшиеся warnings являются предупреждениями по данным/операциям, а не execution failures:
 
-- anomaly tests report missing yield rows and demand/supply edge cases;
-- bid-to-cover and demand-to-placement outliers require analytical review;
-- rows with missing cutoff price limit discount analysis;
-- nominal/revenue gap anomalies above threshold require interpretation;
-- screenshot backend is not configured, so visual regression uses static HTML / Plotly JSON fallback;
-- docs/scripts physical cleanup remains deferred until references are resolved;
-- Python 3.11-3.13 are allowed by metadata but current local runtime certification was performed on Python 3.14.5.
+- anomaly tests фиксируют строки без yield и demand/supply edge cases;
+- bid-to-cover и demand-to-placement outliers требуют аналитической проверки;
+- строки без cutoff price ограничивают discount analysis;
+- nominal/revenue gap anomalies выше threshold требуют интерпретации;
+- screenshot backend не настроен, поэтому visual regression использует fallback static HTML / Plotly JSON;
+- physical cleanup docs/scripts отложен до устранения ссылок;
+- Python 3.11-3.13 разрешены metadata, но текущая локальная runtime-сертификация выполнена на Python 3.14.5.
 
-## 12. Final Structure
+## 12. Итоговая структура
 
 Docs:
 
 - `docs/00_project/` — project governance, inventories, readiness, artifact policy;
-- `docs/01_methodology/` — methodology and KPI maps;
+- `docs/01_methodology/` — methodology и KPI maps;
 - `docs/02_data_contracts/` — active data contracts;
 - `docs/02_data_pipeline/` — data pipeline documentation;
-- `docs/03_analytics/` and `docs/03_pipeline/` — analytics and pipeline planning;
-- `docs/04_visualization/` — visualization rules and limitations;
+- `docs/03_analytics/` и `docs/03_pipeline/` — analytics и pipeline planning;
+- `docs/04_visualization/` — visualization rules и limitations;
 - `docs/05_dashboard/` — dashboard docs;
-- `docs/06_quality/` — QA reports and manual checks;
+- `docs/06_quality/` — QA reports и manual checks;
 - `docs/07_operations/` — environment, runbook, release checklist;
 - `docs/90_archive/` — historical documentation.
 
 Scripts:
 
-- active stage scripts remain in `scripts/`;
-- production maintenance scripts are under `scripts/maintenance/`;
-- no physical script archive or decomposition in v1.
+- active stage scripts остаются в `scripts/`;
+- production maintenance scripts находятся в `scripts/maintenance/`;
+- physical script archive или decomposition в v1 не выполняются.
 
 Outputs:
 
-- generated outputs under `outputs/`;
-- Git tracks only skeleton `.gitkeep` files and `outputs/charts/index.md`;
-- generated HTML/CSV/reports/dashboard exports are release artifacts, not source commits.
+- generated outputs находятся в `outputs/`;
+- Git tracks только skeleton `.gitkeep` files и `outputs/charts/index.md`;
+- generated HTML/CSV/reports/dashboard exports являются release artifacts, а не source commits.
 
-## 13. Full Outputs Cleanup Command
+## 13. Команда полной очистки outputs
 
 Dry-run:
 
@@ -240,7 +240,7 @@ Dry-run:
 ofz-clean-outputs --dry-run
 ```
 
-Archive and delete:
+Архивировать и удалить:
 
 ```powershell
 ofz-clean-outputs --archive-all --delete-all --confirm DELETE_OUTPUTS
@@ -252,7 +252,7 @@ Fallback:
 .\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --archive-all --delete-all --confirm DELETE_OUTPUTS
 ```
 
-## 14. Interactive Launcher Cleanup Mode
+## 14. Cleanup mode в interactive launcher
 
 Interactive launcher:
 
@@ -260,45 +260,45 @@ Interactive launcher:
 ofz-interactive
 ```
 
-Before pipeline start it checks generated outputs and offers:
+Перед запуском pipeline он проверяет generated outputs и предлагает:
 
-1. keep outputs as-is;
-2. show cleanup dry-run;
-3. archive outputs and clean;
-4. clean outputs without archive after explicit confirmation;
-5. cancel run.
+1. оставить outputs как есть;
+2. показать cleanup dry-run;
+3. архивировать outputs и очистить;
+4. очистить outputs без архива после явного подтверждения;
+5. отменить запуск.
 
-Launcher delegates deletion to `scripts/maintenance/cleanup_outputs.py`; it does not delete files directly.
+Launcher делегирует удаление `scripts/maintenance/cleanup_outputs.py`; напрямую файлы он не удаляет.
 
-## 15. Release Checklist
+## 15. Release checklist
 
-Release checklist exists:
+Release checklist существует:
 
 - `docs/07_operations/release_checklist.md`.
 
-It covers Git state, environment, CLI help, data/raw, pipeline runs, QA, outputs/release bundle, docs/scripts cleanup decisions and final staged-file checks.
+Он покрывает Git state, environment, CLI help, `data/raw`, pipeline runs, QA, outputs/release bundle, docs/scripts cleanup decisions и final staged-file checks.
 
-## 16. Remaining Risks
+## 16. Оставшиеся риски
 
-Production risks that remain:
+Оставшиеся production risks:
 
-- visual regression is not screenshot-based yet;
-- generated outputs are large and require external release bundle discipline;
-- docs archive candidates still have references, so cleanup is not physically applied;
-- legacy scripts remain in place until P2;
-- chart builders and QA scripts are large monoliths and need controlled decomposition later;
-- data warnings require analytical review before high-stakes external publication;
-- release bundle process is documented but not yet automated as a single command.
+- visual regression пока не screenshot-based;
+- generated outputs большие и требуют дисциплины external release bundle;
+- docs archive candidates все еще имеют ссылки, поэтому cleanup физически не применен;
+- legacy scripts остаются на месте до P2;
+- chart builders и QA scripts являются крупными monoliths и требуют controlled decomposition позже;
+- data warnings требуют аналитической проверки перед high-stakes external publication;
+- release bundle process документирован, но пока не автоматизирован одной командой.
 
-## 17. Next Release Recommendations
+## 17. Рекомендации следующего релиза
 
-Recommended P2 work:
+Рекомендуемые P2-задачи:
 
-1. Add screenshot backend for visual regression.
-2. Automate release bundle creation.
-3. Resolve docs archive references and run controlled docs archive apply.
-4. Resolve legacy script references and physically archive safe candidates.
-5. Start module decomposition with helper extraction only.
-6. Add CI workflow for install, compileall, schema, fast quality gate.
-7. Certify runtime on Python 3.11/3.12/3.13 or narrow metadata to tested versions.
-8. Add a release manifest tying Git commit, raw hashes, run manifest and release bundle checksum.
+1. Добавить screenshot backend для visual regression.
+2. Автоматизировать release bundle creation.
+3. Устранить ссылки на docs archive candidates и выполнить controlled docs archive apply.
+4. Устранить ссылки на legacy scripts и физически архивировать safe candidates.
+5. Начать module decomposition только с extraction pure helper functions.
+6. Добавить CI workflow для install, compileall, schema и fast quality gate.
+7. Сертифицировать runtime на Python 3.11/3.12/3.13 или сузить metadata до реально проверенных версий.
+8. Добавить release manifest, связывающий Git commit, raw hashes, run manifest и checksum release bundle.
