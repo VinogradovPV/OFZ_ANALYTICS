@@ -627,8 +627,29 @@ def write_run_manifest(args: PipelineArgs, logger: logging.Logger) -> None:
             "Manifest формируется после успешного `--all` и фиксирует существующие outputs на момент записи.",
             "Статусы внешних QA-проверок отражают наличие артефактов; отдельные runtime QA-скрипты запускаются через quality gate или вручную.",
         ],
+        cleanup=cleanup_manifest_fields(),
     )
     logger.info("Run manifest записан: %s", paths.json_path)
+
+
+def cleanup_manifest_fields() -> dict[str, str]:
+    """Return cleanup pre-flight fields supplied by interactive launcher."""
+    status = os.environ.get("OFZ_INTERACTIVE_CLEANUP_STATUS", "").strip()
+    mode = os.environ.get("OFZ_INTERACTIVE_CLEANUP_MODE", "").strip()
+    returncode = os.environ.get("OFZ_INTERACTIVE_CLEANUP_RETURNCODE", "").strip()
+    if not status and not mode and not returncode:
+        return {
+            "source": "run_pipeline",
+            "status": "not_requested",
+            "mode": "not_interactive",
+            "returncode": "",
+        }
+    return {
+        "source": "interactive_pipeline",
+        "status": status,
+        "mode": mode,
+        "returncode": returncode,
+    }
 
 
 def stage_sort_key(stage: str) -> tuple[int, int]:

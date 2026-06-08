@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import os
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -22,6 +23,7 @@ else:
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 WINDOWS_LOCAL_PYTHON_COMMAND = r".\.venv\Scripts\python.exe"
 POSIX_LOCAL_PYTHON_COMMAND = "./.venv/bin/python"
 
@@ -113,7 +115,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("Запуск отменен. Команду можно выполнить вручную из корня проекта.")
         return 0
 
-    completed = subprocess.run(command, cwd=PROJECT_ROOT, check=False)
+    cleanup_result = run_cleanup_preflight()
+    if cleanup_result["status"] == "cancelled":
+        print("Запуск отменен до pipeline.")
+        return 0
+    if cleanup_result["status"] == "failed":
+        print("Cleanup завершился с ошибкой. Pipeline не запускается.")
+        return 1
+
+    env = cleanup_manifest_env(cleanup_result)
+    completed = subprocess.run(command, cwd=PROJECT_ROOT, check=False, env=env)
     return int(completed.returncode)
 
 
@@ -313,6 +324,82 @@ def local_python_command() -> str:
     if (PROJECT_ROOT / ".venv" / "bin" / "python").exists():
         return POSIX_LOCAL_PYTHON_COMMAND
     return WINDOWS_LOCAL_PYTHON_COMMAND
+
+
+def run_cleanup_preflight() -> dict[str, str]:
+    """Run optional outputs cleanup before the selected pipeline command."""
+    if not has_generated_outputs():
+        return {"status": "skipped", "mode": "outputs_empty", "returncode": "0"}
+
+    while True:
+        print("")
+        print("В outputs уже есть generated artifacts.")
+        print("1. Оставить outputs как есть [default]")
+        print("2. Показать dry-run очистки")
+        print("3. Архивировать outputs и очистить")
+        print("4. Очистить outputs без архива")
+        print("5. Отменить запуск")
+        answer = input("Выберите действие [1-5], default=1: ").strip() or "1"
+
+        if answer == "1":
+            return {"status": "skipped", "mode": "keep_outputs", "returncode": "0"}
+        if answer == "2":
+            result = run_cleanup_command(["--dry-run"])
+            if result["status"] == "failed":
+                return result
+            print("Dry-run cleanup завершен. Выберите следующее действие.")
+            continue
+        if answer == "3":
+            return run_cleanup_command(["--archive-all", "--delete-all", "--confirm", "DELETE_OUTPUTS"])
+        if answer == "4":
+            token = input("Для очистки без архива введите DELETE_OUTPUTS_NO_ARCHIVE: ").strip()
+            if token != "DELETE_OUTPUTS_NO_ARCHIVE":
+                print("Подтверждение не совпало. Outputs не изменены.")
+                continue
+            return run_cleanup_command(["--delete-all", "--confirm", "DELETE_OUTPUTS"])
+        if answer == "5":
+            return {"status": "cancelled", "mode": "user_cancelled", "returncode": "0"}
+        print("Допустимые значения: 1, 2, 3, 4, 5.")
+
+
+def has_generated_outputs() -> bool:
+    """Return True when outputs contains generated files beyond skeleton/index files."""
+    if not OUTPUTS_DIR.exists():
+        return False
+    for path in OUTPUTS_DIR.rglob("*"):
+        if not path.is_file():
+            continue
+        if path.name in {".gitkeep", "README.md", "index.md"}:
+            continue
+        try:
+            parts = path.relative_to(OUTPUTS_DIR).parts
+        except ValueError:
+            continue
+        if parts and parts[0] == "archive":
+            continue
+        return True
+    return False
+
+
+def run_cleanup_command(args: Sequence[str]) -> dict[str, str]:
+    """Run cleanup_outputs.py through the local Python command."""
+    command = [local_python_command(), "scripts/maintenance/cleanup_outputs.py", *args]
+    print("")
+    print("Cleanup команда:")
+    print(format_command(command))
+    completed = subprocess.run(command, cwd=PROJECT_ROOT, check=False)
+    mode = " ".join(args)
+    status = "ok" if completed.returncode == 0 else "failed"
+    return {"status": status, "mode": mode, "returncode": str(completed.returncode)}
+
+
+def cleanup_manifest_env(cleanup_result: dict[str, str]) -> dict[str, str]:
+    """Expose interactive cleanup result to run_pipeline/run_manifest."""
+    env = os.environ.copy()
+    env["OFZ_INTERACTIVE_CLEANUP_STATUS"] = cleanup_result.get("status", "")
+    env["OFZ_INTERACTIVE_CLEANUP_MODE"] = cleanup_result.get("mode", "")
+    env["OFZ_INTERACTIVE_CLEANUP_RETURNCODE"] = cleanup_result.get("returncode", "")
+    return env
 
 
 def ask_confirmation(prompt: str) -> bool:

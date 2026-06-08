@@ -33,6 +33,8 @@ KEY_SCRIPTS = [
     "08_analytical_tables.py",
     "09_monthly_analytics.py",
     "10_build_monthly_charts.py",
+    "interactive_pipeline.py",
+    "maintenance/cleanup_outputs.py",
     "schema_validation.py",
     "regression_tests.py",
     "raw_data_registry.py",
@@ -74,6 +76,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     checks: list[tuple[str, Callable[[], None]]] = [
         ("py_compile_key_scripts", validate_py_compile_key_scripts),
         ("pipeline_command_contract", lambda: validate_pipeline_command_contract(args)),
+        ("interactive_cleanup_contract", validate_interactive_cleanup_contract),
         ("analytical_tables_exist", validate_analytical_tables_exist),
         ("charts_exist", validate_charts_exist),
         ("monthly_outputs_exist", validate_monthly_outputs_exist),
@@ -148,6 +151,23 @@ def validate_pipeline_command_contract(args: argparse.Namespace) -> None:
     assert command[0].endswith("python.exe") or command[0] == sys.executable, "Команда должна запускаться проектным Python."
     assert "scripts/run_pipeline.py" in command, "Команда должна запускать scripts/run_pipeline.py."
     assert "--all" in command, "Команда полного pipeline должна содержать --all."
+
+
+def validate_interactive_cleanup_contract() -> None:
+    """Проверить, что interactive launcher использует безопасный cleanup pre-flight."""
+    launcher = config.PROJECT_ROOT / "scripts" / "interactive_pipeline.py"
+    cleanup = config.PROJECT_ROOT / "scripts" / "maintenance" / "cleanup_outputs.py"
+    assert launcher.exists(), "Не найден scripts/interactive_pipeline.py."
+    assert cleanup.exists(), "Не найден scripts/maintenance/cleanup_outputs.py."
+    text = launcher.read_text(encoding="utf-8")
+    required = [
+        "run_cleanup_preflight",
+        "scripts/maintenance/cleanup_outputs.py",
+        "DELETE_OUTPUTS_NO_ARCHIVE",
+        "OFZ_INTERACTIVE_CLEANUP_STATUS",
+    ]
+    missing = [item for item in required if item not in text]
+    assert not missing, "В interactive launcher отсутствуют cleanup-маркеры: " + ", ".join(missing)
 
 
 def run_pipeline(params: report_params.ReportParams) -> None:

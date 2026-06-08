@@ -140,6 +140,7 @@ def write_manifest(
     check_statuses: dict[str, str] | None = None,
     warnings: Sequence[str] | None = None,
     limitations: Sequence[str] | None = None,
+    cleanup: dict[str, Any] | None = None,
 ) -> ManifestPaths:
     """Собрать и записать run manifest."""
     config.ensure_output_directories()
@@ -155,6 +156,7 @@ def write_manifest(
         check_statuses=check_statuses or {},
         warnings=list(warnings or []),
         limitations=list(limitations or []),
+        cleanup=cleanup or {},
         manifest_paths=paths,
     )
 
@@ -176,6 +178,7 @@ def build_manifest_data(
     check_statuses: dict[str, str],
     warnings: list[str],
     limitations: list[str],
+    cleanup: dict[str, Any],
     manifest_paths: ManifestPaths,
 ) -> dict[str, Any]:
     """Собрать JSON-совместимые данные manifest."""
@@ -205,6 +208,7 @@ def build_manifest_data(
         "check_statuses": merged_statuses,
         "warnings": all_warnings,
         "limitations": limitations,
+        "cleanup": cleanup,
         "manifest_files": {
             "json": relative_path(manifest_paths.json_path),
             "markdown": relative_path(manifest_paths.markdown_path),
@@ -575,6 +579,19 @@ def render_manifest_markdown(manifest: dict[str, Any]) -> str:
     lines.extend(["", "## Limitations", ""])
     limitations = manifest.get("limitations") or []
     lines.extend([f"- {item}" for item in limitations] if limitations else ["- Нет."])
+
+    cleanup = manifest.get("cleanup") or {}
+    lines.extend(["", "## Cleanup pre-flight", ""])
+    if cleanup:
+        lines.extend(
+            [
+                f"- `status`: `{cleanup.get('status', '')}`",
+                f"- `mode`: `{cleanup.get('mode', '')}`",
+                f"- `returncode`: `{cleanup.get('returncode', '')}`",
+            ]
+        )
+    else:
+        lines.append("- Не применялся или не передан.")
 
     lines.extend(
         [

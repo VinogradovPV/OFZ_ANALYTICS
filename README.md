@@ -109,6 +109,14 @@ Safe outputs cleanup:
 
 The cleanup command only works inside `outputs/`, preserves `outputs/archive/`, writes cleanup manifests, and recreates the tracked folder skeleton with `.gitkeep`.
 
+Interactive cleanup pre-flight:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\interactive_pipeline.py
+```
+
+Before running the selected pipeline command, the interactive launcher checks whether generated `outputs/` artifacts already exist. If they do, it offers to keep outputs, run cleanup dry-run, archive and clean outputs, clean without archive after explicit `DELETE_OUTPUTS_NO_ARCHIVE`, or cancel the run. The launcher never deletes files directly: it calls `scripts/maintenance/cleanup_outputs.py` and stops the pipeline if cleanup fails. The selected cleanup status is recorded in the run manifest for full interactive runs.
+
 Интерактивная активация `.venv`, если нужна:
 
 ```powershell
@@ -151,6 +159,8 @@ The cleanup command only works inside `outputs/`, preserves `outputs/archive/`, 
 ```
 
 Интерактивный launcher спрашивает `report_date`, `period_type`, `aggregation_mode`, `retrospective_years`, режим запуска и подтверждение перед выполнением. Доступные режимы:
+
+Если в `outputs/` уже есть generated artifacts, launcher перед запуском показывает cleanup pre-flight menu. Default-действие: оставить outputs как есть. Архивация и очистка выполняются только через `scripts/maintenance/cleanup_outputs.py`; очистка без архива требует ввода `DELETE_OUTPUTS_NO_ARCHIVE`.
 
 - `all` — полный pipeline;
 - `stages` — ручной список stage numbers / stage names;
