@@ -188,3 +188,43 @@ Verification for this documentation stage:
 - `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK;
 - `.\.venv\Scripts\python.exe -m pip check`: OK;
 - CLI help commands through `.venv\Scripts\ofz-*.exe`: OK. Short `ofz-*` commands require an activated `.venv` or PATH containing `.venv\Scripts`.
+## 2026-06-08 - Final Production Quality Gate
+
+Final production-candidate quality gate completed after the production runbook and release checklist stage.
+
+Commands verified:
+
+- `git status --short`;
+- `.\.venv\Scripts\python.exe -m pip install -e .`;
+- `.\.venv\Scripts\python.exe -m pip check`;
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`;
+- `.\.venv\Scripts\ofz-schema.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`;
+- `.\.venv\Scripts\python.exe scripts\smoke_tests.py`;
+- `.\.venv\Scripts\python.exe scripts\regression_tests.py`;
+- `.\.venv\Scripts\python.exe scripts\anomaly_tests.py`;
+- `.\.venv\Scripts\python.exe scripts\html_chart_qa.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`;
+- `.\.venv\Scripts\python.exe scripts\visual_regression.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`;
+- `.\.venv\Scripts\ofz-quality.exe --full --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`;
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`.
+
+Result:
+
+- editable install: OK after escalated rerun because sandboxed pip could not write to `%TEMP%`;
+- pip check: OK;
+- compileall: OK;
+- schema validation: OK, 16/16;
+- smoke tests: OK, 9 checks;
+- regression tests: OK, 14 checks;
+- anomaly tests: completed with documented data warnings, no execution failure;
+- HTML chart QA: OK;
+- visual regression: OK via fallback static HTML / Plotly JSON inspection;
+- quality gate full: OK;
+- quality gate fast: OK after rerun sequentially.
+
+Note: an initial parallel fast/full quality-gate run produced a transient `.pyc` permission conflict in `scripts/__pycache__`. The fast gate was rerun sequentially and passed.
+
+Git/artifact status:
+
+- `data/raw` tracked in Git: 8 source Excel files;
+- `outputs` tracked only as `.gitkeep` skeleton and `outputs/charts/index.md`;
+- generated outputs are not tracked.
