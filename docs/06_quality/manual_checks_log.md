@@ -256,3 +256,9 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-08 | Added `scripts/maintenance/cleanup_docs.py` with inventory-first documentation cleanup workflow and created `docs/00_project/docs_inventory_before_cleanup.md`. | `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\cleanup_docs.py`; `.\.venv\Scripts\python.exe scripts\maintenance\cleanup_docs.py --dry-run`. | Passed: dry-run classified 83 markdown documents without moving or deleting files: 44 `keep_active`, 4 `merge_candidate`, 35 `archive_candidate`, 0 `delete_candidate`. Cleanup manifest was generated under `outputs/reports/cleanup/` as a generated artifact. | No archive/delete action was executed in this pass. `docs_inventory_after_cleanup.md` is created only after a future `--archive` run. |
+
+## 2026-06-08 - scripts inventory before cleanup
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-08 | Created `docs/00_project/scripts_inventory_before_cleanup.md` for P1 scripts audit without physical file moves. | `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`. | Passed: compileall completed; quality gate fast completed successfully with schema validation 16/16, regression tests 14, smoke tests 9, HTML QA and visual regression fallback OK. Inventory classified 42 Python files: 32 `keep_active`, 5 `refactor_candidate`, 5 `archive_candidate`, 0 `delete_candidate`, 0 unknown. | No Python files were moved or archived. Refactor/archive candidates require a separate migration/archive stage with compatibility checks. |
