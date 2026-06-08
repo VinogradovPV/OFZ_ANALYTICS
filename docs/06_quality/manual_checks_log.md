@@ -297,3 +297,8 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-08 | Aligned the archive decision artifact with the production cleanup naming convention: `docs/00_project/scripts_archive_decision.md`. | Documentation review against `scripts_inventory_before_cleanup.md` and `production_readiness_report.md`. | The decision is recorded in the required file name, with per-script reference status, production risk and recommendation. `scripts_inventory_before_cleanup.md` and `production_readiness_report.md` were updated. | Physical archive remains deferred to P2. No Python files were moved or deleted. |
+## 2026-06-08 - production runbook and release checklist
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-08 | Updated production operations documentation after docs cleanup and scripts archive decisions. | `git status --short`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\python.exe -m pip check`; `.\.venv\Scripts\ofz-run.exe --help`; `.\.venv\Scripts\ofz-interactive.exe --help`; `.\.venv\Scripts\ofz-quality.exe --help`; `.\.venv\Scripts\ofz-clean-outputs.exe --help`; `.\.venv\Scripts\ofz-schema.exe --help`. | Added `docs/07_operations/production_runbook.md` and `docs/07_operations/release_checklist.md` aligned with current CLI entry points, generated-output Git policy, cleanup workflow, release bundle policy and deferred docs/scripts archive decisions. Short `ofz-*` commands require activated `.venv`; direct `.venv\Scripts\ofz-*.exe` checks passed. | This is documentation-only. Full release still requires a separate `ofz-quality --full` run and release bundle preparation. |

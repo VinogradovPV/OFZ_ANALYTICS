@@ -162,3 +162,29 @@ Verification:
 - `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
 
 Generated outputs were not committed or staged.
+## 2026-06-08 - Production Runbook And Release Checklist
+
+Production operations documentation was updated after docs cleanup and scripts archive decisions.
+
+Created or refreshed:
+
+- `docs/07_operations/production_runbook.md`;
+- `docs/07_operations/release_checklist.md`.
+
+The runbook reflects the current production state:
+
+- private GitHub repository;
+- `data/raw` tracked as source dataset;
+- generated outputs excluded from Git;
+- CLI entry points: `ofz-run`, `ofz-interactive`, `ofz-quality`, `ofz-clean-outputs`, `ofz-schema`;
+- outputs cleanup through `ofz-clean-outputs`;
+- docs cleanup physical archive deferred;
+- scripts archive physical move deferred until P2;
+- module decomposition remains P2-only.
+
+Verification for this documentation stage:
+
+- `git status --short`: reviewed;
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK;
+- `.\.venv\Scripts\python.exe -m pip check`: OK;
+- CLI help commands through `.venv\Scripts\ofz-*.exe`: OK. Short `ofz-*` commands require an activated `.venv` or PATH containing `.venv\Scripts`.

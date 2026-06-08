@@ -790,3 +790,23 @@ Data strategy:
 - `data/raw` is committed as the project source dataset;
 - raw file hashes are tracked by raw data registry and/or run manifest;
 - generated data such as `data/processed` is not committed and is recreated by pipeline stages.
+## Production operations
+
+Production-запуск описан в:
+
+- `docs/07_operations/production_runbook.md` — пошаговый runbook для clone, `.venv`, CLI, pipeline, cleanup outputs, QA, release bundle и Git workflow.
+- `docs/07_operations/release_checklist.md` — контрольный checklist перед production release.
+
+Актуальные CLI entry points:
+
+```powershell
+ofz-run --help
+ofz-interactive --help
+ofz-quality --help
+ofz-clean-outputs --help
+ofz-schema --help
+```
+
+Если `.venv` не активирована, используйте явные executables из `.venv\Scripts`, например `.\.venv\Scripts\ofz-quality.exe --help`.
+
+Generated outputs не входят в обычную Git-историю. Для конкретного отчетного запуска они сохраняются как release bundle / external artifact.
