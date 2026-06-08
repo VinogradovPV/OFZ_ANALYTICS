@@ -268,3 +268,9 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-08 | Added `docs/03_pipeline/module_decomposition_plan.md` for future decomposition of large scripts. | Documentation review against `scripts_inventory_before_cleanup.md`, `run_pipeline.py`, `quality_gate.py` and current CLI entry points. | Plan covers `06_build_charts.py`, `10_build_monthly_charts.py`, `html_chart_qa.py`, `visual_regression.py`, `quality_gate.py` and `07_dashboard_exports.py`; no files were moved. | The plan is not an implementation. Each future decomposition step must keep wrapper compatibility and run `compileall` plus `quality_gate.py --fast`. |
+
+## 2026-06-08 - checkpoint before data contracts consolidation
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-08 | Recorded checkpoint after production cleanup stages 8-10 and before data contracts consolidation. | `git status --short`; `git ls-files outputs`; `git ls-files docs/00_project/docs_inventory_before_cleanup.md docs/00_project/scripts_inventory_before_cleanup.md docs/03_pipeline/module_decomposition_plan.md docs/06_quality/manual_checks_log.md`; top-level `scripts/` listing; `Test-Path docs/00_project/docs_inventory_after_cleanup.md`. | Working tree was clean before this log update; tracked `outputs/` contained only `.gitkeep` files and `outputs/charts/index.md`; inventories and module decomposition plan are tracked. No physical script refactor/decomposition was performed. `docs_inventory_after_cleanup.md` is absent, so docs archive apply has not been run in this checkpoint. | Data contracts were intentionally not changed. Physical refactor/decomposition is deferred to P2. Docs archive apply remains a separate controlled step with after-inventory generation. |
