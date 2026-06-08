@@ -243,9 +243,9 @@ def test_unsatisfied_auction_ratios() -> None:
     context = feature_engineering.FeatureContext()
     result = df.copy()
     feature_engineering.add_demand_ratios(result, context)
-    assert float(result.loc[0, "demand_satisfaction_ratio"]) == 0.4, "Удовлетворение спроса должно быть placement/demand."
-    assert float(result.loc[0, "demand_to_placement_ratio"]) == 2.5, "Спрос/размещение должен быть demand/placement."
-    assert float(result.loc[0, "bid_to_cover_ratio"]) == 2.0, "Bid-to-cover должен быть demand/supply."
+    assert as_float(result.loc[0, "demand_satisfaction_ratio"]) == 0.4, "Удовлетворение спроса должно быть placement/demand."
+    assert as_float(result.loc[0, "demand_to_placement_ratio"]) == 2.5, "Спрос/размещение должен быть demand/placement."
+    assert as_float(result.loc[0, "bid_to_cover_ratio"]) == 2.0, "Bid-to-cover должен быть demand/supply."
 
 
 def test_zero_or_missing_yield_handling() -> None:
@@ -328,6 +328,11 @@ def sample_monthly_source() -> pd.DataFrame:
             "ofz_type": ["ОФЗ-ПД", "ОФЗ-ПД", "ОФЗ-ПД", "ОФЗ-ПД", "ОФЗ-ПД"],
         }
     )
+
+
+def as_float(value: Any) -> float:
+    """Convert pandas scalar-like values to float for assertions."""
+    return float(value)
 
 
 if __name__ == "__main__":

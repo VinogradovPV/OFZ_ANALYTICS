@@ -422,8 +422,8 @@ def serialize_periods(periods: Sequence[dict[str, Any]]) -> list[dict[str, Any]]
                 "report_period_file_label": str(period.get("report_period_file_label", "")),
                 "period_start": iso_or_none(period.get("period_start") or period.get("start_date")),
                 "period_end": iso_or_none(period.get("period_end") or period.get("end_date")),
-                "report_year": int(period.get("report_year")) if period.get("report_year") is not None else None,
-                "report_period_order": int(period.get("report_period_order")) if period.get("report_period_order") is not None else None,
+                "report_year": optional_int(period.get("report_year")),
+                "report_period_order": optional_int(period.get("report_period_order")),
                 "aggregation_mode": str(period.get("aggregation_mode", "")),
                 "is_target_period": bool(period.get("is_target_period", False)),
             }
@@ -438,6 +438,13 @@ def iso_or_none(value: Any) -> str | None:
     if hasattr(value, "isoformat"):
         return str(value.isoformat())
     return str(value)
+
+
+def optional_int(value: Any) -> int | None:
+    """Convert value to int unless it is missing."""
+    if value is None:
+        return None
+    return int(value)
 
 
 def parse_stages(values: Sequence[str]) -> list[str]:

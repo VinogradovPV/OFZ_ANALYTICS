@@ -7,7 +7,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence, cast
 
 import pandas as pd
 
@@ -185,9 +185,21 @@ def markdown_table(df: pd.DataFrame) -> str:
 
 def escape_markdown_cell(value: object) -> str:
     """Экранировать значение ячейки Markdown-таблицы."""
-    if pd.isna(value):
+    if is_missing_cell(value):
         return ""
     return str(value).replace("|", "\\|").replace("\n", " ")
+
+
+def is_missing_cell(value: object) -> bool:
+    """Return True for scalar missing values used in Markdown cells."""
+    try:
+        missing = pd.isna(cast(Any, value))
+    except (TypeError, ValueError):
+        return False
+    try:
+        return bool(missing)
+    except ValueError:
+        return False
 
 
 if __name__ == "__main__":

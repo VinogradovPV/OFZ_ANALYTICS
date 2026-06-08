@@ -12,7 +12,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Sequence, cast
 
 import pandas as pd
 
@@ -265,7 +265,7 @@ def build_yield_findings(context: SummaryContext) -> list[str]:
     if weighted.dropna().empty:
         return ["- Доходность по видам ОФЗ: нет валидной средневзвешенной доходности."]
     max_index = weighted.idxmax()
-    row = target.loc[max_index]
+    row = row_at_label(target, max_index)
     return [
         f"- Максимальная средневзвешенная доходность среди видов ОФЗ в целевом периоде: "
         f"{row.get('ofz_type')} - {format_ratio(row.get('yield_weighted_avg'), digits=2)}% годовых.",
@@ -287,7 +287,7 @@ def build_maturity_findings(context: SummaryContext) -> list[str]:
     volumes = pd.to_numeric(target["placement_volume"], errors="coerce")
     if volumes.dropna().empty:
         return ["- Сроковая структура: нет валидного `placement_volume`."]
-    row = target.loc[volumes.idxmax()]
+    row = row_at_label(target, volumes.idxmax())
     share = row.get("placement_volume_share")
     return [
         f"- Крупнейшая сроковая категория по объему размещения: {row.get('maturity_bucket_label') or row.get('maturity_bucket')} "
@@ -308,7 +308,7 @@ def build_monthly_findings(context: SummaryContext) -> list[str]:
     placement = pd.to_numeric(target["total_placement_volume"], errors="coerce")
     if placement.dropna().empty:
         return ["- Monthly layer: нет валидного помесячного объема размещения."]
-    max_row = target.loc[placement.idxmax()]
+    max_row = row_at_label(target, placement.idxmax())
     last_row = target.sort_values("month_number").iloc[-1] if "month_number" in target.columns else target.iloc[-1]
     return [
         f"- Максимальный месячный объем размещения в целевом году: {max_row.get('month_label') or max_row.get('month')} - "
@@ -345,7 +345,7 @@ def build_revenue_findings(context: SummaryContext) -> list[str]:
         if gap_column:
             gaps = pd.to_numeric(target_by_type[gap_column], errors="coerce")
             if gaps.notna().any():
-                max_gap_row = target_by_type.loc[gaps.idxmax()]
+                max_gap_row = row_at_label(target_by_type, gaps.idxmax())
                 gap_value = max_gap_row.get(gap_column)
                 if gap_column.endswith("_bln"):
                     gap_value = pd.to_numeric(pd.Series([gap_value]), errors="coerce").iloc[0] * 1000.0
@@ -375,8 +375,8 @@ def build_monthly_bid_cover_findings(context: SummaryContext) -> list[str]:
     ordered = target.sort_values("month_number") if "month_number" in target.columns else target
     valid_ordered = ordered.loc[pd.to_numeric(ordered[ratio_column], errors="coerce").notna()]
     last_row = valid_ordered.iloc[-1] if not valid_ordered.empty else target.iloc[-1]
-    min_row = target.loc[ratios.idxmin()]
-    max_row = target.loc[ratios.idxmax()]
+    min_row = row_at_label(target, ratios.idxmin())
+    max_row = row_at_label(target, ratios.idxmax())
     threshold_count = int((ratios >= 1).sum())
     return [
         f"- Помесячное покрытие предложения спросом: последнее доступное значение {month_name(last_row)} - "
@@ -400,8 +400,8 @@ def build_discount_vs_demand_findings(context: SummaryContext) -> list[str]:
     y_values = pd.to_numeric(df[y_column], errors="coerce")
     if x_values.dropna().empty or y_values.dropna().empty:
         return ["- Discount vs demand: нет валидных значений спроса к размещению или дисконта."]
-    max_x_row = df.loc[x_values.idxmax()]
-    max_y_row = df.loc[y_values.idxmax()]
+    max_x_row = row_at_label(df, x_values.idxmax())
+    max_y_row = row_at_label(df, y_values.idxmax())
     outliers = context.tables.get("chart_discount_vs_demand_outliers")
     outlier_count = 0 if outliers is None else len(outliers)
     return [
@@ -429,7 +429,7 @@ def build_yield_boxplot_findings(context: SummaryContext) -> list[str]:
     medians = pd.to_numeric(target[median_column], errors="coerce")
     if medians.dropna().empty:
         return ["- Yield boxplot: нет валидных медианных значений доходности."]
-    max_median_row = target.loc[medians.idxmax()]
+    max_median_row = row_at_label(target, medians.idxmax())
     lines = [
         f"- Yield boxplot: максимальная медианная доходность в целевом срезе у {max_median_row.get('ofz_type')} - "
         f"{format_ratio(max_median_row.get(median_column), digits=2)}% годовых "
@@ -439,8 +439,8 @@ def build_yield_boxplot_findings(context: SummaryContext) -> list[str]:
         min_values = pd.to_numeric(target[min_column], errors="coerce")
         max_values = pd.to_numeric(target[max_column], errors="coerce")
         if min_values.notna().any() and max_values.notna().any():
-            min_row = target.loc[min_values.idxmin()]
-            max_row = target.loc[max_values.idxmax()]
+            min_row = row_at_label(target, min_values.idxmin())
+            max_row = row_at_label(target, max_values.idxmax())
             lines.append(
                 f"- Диапазон фактической доходности по boxplot: min {format_ratio(min_row.get(min_column), digits=2)}% "
                 f"({min_row.get('ofz_type')}), max {format_ratio(max_row.get(max_column), digits=2)}% ({max_row.get('ofz_type')})."
@@ -577,6 +577,14 @@ def first_existing_column(df: pd.DataFrame, columns: Sequence[str]) -> str | Non
         if column in df.columns:
             return column
     return None
+
+
+def row_at_label(df: pd.DataFrame, label: Any) -> pd.Series[Any]:
+    """Return one row for a label even when pandas sees duplicate index labels."""
+    selected = df.loc[label]
+    if isinstance(selected, pd.DataFrame):
+        return selected.iloc[0]
+    return cast(pd.Series[Any], selected)
 
 
 def month_name(row: pd.Series) -> str:
