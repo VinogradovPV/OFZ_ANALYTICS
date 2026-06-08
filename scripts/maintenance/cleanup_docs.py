@@ -33,6 +33,10 @@ ACTIVE_EXACT_PATHS = {
     "docs/00_project/production_cleanup_baseline.md",
     "docs/00_project/production_readiness_report.md",
     "docs/00_project/project_inventory.md",
+    "docs/00_project/docs_cleanup_apply_decision.md",
+    "docs/00_project/docs_inventory_before_cleanup.md",
+    "docs/00_project/docs_inventory_after_cleanup.md",
+    "docs/00_project/scripts_inventory_before_cleanup.md",
     "docs/00_project/scripts_migration_plan.md",
     "docs/00_project/scripts_structure_plan.md",
     "docs/00_project/self_review.md",
@@ -41,6 +45,10 @@ ACTIVE_EXACT_PATHS = {
     "docs/01_methodology/revenue_kpi_map.md",
     "docs/01_methodology/table_columns_dictionary.md",
     "docs/02_data_contracts/chart_data_contract.md",
+    "docs/02_data_contracts/processed_data_contract.md",
+    "docs/02_data_contracts/analytical_tables_contract.md",
+    "docs/02_data_contracts/dashboard_exports_contract.md",
+    "docs/02_data_contracts/semantic_model_v2.md",
     "docs/02_data_pipeline/data_audit.md",
     "docs/02_data_pipeline/data_cleaning_report.md",
     "docs/02_data_pipeline/feature_engineering.md",
@@ -67,6 +75,8 @@ ACTIVE_EXACT_PATHS = {
     "docs/06_quality/visual_regression_report.md",
     "docs/07_operations/environment.md",
     "docs/07_operations/production_runbook.md",
+    "docs/07_operations/release_checklist.md",
+    "docs/03_pipeline/module_decomposition_plan.md",
 }
 
 ACTIVE_NAME_HINTS = {

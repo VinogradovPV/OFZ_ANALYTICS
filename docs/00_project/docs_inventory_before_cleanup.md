@@ -1,15 +1,15 @@
 # Docs inventory before cleanup
 
-- generated_at: `2026-06-08T11:15:05`
+- generated_at: `2026-06-08T15:46:32`
 - mode: `dry-run`
-- documents: `83`
+- documents: `90`
 
 ## Summary
 
 | Status | Count |
 |---|---:|
 | `archive_candidate` | 35 |
-| `keep_active` | 44 |
+| `keep_active` | 51 |
 | `merge_candidate` | 4 |
 
 ## Inventory
@@ -19,12 +19,14 @@
 | `docs/00_project/analytical_architecture.md` | Аналитическая архитектура проекта ОФЗ | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/00_project/artifact_policy.md` | Production artifact policy | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/00_project/dashboard_architecture.md` | Архитектура dashboard | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
-| `docs/00_project/docs_inventory_before_cleanup.md` | docs inventory before cleanup | Inventory-first отчет о состоянии документации перед/после cleanup. | актуальный production-control документ | yes | `keep_active` | Инвентаризация является обязательным входом для cleanup workflow. |
+| `docs/00_project/docs_cleanup_apply_decision.md` | Docs Cleanup Apply Decision | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
+| `docs/00_project/docs_inventory_before_cleanup.md` | Docs inventory before cleanup | Inventory-first отчет о состоянии документации перед/после cleanup. | актуальный production-control документ | yes | `keep_active` | Инвентаризация является обязательным входом для cleanup workflow. |
 | `docs/00_project/final_project_summary.md` | Финальный обзор проекта | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/00_project/outputs_structure.md` | Структура outputs | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/00_project/production_cleanup_baseline.md` | Production Cleanup Baseline | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/00_project/production_readiness_report.md` | Production readiness report | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/00_project/project_inventory.md` | Инвентаризация проекта | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
+| `docs/00_project/scripts_inventory_before_cleanup.md` | Scripts inventory before cleanup | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/00_project/scripts_migration_plan.md` | Scripts Migration Plan | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/00_project/scripts_structure_plan.md` | Scripts Structure Plan | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/00_project/self_review.md` | Self-review проекта | Проектная, governance или production-readiness документация. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
@@ -32,7 +34,11 @@
 | `docs/01_methodology/period_selection_report.md` | Отчет выбора периодов | Методология KPI, периодов и аналитических показателей. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/01_methodology/revenue_kpi_map.md` | Revenue KPI map | Методология KPI, периодов и аналитических показателей. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/01_methodology/table_columns_dictionary.md` | Словарь столбцов табличных отчетов | Методология KPI, периодов и аналитических показателей. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
-| `docs/02_data_contracts/chart_data_contract.md` | Контракт chart data exports | Data contract для воспроизводимых artifacts. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
+| `docs/02_data_contracts/analytical_tables_contract.md` | Analytical Tables Contract | Data contract для воспроизводимых artifacts. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
+| `docs/02_data_contracts/chart_data_contract.md` | Chart Data Contract | Data contract для воспроизводимых artifacts. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
+| `docs/02_data_contracts/dashboard_exports_contract.md` | Dashboard Exports Contract | Data contract для воспроизводимых artifacts. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
+| `docs/02_data_contracts/processed_data_contract.md` | Processed Data Contract | Data contract для воспроизводимых artifacts. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
+| `docs/02_data_contracts/semantic_model_v2.md` | Semantic Model V2 Contract | Data contract для воспроизводимых artifacts. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/02_data_pipeline/data_audit.md` | Аудит исходных данных | Документация data pipeline и проверок данных. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/02_data_pipeline/data_cleaning_report.md` | Отчет об очистке данных | Документация data pipeline и проверок данных. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/02_data_pipeline/feature_engineering.md` | Отчет построения признаков | Документация data pipeline и проверок данных. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
@@ -45,6 +51,7 @@
 | `docs/03_analytics/monthly_analytics_report.md` | Помесячная аналитика ОФЗ | Аналитические отчеты, таблицы и executive outputs. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/03_analytics/revenue_analytics_report.md` | Revenue analytics: выручка от реализации ОФЗ | Аналитические отчеты, таблицы и executive outputs. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/03_analytics/revenue_charts_report.md` | Revenue charts: графики выручки от реализации ОФЗ | Аналитические отчеты, таблицы и executive outputs. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
+| `docs/03_pipeline/module_decomposition_plan.md` | Module decomposition plan | Документ требует ручной классификации. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/04_visualization/boxplot_diagnostics.md` | Диагностика boxplot доходности | Стратегия, ограничения и диагностика визуализаций. | частично актуален; содержит диагностический контекст | indirect | `merge_candidate` | Диагностический документ может быть объединен с visualization strategy или limitations. |
 | `docs/04_visualization/chart_build_limitations.md` | Ограничения построения графиков | Стратегия, ограничения и диагностика визуализаций. | актуален для production run или project governance | yes | `keep_active` | Документ входит в активный production/documentation contract. |
 | `docs/04_visualization/chart_improvement_diagnostics.md` | Диагностика функций доработки графиков | Стратегия, ограничения и диагностика визуализаций. | частично актуален; содержит диагностический контекст | indirect | `merge_candidate` | Диагностический документ может быть объединен с visualization strategy или limitations. |
