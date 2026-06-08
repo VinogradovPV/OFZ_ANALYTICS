@@ -262,3 +262,9 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-08 | Created `docs/00_project/scripts_inventory_before_cleanup.md` for P1 scripts audit without physical file moves. | `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`. | Passed: compileall completed; quality gate fast completed successfully with schema validation 16/16, regression tests 14, smoke tests 9, HTML QA and visual regression fallback OK. Inventory classified 42 Python files: 32 `keep_active`, 5 `refactor_candidate`, 5 `archive_candidate`, 0 `delete_candidate`, 0 unknown. | No Python files were moved or archived. Refactor/archive candidates require a separate migration/archive stage with compatibility checks. |
+
+## 2026-06-08 - module decomposition plan
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-08 | Added `docs/03_pipeline/module_decomposition_plan.md` for future decomposition of large scripts. | Documentation review against `scripts_inventory_before_cleanup.md`, `run_pipeline.py`, `quality_gate.py` and current CLI entry points. | Plan covers `06_build_charts.py`, `10_build_monthly_charts.py`, `html_chart_qa.py`, `visual_regression.py`, `quality_gate.py` and `07_dashboard_exports.py`; no files were moved. | The plan is not an implementation. Each future decomposition step must keep wrapper compatibility and run `compileall` plus `quality_gate.py --fast`. |
