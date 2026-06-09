@@ -16,6 +16,9 @@ logs/
 # Generated processed data
 data/processed/
 
+# External release bundles
+releases/
+
 # Generated outputs
 outputs/charts/**
 outputs/exports/**

@@ -93,9 +93,10 @@ Editable install and CLI entry points:
 .\.venv\Scripts\ofz-quality.exe --help
 .\.venv\Scripts\ofz-schema.exe --help
 .\.venv\Scripts\ofz-clean-outputs.exe --help
+.\.venv\Scripts\ofz-build-release-bundle.exe --help
 ```
 
-Existing script launch commands remain supported. `ofz-clean-outputs` is a safe maintenance entry point for generated `outputs/`: it defaults to dry-run and requires `--confirm DELETE_OUTPUTS` for deletion.
+Existing script launch commands remain supported. `ofz-clean-outputs` is a safe maintenance entry point for generated `outputs/`: it defaults to dry-run and requires `--confirm DELETE_OUTPUTS` for deletion. `ofz-build-release-bundle` creates an external release bundle under ignored `releases/` and requires `--include-outputs --confirm BUILD_RELEASE_BUNDLE` outside dry-run.
 
 Environment details are documented in [`docs/07_operations/environment.md`](docs/07_operations/environment.md).
 
@@ -108,6 +109,20 @@ Safe outputs cleanup:
 ```
 
 The cleanup command only works inside `outputs/`, preserves `outputs/archive/`, writes cleanup manifests, and recreates the tracked folder skeleton with `.gitkeep`.
+
+Release bundle dry-run:
+
+```powershell
+.\.venv\Scripts\ofz-build-release-bundle.exe --dry-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+Release bundle creation:
+
+```powershell
+.\.venv\Scripts\ofz-build-release-bundle.exe --include-outputs --confirm BUILD_RELEASE_BUNDLE --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+The bundle is written to `releases/ofz_analytics_<report_date>_<period_type>_<aggregation_mode>_retrospective_<N>_<timestamp>/`, which is excluded from Git. The bundle includes generated HTML charts, chart data, dashboard exports, run manifests, QA reports and release manifests.
 
 Interactive cleanup pre-flight:
 

@@ -498,3 +498,8 @@ The implemented cleanup command also preserves existing `outputs/archive/` durin
 ### Commit prohibition
 
 Generated outputs are prohibited from ordinary commits. The only allowed tracked files under `outputs/` are skeleton/navigation files described above.
+## P2.1 release bundle automation note
+
+Дата: 2026-06-09.
+
+External release bundles are created under `releases/` by `ofz-build-release-bundle` / `scripts/maintenance/build_release_bundle.py`. The `releases/` directory is ignored by Git. A real bundle requires `--include-outputs --confirm BUILD_RELEASE_BUNDLE`; dry-run reports planned contents and missing categories without writing files.

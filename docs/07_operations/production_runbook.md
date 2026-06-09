@@ -59,6 +59,7 @@ ofz-interactive --help
 ofz-quality --help
 ofz-clean-outputs --help
 ofz-schema --help
+ofz-build-release-bundle --help
 ```
 
 Если `.venv` не активирована, запускать entry points явно:
@@ -69,6 +70,7 @@ ofz-schema --help
 .\.venv\Scripts\ofz-quality.exe --help
 .\.venv\Scripts\ofz-clean-outputs.exe --help
 .\.venv\Scripts\ofz-schema.exe --help
+.\.venv\Scripts\ofz-build-release-bundle.exe --help
 ```
 
 Fallback через Python scripts, если entry point executables недоступны:
@@ -79,6 +81,7 @@ Fallback через Python scripts, если entry point executables недос�
 .\.venv\Scripts\python.exe scripts\quality_gate.py --help
 .\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --help
 .\.venv\Scripts\python.exe scripts\schema_validation.py --help
+.\.venv\Scripts\python.exe scripts\maintenance\build_release_bundle.py --help
 ```
 
 ## 5. Проверка `data/raw`
@@ -267,6 +270,28 @@ Generated outputs не коммитятся. Для аудита конкрет�
 - visual regression report;
 - executive summary;
 - data quality summary, если создан.
+
+### 17.1 Release bundle automation
+
+Dry-run:
+
+```powershell
+ofz-build-release-bundle --dry-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+Release bundle creation:
+
+```powershell
+ofz-build-release-bundle --include-outputs --confirm BUILD_RELEASE_BUNDLE --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+Fallback:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\maintenance\build_release_bundle.py --dry-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+Bundle creates `release_manifest.json` and `release_manifest.md` under ignored `releases/`. Manifest records Git commit, branch, dirty flag, raw file hashes, included file checksums, QA/schema status, visual regression mode and warning summary.
 
 ## 18. Docs cleanup status
 

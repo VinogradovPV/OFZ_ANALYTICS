@@ -306,3 +306,16 @@ Release checklist существует:
 6. Добавить CI workflow для install, compileall, schema и fast quality gate.
 7. Сертифицировать runtime на Python 3.11/3.12/3.13 или сузить metadata до реально проверенных версий.
 8. Добавить release manifest, связывающий Git commit, raw hashes, run manifest и checksum release bundle.
+## P2.1 update: release bundle automation
+
+Дата: 2026-06-09.
+
+Release bundle creation автоматизирован через `scripts/maintenance/build_release_bundle.py` и CLI entry point `ofz-build-release-bundle`.
+
+Новый release bundle создается вне Git в `releases/` и включает generated outputs только при явном запуске:
+
+```powershell
+ofz-build-release-bundle --include-outputs --confirm BUILD_RELEASE_BUNDLE --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+Следующий production-readiness шаг P2: добавить pipeline telemetry и включить telemetry summary в release bundle.

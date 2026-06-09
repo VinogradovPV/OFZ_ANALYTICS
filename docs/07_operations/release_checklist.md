@@ -29,6 +29,7 @@
 - [ ] `ofz-quality --help` OK after `.venv` activation, or `.\.venv\Scripts\ofz-quality.exe --help` OK.
 - [ ] `ofz-clean-outputs --help` OK after `.venv` activation, or `.\.venv\Scripts\ofz-clean-outputs.exe --help` OK.
 - [ ] `ofz-schema --help` OK after `.venv` activation, or `.\.venv\Scripts\ofz-schema.exe --help` OK.
+- [ ] `ofz-build-release-bundle --help` OK after `.venv` activation, or `.\.venv\Scripts\ofz-build-release-bundle.exe --help` OK.
 
 ## Data
 
@@ -72,6 +73,8 @@ ofz-run --all --report-date 2026-01-01 --retrospective-years 4 --period-type yea
 - [ ] Outputs cleaned or archive policy followed.
 - [ ] If cleanup needed, `ofz-clean-outputs --dry-run` was reviewed.
 - [ ] If audit history needed, `ofz-clean-outputs --archive-all` was run before delete.
+- [ ] `ofz-build-release-bundle --dry-run --report-date <date> --retrospective-years <N> --period-type <period> --aggregation-mode <mode>` was reviewed.
+- [ ] If release bundle is needed, `ofz-build-release-bundle --include-outputs --confirm BUILD_RELEASE_BUNDLE ...` was run.
 - [ ] Release bundle includes HTML charts.
 - [ ] Release bundle includes chart data CSV.
 - [ ] Release bundle includes dashboard exports.

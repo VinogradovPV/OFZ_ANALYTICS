@@ -123,6 +123,7 @@ Console entry points after editable install:
 .\.venv\Scripts\ofz-quality.exe --help
 .\.venv\Scripts\ofz-schema.exe --help
 .\.venv\Scripts\ofz-clean-outputs.exe --help
+.\.venv\Scripts\ofz-build-release-bundle.exe --help
 ```
 
 Implemented entry points:
@@ -134,6 +135,7 @@ Implemented entry points:
 | `ofz-quality` | `scripts.quality_gate:main` |
 | `ofz-schema` | `scripts.schema_validation:main` |
 | `ofz-clean-outputs` | `scripts.maintenance.cleanup_outputs:main` |
+| `ofz-build-release-bundle` | `scripts.maintenance.build_release_bundle:main` |
 
 Safe outputs cleanup:
 

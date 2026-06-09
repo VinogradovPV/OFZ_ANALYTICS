@@ -317,3 +317,9 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-09 | Replaced the initial P2 modernization system prompt with `prompts/ofz_p2_modernization_system_prompt_v3.md`. | Reference scan for old/new prompt filenames; Git status review. | Old prompt filename references were updated in P2 checkpoint/progress docs. The old prompt file was removed from the active source prompt set; v3 is tracked as the current source prompt asset. | Documentation/source-prompt change only. No pipeline code or generated outputs changed. |
+
+## 2026-06-09 - P2.1 release bundle automation
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-09 | Added external release bundle automation through `scripts/maintenance/build_release_bundle.py` and entry point `ofz-build-release-bundle`. | `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\build_release_bundle.py`; release bundle dry-run for month/cumulative 2026-05-01 r4; `.\.venv\Scripts\python.exe -m pip install -e .`; `.\.venv\Scripts\ofz-build-release-bundle.exe --help`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`. | Passed: py_compile, dry-run, editable install after escalated retry, CLI help, compileall and quality gate fast. Dry-run found 100 chart files, 137 export files, 34 dashboard files, 12 run manifest files, 66 QA report files, 4 executive summary files and 3 data quality summary files. Bundle writes to ignored `releases/` and requires `--include-outputs --confirm BUILD_RELEASE_BUNDLE` outside dry-run. | `telemetry_summary` is optional until P2.2 Pipeline telemetry. Actual release bundle creation was not executed in this stage. Initial `pip install -e .` failed inside sandbox on `%TEMP%` permissions and passed after approved retry. |

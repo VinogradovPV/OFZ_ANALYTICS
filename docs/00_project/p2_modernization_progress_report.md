@@ -72,3 +72,61 @@ Push выполняется в `origin/main` после commit P2.0.
 ### 10. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: `P2.1 Release bundle automation`.
+
+## P2.1 - Release bundle automation
+
+Дата: 2026-06-09.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.1 Release bundle automation`.
+
+### 2. Что изменено
+
+- создан `scripts/maintenance/build_release_bundle.py`;
+- добавлен CLI entry point `ofz-build-release-bundle`;
+- добавлено правило `.gitignore` для `releases/`;
+- создан `docs/07_operations/release_bundle_plan.md`;
+- обновлены README, production runbook и release checklist;
+- release bundle создается как внешний artifact и не попадает в Git.
+
+### 3. Какие проверки прошли
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\build_release_bundle.py`: OK.
+- `.\.venv\Scripts\python.exe scripts\maintenance\build_release_bundle.py --dry-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `.\.venv\Scripts\python.exe -m pip install -e .`: OK after approved retry.
+- `.\.venv\Scripts\ofz-build-release-bundle.exe --help`: OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+
+### 4. Какие проверки упали
+
+Production-проверки не упали. Первый запуск `pip install -e .` внутри sandbox получил permission denied на `%TEMP%`; повтор с разрешением прошел.
+
+### 5. Какие warnings documented
+
+- `telemetry_summary` остается optional до этапа `P2.2 Pipeline telemetry`;
+- реальный release bundle не создается без `--include-outputs --confirm BUILD_RELEASE_BUNDLE`;
+- generated outputs и `releases/` не коммитятся.
+
+### 6. Какие commits созданы
+
+Commit message: `Add release bundle automation`.
+
+### 7. Был ли push
+
+Push выполняется после commit P2.1.
+
+### 8. Текущий git status
+
+Фиксируется после commit/push P2.1.
+
+### 9. Подтверждения
+
+- generated outputs not staged: проверить перед commit;
+- `data/raw` tracked: подтверждено через `git ls-files data/raw`;
+- CLI entry points still work: `ofz-build-release-bundle --help` OK, остальные entry points не менялись.
+
+### 10. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: `P2.2 Pipeline telemetry`.

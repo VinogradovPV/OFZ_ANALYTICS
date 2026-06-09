@@ -27,6 +27,7 @@ ofz-interactive = "scripts.interactive_pipeline:main"
 ofz-quality = "scripts.quality_gate:main"
 ofz-clean-outputs = "scripts.maintenance.cleanup_outputs:main"
 ofz-schema = "scripts.schema_validation:main"
+ofz-build-release-bundle = "scripts.maintenance.build_release_bundle:main"
 
 [tool.setuptools.packages.find]
 include = ["scripts", "scripts.*"]
