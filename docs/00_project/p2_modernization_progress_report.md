@@ -130,3 +130,105 @@ Push выполняется после commit P2.1.
 ### 10. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: `P2.2 Pipeline telemetry`.
+
+## P2.2 - Pipeline telemetry
+
+Дата: 2026-06-09.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.2 Pipeline telemetry`.
+
+### 2. Что изменено
+
+- создан модуль `scripts/pipeline/telemetry.py`;
+- добавлен package marker `scripts/pipeline/__init__.py`;
+- `ofz-run` теперь пишет telemetry JSON/MD для полного pipeline run;
+- run manifest включает ссылки на telemetry summary;
+- release bundle подхватывает telemetry summary через существующую категорию `telemetry_summary`;
+- команда `ofz-run` без `--all/--stage/--stages`, но с report params, запускает полный pipeline как production default.
+
+### 3. Какие проверки прошли
+
+Проверки фиксируются после выполнения P2.2 validation commands.
+
+### 4. Какие проверки упали
+
+Падения фиксируются после выполнения P2.2 validation commands.
+
+### 5. Какие warnings documented
+
+- telemetry outputs являются generated artifacts и не коммитятся;
+- telemetry summary не заменяет QA scripts, а фиксирует runtime/audit metadata.
+
+### 6. Какие commits созданы
+
+Commit message: `Add pipeline telemetry reporting`.
+
+### 7. Был ли push
+
+Push выполняется после commit P2.2.
+
+### 8. Текущий git status
+
+Фиксируется после commit/push P2.2.
+
+### 9. Подтверждения
+
+- generated outputs not staged: проверить перед commit;
+- `data/raw` tracked: проверить перед commit;
+- CLI entry points still work: проверить через `ofz-run` и `ofz-quality`.
+
+### 10. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: `P2.3 UI launcher contract`.
+
+## P2.2 - Pipeline telemetry validation close-out
+
+Дата: 2026-06-09.
+
+### Итог
+
+`P2.2 Pipeline telemetry` завершен. `ofz-run` пишет runtime telemetry в `outputs/reports/telemetry/`, run manifest содержит ссылки на telemetry JSON/MD, а release bundle automation подхватывает telemetry summary при наличии.
+
+### Фактические проверки
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\generate_executive_summary.py scripts\pipeline\telemetry.py scripts\run_pipeline.py scripts\run_manifest.py`: OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK.
+- `.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `Get-ChildItem outputs/reports/telemetry -Recurse -File`: telemetry JSON/MD files created.
+
+### Зафиксированные telemetry fields
+
+- `run_id`, `started_at`, `finished_at`, `duration_seconds`;
+- `stage_durations`;
+- `input_row_counts`;
+- `output_file_counts`;
+- `generated_artifacts_count`, `artifacts_total_size_bytes`;
+- `warnings_count`, `errors_count`;
+- `cleanup_mode`;
+- `quality_gate_results`, `schema_validation_results`;
+- `git_commit`, `git_dirty_flag`;
+- `raw_data_hashes`.
+
+### Warnings documented
+
+- Telemetry outputs are generated artifacts and are not committed.
+- During validation an existing runtime cast issue in `generate_executive_summary.py` was fixed: runtime `cast(pd.Series[Any], ...)` was replaced with non-subscripted `pd.Series`.
+- The latest telemetry run was executed with a dirty working tree because P2.2 source changes were intentionally uncommitted during validation.
+
+### Следующий рекомендуемый P2-этап
+
+`P2.3 UI launcher contract`.
+
+### 11. P2.2 validation update
+
+- `py_compile`: OK.
+- `compileall`: OK.
+- `ofz-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `ofz-quality --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- Latest telemetry summary: `outputs/reports/telemetry/telemetry_20260609_080836_53742514.json` and `.md`.
+- Latest run manifest contains telemetry links.
+- Initial P2.2 validation run found and fixed a runtime cast issue in `scripts/generate_executive_summary.py`: `pd.Series[Any]` was replaced with runtime-safe `pd.Series` inside `cast`.
+- Generated outputs and telemetry reports remain ignored and must not be staged.

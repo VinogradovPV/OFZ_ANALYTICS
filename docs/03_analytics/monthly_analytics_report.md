@@ -1,12 +1,12 @@
 # Помесячная аналитика ОФЗ
 
-Дата формирования: `2026-06-04 19:08:40`.
+Дата формирования: `2026-06-09 11:08:50`.
 
 ## Параметры
 
-- `report_date`: `2026-01-01`
+- `report_date`: `2026-05-01`
 - `retrospective_years`: `4`
-- `period_type`: `year`
+- `period_type`: `month`
 - `aggregation_mode`: `cumulative`
 - Периодов сравнения: `5`
 
@@ -25,21 +25,21 @@
 ## Output
 
 - Processed dataset: `data/processed/ofz_monthly_metrics.csv`
-- CSV export: `outputs/exports/analytical_csv/monthly_metrics_year_cumulative_2026-01-01_retrospective_4.csv`
-- XLSX export: `outputs/reports/monthly_tables/monthly_metrics_year_cumulative_2026-01-01_retrospective_4.xlsx`
-- Строк monthly layer: `60`
+- CSV export: `outputs/exports/analytical_csv/monthly_metrics_month_cumulative_2026-05-01_retrospective_4.csv`
+- XLSX export: `outputs/reports/monthly_tables/monthly_metrics_month_cumulative_2026-05-01_retrospective_4.xlsx`
+- Строк monthly layer: `20`
 
 ## Периоды
 
-- `2021`: `2021-01` - `2021-12`, месяцев: `12`
-- `2022`: `2022-01` - `2022-12`, месяцев: `12`
-- `2023`: `2023-01` - `2023-12`, месяцев: `12`
-- `2024`: `2024-01` - `2024-12`, месяцев: `12`
-- `2025`: `2025-01` - `2025-12`, месяцев: `12`
+- `2022-M01-M04`: `2022-01` - `2022-04`, месяцев: `4`
+- `2023-M01-M04`: `2023-01` - `2023-04`, месяцев: `4`
+- `2024-M01-M04`: `2024-01` - `2024-04`, месяцев: `4`
+- `2025-M01-M04`: `2025-01` - `2025-04`, месяцев: `4`
+- `2026-M01-M04`: `2026-01` - `2026-04`, месяцев: `4`
 
 ## Ограничения
 
 - Не найдена колонка для показателя `выручка`; связанные значения будут пустыми.
-- В monthly layer есть месяцы без размещений: 6; строки сохранены для непрерывной временной оси.
+- В monthly layer есть месяцы без размещений: 2; строки сохранены для непрерывной временной оси.
 - В отдельных месяцах присутствуют ДРПА; demand-based ratios следует интерпретировать с учетом флага `drpa_present`.
 - Месячные поля считаются за конкретный месяц, а cumulative-поля - с января до текущего месяца включительно.

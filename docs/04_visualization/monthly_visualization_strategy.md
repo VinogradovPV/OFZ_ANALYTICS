@@ -1,12 +1,12 @@
 # Стратегия помесячных визуализаций
 
-Дата формирования: `2026-06-04 19:08:41`.
+Дата формирования: `2026-06-09 11:08:51`.
 
 ## Параметры
 
-- `report_date`: `2026-01-01`
+- `report_date`: `2026-05-01`
 - `retrospective_years`: `4`
-- `period_type`: `year`
+- `period_type`: `month`
 - `aggregation_mode`: `cumulative`
 
 ## Назначение
@@ -28,24 +28,24 @@
 
 ## Созданные файлы
 
-- HTML: `outputs/charts/monthly/placement/monthly_placement_volume_year_cumulative_2026-01-01_retrospective_4.html`
-- CSV-основа: `outputs/exports/chart_data/monthly_placement_volume_year_cumulative_2026-01-01_retrospective_4.csv`
-- HTML: `outputs/charts/monthly/placement/monthly_cumulative_placement_year_cumulative_2026-01-01_retrospective_4.html`
-- CSV-основа: `outputs/exports/chart_data/monthly_cumulative_placement_year_cumulative_2026-01-01_retrospective_4.csv`
-- HTML: `outputs/charts/monthly/demand_supply/monthly_demand_supply_year_cumulative_2026-01-01_retrospective_4.html`
-- CSV-основа: `outputs/exports/chart_data/monthly_demand_supply_year_cumulative_2026-01-01_retrospective_4.csv`
-- HTML: `outputs/charts/monthly/bid_cover/monthly_bid_to_cover_year_cumulative_2026-01-01_retrospective_4.html`
-- CSV-основа: `outputs/exports/chart_data/monthly_bid_to_cover_year_cumulative_2026-01-01_retrospective_4.csv`
-- HTML: `outputs/charts/monthly/yield/monthly_weighted_avg_yield_year_cumulative_2026-01-01_retrospective_4.html`
-- CSV-основа: `outputs/exports/chart_data/monthly_weighted_avg_yield_year_cumulative_2026-01-01_retrospective_4.csv`
-- HTML: `outputs/charts/monthly/structure/monthly_placement_by_format_year_cumulative_2026-01-01_retrospective_4.html`
-- CSV-основа: `outputs/exports/chart_data/monthly_placement_by_format_year_cumulative_2026-01-01_retrospective_4.csv`
-- HTML: `outputs/charts/monthly/structure/monthly_placement_by_maturity_year_cumulative_2026-01-01_retrospective_4.html`
-- CSV-основа: `outputs/exports/chart_data/monthly_placement_by_maturity_year_cumulative_2026-01-01_retrospective_4.csv`
-- HTML: `outputs/charts/monthly/heatmap/monthly_heatmap_placement_year_cumulative_2026-01-01_retrospective_4.html`
-- CSV-основа: `outputs/exports/chart_data/monthly_heatmap_placement_year_cumulative_2026-01-01_retrospective_4.csv`
-- HTML: `outputs/charts/monthly/heatmap/monthly_heatmap_revenue_year_cumulative_2026-01-01_retrospective_4.html`
-- CSV-основа: `outputs/exports/chart_data/monthly/monthly_heatmap_revenue_year_cumulative_2026-01-01_retrospective_4.csv`
+- HTML: `outputs/charts/monthly/placement/monthly_placement_volume_month_cumulative_2026-05-01_retrospective_4.html`
+- CSV-основа: `outputs/exports/chart_data/monthly_placement_volume_month_cumulative_2026-05-01_retrospective_4.csv`
+- HTML: `outputs/charts/monthly/placement/monthly_cumulative_placement_month_cumulative_2026-05-01_retrospective_4.html`
+- CSV-основа: `outputs/exports/chart_data/monthly_cumulative_placement_month_cumulative_2026-05-01_retrospective_4.csv`
+- HTML: `outputs/charts/monthly/demand_supply/monthly_demand_supply_month_cumulative_2026-05-01_retrospective_4.html`
+- CSV-основа: `outputs/exports/chart_data/monthly_demand_supply_month_cumulative_2026-05-01_retrospective_4.csv`
+- HTML: `outputs/charts/monthly/bid_cover/monthly_bid_to_cover_month_cumulative_2026-05-01_retrospective_4.html`
+- CSV-основа: `outputs/exports/chart_data/monthly_bid_to_cover_month_cumulative_2026-05-01_retrospective_4.csv`
+- HTML: `outputs/charts/monthly/yield/monthly_weighted_avg_yield_month_cumulative_2026-05-01_retrospective_4.html`
+- CSV-основа: `outputs/exports/chart_data/monthly_weighted_avg_yield_month_cumulative_2026-05-01_retrospective_4.csv`
+- HTML: `outputs/charts/monthly/structure/monthly_placement_by_format_month_cumulative_2026-05-01_retrospective_4.html`
+- CSV-основа: `outputs/exports/chart_data/monthly_placement_by_format_month_cumulative_2026-05-01_retrospective_4.csv`
+- HTML: `outputs/charts/monthly/structure/monthly_placement_by_maturity_month_cumulative_2026-05-01_retrospective_4.html`
+- CSV-основа: `outputs/exports/chart_data/monthly_placement_by_maturity_month_cumulative_2026-05-01_retrospective_4.csv`
+- HTML: `outputs/charts/monthly/heatmap/monthly_heatmap_placement_month_cumulative_2026-05-01_retrospective_4.html`
+- CSV-основа: `outputs/exports/chart_data/monthly_heatmap_placement_month_cumulative_2026-05-01_retrospective_4.csv`
+- HTML: `outputs/charts/monthly/heatmap/monthly_heatmap_revenue_month_cumulative_2026-05-01_retrospective_4.html`
+- CSV-основа: `outputs/exports/chart_data/monthly/monthly_heatmap_revenue_month_cumulative_2026-05-01_retrospective_4.csv`
 
 ## Ограничения
 

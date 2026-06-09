@@ -47,7 +47,7 @@ Bundle включает:
 - QA reports из `outputs/reports/` и `docs/06_quality/`;
 - executive summary из `outputs/reports/` и `docs/03_analytics/`;
 - data quality summary, если создан;
-- telemetry summary, если создан;
+- telemetry summary из `outputs/reports/telemetry/`, если создан;
 - `release_manifest.json`;
 - `release_manifest.md`.
 

@@ -1,6 +1,6 @@
 # Обзор запуска pipeline
 
-Дата формирования: `2026-06-04 19:08:42`.
+Дата формирования: `2026-06-09 11:08:52`.
 
 ## Параметры запуска
 
@@ -8,9 +8,9 @@
 - Safe mode: `False`
 - Compare: `False`
 - Interactive: `False`
-- report_date: `2026-01-01`
+- report_date: `2026-05-01`
 - retrospective_years: `4`
-- period_type: `year`
+- period_type: `month`
 - aggregation_mode: `cumulative`
 
 ## Контракт данных

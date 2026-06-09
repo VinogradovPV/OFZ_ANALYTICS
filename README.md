@@ -124,6 +124,14 @@ Release bundle creation:
 
 The bundle is written to `releases/ofz_analytics_<report_date>_<period_type>_<aggregation_mode>_retrospective_<N>_<timestamp>/`, which is excluded from Git. The bundle includes generated HTML charts, chart data, dashboard exports, run manifests, QA reports and release manifests.
 
+Pipeline telemetry:
+
+```powershell
+.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+Each full pipeline run writes telemetry summaries to `outputs/reports/telemetry/telemetry_<run_id>.json` and `.md`. Telemetry records stage durations, artifact counts and sizes, cleanup mode, quality/schema status, Git commit/dirty flag and raw data hashes. These generated telemetry files are not committed and are included in release bundles when present.
+
 Interactive cleanup pre-flight:
 
 ```powershell

@@ -1,12 +1,12 @@
 # Аналитические табличные отчеты
 
-Дата формирования: `2026-06-04 19:08:37`.
+Дата формирования: `2026-06-09 11:08:47`.
 
 ## Параметры
 
-- `report_date`: `2026-01-01`
+- `report_date`: `2026-05-01`
 - `retrospective_years`: `4`
-- `period_type`: `year`
+- `period_type`: `month`
 - `aggregation_mode`: `cumulative`
 
 ## Правила сортировки аналитических таблиц
@@ -19,62 +19,59 @@
 
 ## Таблица доходности по видам ОФЗ
 
-- CSV: `outputs/exports/analytical_csv/ofz_yield_by_type_year_cumulative_2026-01-01_retrospective_4.csv`
-- XLSX: `outputs/reports/analytical_tables/ofz_yield_by_type_year_cumulative_2026-01-01_retrospective_4.xlsx`
+- CSV: `outputs/exports/analytical_csv/ofz_yield_by_type_month_cumulative_2026-05-01_retrospective_4.csv`
+- XLSX: `outputs/reports/monthly_tables/ofz_yield_by_type_month_cumulative_2026-05-01_retrospective_4.xlsx`
 
 | report_period_label | report_year | report_period_type | aggregation_mode | report_period_order | report_period_start | ofz_type | placement_volume | yield_min | yield_weighted_avg | yield_max | yield_min_yoy_change | yield_weighted_avg_yoy_change | yield_max_yoy_change | auction_count | data_quality_flag |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2021 | 2021 | year | cumulative | 0 | 2021-01-01 | ОФЗ-ИН | 139402 | 2.39 | 2.68114 | 3.09 |  |  |  | 13 | ok |
-| 2021 | 2021 | year | cumulative | 0 | 2021-01-01 | ОФЗ-ПД | 2.49696e+06 | 5.55 | 7.17975 | 8.71 |  |  |  | 67 | ok |
-| 2022 | 2022 | year | cumulative | 1 | 2022-01-01 | ОФЗ-ИН | 155529 | 3.09 | 3.30522 | 3.35 | 0.7 | 0.62408 | 0.26 | 10 | ok |
-| 2022 | 2022 | year | cumulative | 1 | 2022-01-01 | ОФЗ-ПД | 625730 | 8.94 | 10.026 | 10.62 | 3.39 | 2.84628 | 1.91 | 15 | ok |
-| 2023 | 2023 | year | cumulative | 2 | 2023-01-01 | ОФЗ-ИН | 316335 | 3.06 | 3.2615 | 4.22 | -0.03 | -0.043712 | 0.87 | 16 | ok |
-| 2023 | 2023 | year | cumulative | 2 | 2023-01-01 | ОФЗ-ПД | 1.70132e+06 | 9.8 | 10.9817 | 12.5 | 0.86 | 0.955671 | 1.88 | 61 | ok |
-| 2024 | 2024 | year | cumulative | 3 | 2024-01-01 | ОФЗ-ИН | 8943.83 | 5.17 | 5.17 | 5.17 | 2.11 | 1.9085 | 0.95 | 1 | ok |
-| 2024 | 2024 | year | cumulative | 3 | 2024-01-01 | ОФЗ-ПД | 1.79662e+06 | 11.87 | 14.1195 | 18.42 | 2.07 | 3.13779 | 5.92 | 66 | ok |
-| 2024 | 2024 | year | cumulative | 3 | 2024-01-01 | ОФЗ-ПК | 27716.7 | 0 | 0 | 0 |  |  |  | 1 | ok |
-| 2025 | 2025 | year | cumulative | 4 | 2025-01-01 | ОФЗ-ПД | 6.35587e+06 | 13.51 | 15.2912 | 17.49 | 1.64 | 1.1717 | -0.93 | 135 | ok |
-| 2025 | 2025 | year | cumulative | 4 | 2025-01-01 | ОФЗ-ПК | 1.69122e+06 | 0 | 0 | 0 | 0 | 0 | 0 | 2 | ok |
+| 2022-M01-M04 | 2022 | month | cumulative | 0 | 2022-01-01 | ОФЗ-ИН | 16164.2 | 3.09 | 3.1308 | 3.25 |  |  |  | 2 | ok |
+| 2022-M01-M04 | 2022 | month | cumulative | 0 | 2022-01-01 | ОФЗ-ПД | 111915 | 8.94 | 9.45711 | 9.59 |  |  |  | 3 | ok |
+| 2023-M01-M04 | 2023 | month | cumulative | 1 | 2023-01-01 | ОФЗ-ИН | 129585 | 3.06 | 3.26993 | 3.33 | -0.03 | 0.139125 | 0.08 | 6 | ok |
+| 2023-M01-M04 | 2023 | month | cumulative | 1 | 2023-01-01 | ОФЗ-ПД | 835877 | 9.8 | 10.4697 | 10.84 | 0.86 | 1.01259 | 1.25 | 26 | ok |
+| 2024-M01-M04 | 2024 | month | cumulative | 2 | 2024-01-01 | ОФЗ-ИН | 8943.83 | 5.17 | 5.17 | 5.17 | 2.11 | 1.90007 | 1.84 | 1 | ok |
+| 2024-M01-M04 | 2024 | month | cumulative | 2 | 2024-01-01 | ОФЗ-ПД | 1.13867e+06 | 11.87 | 12.9259 | 13.8 | 2.07 | 2.45621 | 2.96 | 33 | ok |
+| 2025-M01-M04 | 2025 | month | cumulative | 3 | 2025-01-01 | ОФЗ-ПД | 1.74544e+06 | 14.47 | 16.1527 | 17.49 | 2.6 | 3.22682 | 3.69 | 42 | ok |
+| 2026-M01-M04 | 2026 | month | cumulative | 4 | 2026-01-01 | ОФЗ-ПД | 2.47772e+06 | 13.75 | 14.6938 | 15.32 | -0.72 | -1.45896 | -2.17 | 41 | ok |
 
 ## Таблица совокупного спроса и совокупного предложения
 
-- CSV: `outputs/exports/analytical_csv/demand_supply_year_cumulative_2026-01-01_retrospective_4.csv`
-- XLSX: `outputs/reports/analytical_tables/demand_supply_year_cumulative_2026-01-01_retrospective_4.xlsx`
+- CSV: `outputs/exports/analytical_csv/demand_supply_month_cumulative_2026-05-01_retrospective_4.csv`
+- XLSX: `outputs/reports/monthly_tables/demand_supply_month_cumulative_2026-05-01_retrospective_4.xlsx`
 
 | report_period_label | report_year | report_period_type | aggregation_mode | report_period_start | report_period_end | total_demand | total_supply | total_demand_yoy_change | total_supply_yoy_change | bid_to_cover_ratio | bid_to_cover_ratio_yoy_change | demand_supply_ratio | demand_supply_ratio_yoy_change | auction_count | data_quality_flag |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2021 | 2021 | year | cumulative | 2021-01-01 | 2021-12-31 | 4.74442e+06 | 1.29816e+07 |  |  | 0.365473 |  | 0.365473 |  | 83 | ok |
-| 2022 | 2022 | year | cumulative | 2022-01-01 | 2022-12-31 | 6.60459e+06 | 9.77621e+06 | 1.86018e+06 | -3.20536e+06 | 0.675578 | 0.310105 | 0.675578 | 0.310105 | 37 | ok |
-| 2023 | 2023 | year | cumulative | 2023-01-01 | 2023-12-31 | 6.03043e+06 | 2.83754e+07 | -574160 | 1.85992e+07 | 0.212523 | -0.463055 | 0.212523 | -0.463055 | 95 | ok |
-| 2024 | 2024 | year | cumulative | 2024-01-01 | 2024-12-31 | 9.93345e+06 | 3.29047e+07 | 3.90302e+06 | 4.52922e+06 | 0.301886 | 0.089363 | 0.301886 | 0.089363 | 104 | ok |
-| 2025 | 2025 | year | cumulative | 2025-01-01 | 2025-12-31 | 1.26225e+07 | 2.83435e+07 | 2.68904e+06 | -4.56116e+06 | 0.44534 | 0.143454 | 0.44534 | 0.143454 | 142 | ok |
+| 2022-M01-M04 | 2022 | month | cumulative | 2022-01-01 | 2022-04-30 | 252099 | 1.2082e+06 |  |  | 0.208656 |  | 0.208656 |  | 5 | ok |
+| 2023-M01-M04 | 2023 | month | cumulative | 2023-01-01 | 2023-04-30 | 1.90724e+06 | 9.30988e+06 | 1.65515e+06 | 8.10167e+06 | 0.204862 | -0.00379339 | 0.204862 | -0.00379339 | 34 | ok |
+| 2024-M01-M04 | 2024 | month | cumulative | 2024-01-01 | 2024-04-30 | 1.73564e+06 | 5.22732e+06 | -171606 | -4.08256e+06 | 0.332032 | 0.12717 | 0.332032 | 0.12717 | 37 | ok |
+| 2025-M01-M04 | 2025 | month | cumulative | 2025-01-01 | 2025-04-30 | 2.85448e+06 | 8.56045e+06 | 1.11884e+06 | 3.33314e+06 | 0.333449 | 0.00141696 | 0.333449 | 0.00141696 | 45 | ok |
+| 2026-M01-M04 | 2026 | month | cumulative | 2026-01-01 | 2026-04-30 | 3.94459e+06 | 1.29817e+07 | 1.09012e+06 | 4.42126e+06 | 0.303858 | -0.0295915 | 0.303858 | -0.0295915 | 42 | ok |
 
 ## Таблица объемов размещения ОФЗ по срокам обращения
 
-- CSV: `outputs/exports/analytical_csv/placement_volume_by_maturity_year_cumulative_2026-01-01_retrospective_4.csv`
-- XLSX: `outputs/reports/analytical_tables/placement_volume_by_maturity_year_cumulative_2026-01-01_retrospective_4.xlsx`
+- CSV: `outputs/exports/analytical_csv/placement_volume_by_maturity_month_cumulative_2026-05-01_retrospective_4.csv`
+- XLSX: `outputs/reports/monthly_tables/placement_volume_by_maturity_month_cumulative_2026-05-01_retrospective_4.xlsx`
 
 | report_period_label | report_year | report_period_type | aggregation_mode | report_period_order | report_period_start | maturity_bucket | maturity_bucket_order | maturity_bucket_label | placement_volume | placement_volume_yoy_change | placement_volume_share | placement_volume_share_yoy_change | auction_count | data_quality_flag |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2021 | 2021 | year | cumulative | 0 | 2021-01-01 | short_term | 1 | Краткосрочные (до 5 лет включительно) | 204533 |  | 0.0775814 |  | 6 | ok |
-| 2021 | 2021 | year | cumulative | 0 | 2021-01-01 | medium_term | 2 | Среднесрочные (свыше 5 до 10 лет включительно) | 1.65569e+06 |  | 0.628022 |  | 42 | ok |
-| 2021 | 2021 | year | cumulative | 0 | 2021-01-01 | long_term | 3 | Долгосрочные (более 10 лет) | 776138 |  | 0.294397 |  | 35 | ok |
-| 2022 | 2022 | year | cumulative | 1 | 2022-01-01 | medium_term | 2 | Среднесрочные (свыше 5 до 10 лет включительно) | 1.06042e+06 | -595278 | 0.323173 | -0.304848 | 26 | ok |
-| 2022 | 2022 | year | cumulative | 1 | 2022-01-01 | long_term | 3 | Долгосрочные (более 10 лет) | 2.22084e+06 | 1.44471e+06 | 0.676827 | 0.38243 | 11 | ok |
-| 2023 | 2023 | year | cumulative | 2 | 2023-01-01 | medium_term | 2 | Среднесрочные (свыше 5 до 10 лет включительно) | 1.02909e+06 | -31324.4 | 0.361643 | 0.0384696 | 42 | ok |
-| 2023 | 2023 | year | cumulative | 2 | 2023-01-01 | long_term | 3 | Долгосрочные (более 10 лет) | 1.81651e+06 | -404335 | 0.638357 | -0.0384696 | 53 | ok |
-| 2024 | 2024 | year | cumulative | 3 | 2024-01-01 | short_term | 1 | Краткосрочные (до 5 лет включительно) | 129178 | -75354.5 | 0.0295156 | -0.0480658 | 12 | ok |
-| 2024 | 2024 | year | cumulative | 3 | 2024-01-01 | medium_term | 2 | Среднесрочные (свыше 5 до 10 лет включительно) | 435376 | -593715 | 0.0994777 | -0.262165 | 13 | ok |
-| 2024 | 2024 | year | cumulative | 3 | 2024-01-01 | long_term | 3 | Долгосрочные (более 10 лет) | 3.81206e+06 | 1.99555e+06 | 0.871007 | 0.23265 | 79 | ok |
-| 2025 | 2025 | year | cumulative | 4 | 2025-01-01 | short_term | 1 | Краткосрочные (до 5 лет включительно) | 600070 | 470892 | 0.0745699 | 0.0450543 | 10 | ok |
-| 2025 | 2025 | year | cumulative | 4 | 2025-01-01 | medium_term | 2 | Среднесрочные (свыше 5 до 10 лет включительно) | 1.37489e+06 | 939512 | 0.170855 | 0.0713776 | 37 | ok |
-| 2025 | 2025 | year | cumulative | 4 | 2025-01-01 | long_term | 3 | Долгосрочные (более 10 лет) | 6.07213e+06 | 2.26007e+06 | 0.754575 | -0.116432 | 95 | ok |
+| 2022-M01-M04 | 2022 | month | cumulative | 0 | 2022-01-01 | medium_term | 2 | Среднесрочные (свыше 5 до 10 лет включительно) | 91258 |  | 0.712512 |  | 2 | ok |
+| 2022-M01-M04 | 2022 | month | cumulative | 0 | 2022-01-01 | long_term | 3 | Долгосрочные (более 10 лет) | 36821.3 |  | 0.287488 |  | 3 | ok |
+| 2023-M01-M04 | 2023 | month | cumulative | 1 | 2023-01-01 | medium_term | 2 | Среднесрочные (свыше 5 до 10 лет включительно) | 559147 | 467890 | 0.57915 | -0.133361 | 18 | ok |
+| 2023-M01-M04 | 2023 | month | cumulative | 1 | 2023-01-01 | long_term | 3 | Долгосрочные (более 10 лет) | 406315 | 369493 | 0.42085 | 0.133361 | 16 | ok |
+| 2024-M01-M04 | 2024 | month | cumulative | 2 | 2024-01-01 | short_term | 1 | Краткосрочные (до 5 лет включительно) | 54472.8 |  | 0.0474663 |  | 9 | ok |
+| 2024-M01-M04 | 2024 | month | cumulative | 2 | 2024-01-01 | medium_term | 2 | Среднесрочные (свыше 5 до 10 лет включительно) | 332067 | -227081 | 0.289355 | -0.289795 | 9 | ok |
+| 2024-M01-M04 | 2024 | month | cumulative | 2 | 2024-01-01 | long_term | 3 | Долгосрочные (более 10 лет) | 761070 | 354756 | 0.663179 | 0.242329 | 19 | ok |
+| 2025-M01-M04 | 2025 | month | cumulative | 3 | 2025-01-01 | short_term | 1 | Краткосрочные (до 5 лет включительно) | 50000 | -4472.76 | 0.028646 | -0.0188202 | 1 | ok |
+| 2025-M01-M04 | 2025 | month | cumulative | 3 | 2025-01-01 | medium_term | 2 | Среднесрочные (свыше 5 до 10 лет включительно) | 140239 | -191828 | 0.0803456 | -0.209009 | 11 | ok |
+| 2025-M01-M04 | 2025 | month | cumulative | 3 | 2025-01-01 | long_term | 3 | Долгосрочные (более 10 лет) | 1.5552e+06 | 794133 | 0.891008 | 0.22783 | 33 | ok |
+| 2026-M01-M04 | 2026 | month | cumulative | 4 | 2026-01-01 | short_term | 1 | Краткосрочные (до 5 лет включительно) | 72917.9 | 22917.9 | 0.0294295 | 0.000783463 | 3 | ok |
+| 2026-M01-M04 | 2026 | month | cumulative | 4 | 2026-01-01 | medium_term | 2 | Среднесрочные (свыше 5 до 10 лет включительно) | 1.0587e+06 | 918463 | 0.42729 | 0.346944 | 15 | ok |
+| 2026-M01-M04 | 2026 | month | cumulative | 4 | 2026-01-01 | long_term | 3 | Долгосрочные (более 10 лет) | 1.3461e+06 | -209108 | 0.543281 | -0.347727 | 24 | ok |
 
 ## Ограничения
 
-- В report scope есть несостоявшиеся или нулевые размещения: 36; ratio с размещением может быть пустым.
-- В report scope есть строки ДРПА: 66; при наличии `demand_volume` они включаются в таблицу спроса и предложения.
-- Таблица доходности исключила строки без доходности: 74.
+- В report scope есть несостоявшиеся или нулевые размещения: 9; ratio с размещением может быть пустым.
+- В report scope есть строки ДРПА: 35; при наличии `demand_volume` они включаются в таблицу спроса и предложения.
+- Таблица доходности исключила строки без доходности: 9.
 - Таблица спроса и предложения группирует данные по `report_period_start` и `report_period_end`; для cumulative-режима суммируется весь накопленный интервал report scope.
 - Таблица спроса и предложения использует `demand_volume` из столбца `Совокупный объем спроса по номиналу` и `supply_volume` из столбца `Объем предложения`; суммируются и аукционы, и ДРПА при наличии значений.
 - Таблица сроков обращения классифицирует сроки по `days_to_maturity`.

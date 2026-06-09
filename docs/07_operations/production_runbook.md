@@ -254,8 +254,22 @@ Manifest должен содержать:
 - outputs summary;
 - QA statuses;
 - cleanup fields: status, mode, return code, если запуск шел через interactive launcher.
+- telemetry summary links: JSON and Markdown paths under `outputs/reports/telemetry/`.
 
 Latest manifest может пересоздаваться. Release manifests сохранять как audit artifacts или включать в release bundle.
+
+Telemetry summary создается автоматически при full pipeline run:
+
+```powershell
+ofz-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+Файлы:
+
+- `outputs/reports/telemetry/telemetry_<run_id>.json`;
+- `outputs/reports/telemetry/telemetry_<run_id>.md`.
+
+Telemetry outputs являются generated artifacts и не коммитятся.
 
 ## 17. Release bundle
 

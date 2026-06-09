@@ -141,6 +141,7 @@ def write_manifest(
     warnings: Sequence[str] | None = None,
     limitations: Sequence[str] | None = None,
     cleanup: dict[str, Any] | None = None,
+    telemetry: dict[str, Any] | None = None,
 ) -> ManifestPaths:
     """Собрать и записать run manifest."""
     config.ensure_output_directories()
@@ -157,6 +158,7 @@ def write_manifest(
         warnings=list(warnings or []),
         limitations=list(limitations or []),
         cleanup=cleanup or {},
+        telemetry=telemetry or {},
         manifest_paths=paths,
     )
 
@@ -179,6 +181,7 @@ def build_manifest_data(
     warnings: list[str],
     limitations: list[str],
     cleanup: dict[str, Any],
+    telemetry: dict[str, Any],
     manifest_paths: ManifestPaths,
 ) -> dict[str, Any]:
     """Собрать JSON-совместимые данные manifest."""
@@ -209,6 +212,7 @@ def build_manifest_data(
         "warnings": all_warnings,
         "limitations": limitations,
         "cleanup": cleanup,
+        "telemetry": telemetry,
         "manifest_files": {
             "json": relative_path(manifest_paths.json_path),
             "markdown": relative_path(manifest_paths.markdown_path),
@@ -592,6 +596,19 @@ def render_manifest_markdown(manifest: dict[str, Any]) -> str:
         )
     else:
         lines.append("- Не применялся или не передан.")
+
+    telemetry = manifest.get("telemetry") or {}
+    lines.extend(["", "## Pipeline telemetry", ""])
+    if telemetry:
+        lines.extend(
+            [
+                f"- `status`: `{telemetry.get('status', '')}`",
+                f"- `json`: `{telemetry.get('json', '')}`",
+                f"- `markdown`: `{telemetry.get('markdown', '')}`",
+            ]
+        )
+    else:
+        lines.append("- Не записана или не передана.")
 
     lines.extend(
         [

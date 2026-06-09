@@ -584,7 +584,7 @@ def row_at_label(df: pd.DataFrame, label: Any) -> pd.Series[Any]:
     selected = df.loc[label]
     if isinstance(selected, pd.DataFrame):
         return selected.iloc[0]
-    return cast(pd.Series[Any], selected)
+    return cast(pd.Series, selected)
 
 
 def month_name(row: pd.Series) -> str:

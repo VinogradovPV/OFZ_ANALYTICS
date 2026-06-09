@@ -19,8 +19,10 @@ from typing import Sequence
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from scripts import config, report_params, run_manifest, utils
+    from scripts.pipeline import telemetry
 else:
     from . import config, report_params, run_manifest, utils
+    from .pipeline import telemetry
 
 
 REPORT_SCOPE_STAGES = {"5", "8", "8.1", "revenue_analytics", "revenue_charts", "9.1", "monthly_analytics", "monthly_charts"}
@@ -207,8 +209,10 @@ class PipelineArgs:
 
 def main(argv: Sequence[str] | None = None) -> int:
     logger = utils.setup_logging(config.PIPELINE_LOG_PATH)
+    telemetry_run: telemetry.PipelineTelemetry | None = None
     try:
         args = parse_args(argv)
+        telemetry_run = telemetry.start_pipeline_telemetry(args)
         logger.info(
             "Старт run_pipeline: stages=%s safe=%s compare=%s interactive=%s "
             "report_date=%s retrospective_years=%s period_type=%s aggregation_mode=%s",
@@ -227,18 +231,29 @@ def main(argv: Sequence[str] | None = None) -> int:
         ensure_report_scope_prerequisites(args)
 
         for stage in args.stages:
-            run_stage(stage, args=args, logger=logger)
-            validate_stage_output(stage, logger)
+            spec = STAGE_SPECS[stage]
+            stage_telemetry = telemetry.start_stage(telemetry_run, stage, spec.name)
+            try:
+                run_stage(stage, args=args, logger=logger)
+                validate_stage_output(stage, logger)
+                telemetry.finish_stage(stage_telemetry, "ok")
+            except Exception as stage_exc:
+                telemetry.finish_stage(stage_telemetry, "fail", error=str(stage_exc))
+                raise
 
         if args.compare or args.safe:
             run_compare(logger=logger)
 
         write_reproducibility_review(args)
+        telemetry_paths = telemetry.write_pipeline_telemetry(telemetry_run, status="ok")
+        logger.info("Pipeline telemetry written: %s", telemetry_paths.json_path)
         if args.all_requested:
-            write_run_manifest(args, logger)
+            write_run_manifest(args, logger, telemetry_paths=telemetry_paths)
         logger.info("run_pipeline завершен")
         return 0
     except Exception as exc:
+        if telemetry_run is not None:
+            telemetry.write_pipeline_telemetry(telemetry_run, status="fail", extra_errors=[str(exc)])
         logger.exception("Pipeline остановлен: %s", exc)
         print(f"Ошибка pipeline: {exc}", file=sys.stderr)
         return 1
@@ -246,7 +261,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 def parse_args(argv: Sequence[str] | None = None) -> PipelineArgs:
     parser = argparse.ArgumentParser(description="Запуск этапов pipeline аналитики ОФЗ.")
-    selector = parser.add_mutually_exclusive_group(required=True)
+    selector = parser.add_mutually_exclusive_group(required=False)
     selector.add_argument("--stage", help="Один этап, например: --stage 3.")
     selector.add_argument(
         "--stages",
@@ -270,7 +285,7 @@ def parse_args(argv: Sequence[str] | None = None) -> PipelineArgs:
     ns = parser.parse_args(argv)
     requested = select_stages(ns)
     stages = expand_dependent_stages(requested)
-    explicit_requested = [] if ns.all else requested
+    explicit_requested = [] if ns.all or (not ns.stage and not ns.stages) else requested
     stages = drop_optional_missing_stages(stages, explicit_requested)
     params = validate_report_args(
         stages,
@@ -282,7 +297,7 @@ def parse_args(argv: Sequence[str] | None = None) -> PipelineArgs:
 
     return PipelineArgs(
         stages=stages,
-        all_requested=bool(ns.all),
+        all_requested=bool(ns.all or (not ns.stage and not ns.stages)),
         safe=bool(ns.safe),
         compare=bool(ns.compare),
         interactive=bool(ns.interactive),
@@ -295,7 +310,7 @@ def parse_args(argv: Sequence[str] | None = None) -> PipelineArgs:
 
 
 def select_stages(ns: argparse.Namespace) -> list[str]:
-    if ns.all:
+    if ns.all or (not ns.stage and not ns.stages):
         return list(ALL_STAGES)
     if ns.stage:
         return [normalize_stage(ns.stage)]
@@ -609,7 +624,11 @@ def write_reproducibility_review(args: PipelineArgs) -> None:
     utils.write_markdown(config.get_doc_path("reproducibility_review_stages_1_3.md"), "\n".join(lines))
 
 
-def write_run_manifest(args: PipelineArgs, logger: logging.Logger) -> None:
+def write_run_manifest(
+    args: PipelineArgs,
+    logger: logging.Logger,
+    telemetry_paths: telemetry.TelemetryPaths | None = None,
+) -> None:
     """Сформировать run manifest после успешного полного запуска pipeline."""
     if args.params is None:
         logger.warning("Run manifest не сформирован: параметры отчета отсутствуют.")
@@ -628,6 +647,7 @@ def write_run_manifest(args: PipelineArgs, logger: logging.Logger) -> None:
             "Статусы внешних QA-проверок отражают наличие артефактов; отдельные runtime QA-скрипты запускаются через quality gate или вручную.",
         ],
         cleanup=cleanup_manifest_fields(),
+        telemetry=telemetry_manifest_fields(telemetry_paths),
     )
     logger.info("Run manifest записан: %s", paths.json_path)
 
@@ -649,6 +669,17 @@ def cleanup_manifest_fields() -> dict[str, str]:
         "status": status,
         "mode": mode,
         "returncode": returncode,
+    }
+
+
+def telemetry_manifest_fields(paths: telemetry.TelemetryPaths | None) -> dict[str, str]:
+    """Return telemetry links for run manifest."""
+    if paths is None:
+        return {"status": "not_written", "json": "", "markdown": ""}
+    return {
+        "status": "written",
+        "json": paths.json_path.relative_to(config.PROJECT_ROOT).as_posix(),
+        "markdown": paths.markdown_path.relative_to(config.PROJECT_ROOT).as_posix(),
     }
 
 
