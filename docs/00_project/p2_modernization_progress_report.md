@@ -16,7 +16,7 @@
 
 Создан baseline перед началом P2:
 
-- проанализирован `prompts/ofz_p2_modernization_system_prompt.md`;
+- проанализирован `prompts/ofz_p2_modernization_system_prompt_v3.md`;
 - подтвержден production-ready candidate baseline;
 - зафиксирован P2 execution protocol;
 - зафиксирован уточненный порядок P2.0-P2.15;
@@ -44,7 +44,7 @@
 
 - `anomaly_tests` содержит документированные data warnings.
 - `visual_regression` пока использует fallback static HTML / Plotly JSON inspection.
-- `prompts/ofz_p2_modernization_system_prompt.md` был untracked до этого checkpoint и включается как source prompt asset.
+- `prompts/ofz_p2_modernization_system_prompt_v3.md` включается как актуальный source prompt asset; старая версия prompt удаляется из активного набора.
 
 ### 6. Какие commits созданы
 

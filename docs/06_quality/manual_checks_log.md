@@ -312,3 +312,8 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-09 | Started P2 modernization with a formal baseline checkpoint and execution protocol. | `git status --short --branch`; `git branch --show-current`; `git remote -v`; `git log --oneline -5`; `git ls-files data/raw`; `git ls-files outputs`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`; `.\.venv\Scripts\ofz-quality.exe --full --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`; `.venv\Scripts\ofz-*.exe --help`. | Baseline confirmed: branch `main`, remote `origin/main`, `data/raw` tracked, generated outputs not tracked except skeleton/index, fast/full quality gates OK, CLI entry points OK. Created `p2_starting_checkpoint.md` and `p2_modernization_progress_report.md`. | `anomaly_tests` warnings remain documented data warnings. Visual regression remains fallback-only until P2 screenshot backend. |
+## 2026-06-09 - P2 system prompt v3
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-09 | Replaced the initial P2 modernization system prompt with `prompts/ofz_p2_modernization_system_prompt_v3.md`. | Reference scan for old/new prompt filenames; Git status review. | Old prompt filename references were updated in P2 checkpoint/progress docs. The old prompt file was removed from the active source prompt set; v3 is tracked as the current source prompt asset. | Documentation/source-prompt change only. No pipeline code or generated outputs changed. |

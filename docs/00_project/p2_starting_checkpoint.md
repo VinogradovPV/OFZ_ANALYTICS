@@ -12,7 +12,7 @@ P2 начинается только после подтверждения basel
 
 Источник:
 
-- `prompts/ofz_p2_modernization_system_prompt.md`.
+- `prompts/ofz_p2_modernization_system_prompt_v3.md`.
 
 Ключевые правила prompt:
 
