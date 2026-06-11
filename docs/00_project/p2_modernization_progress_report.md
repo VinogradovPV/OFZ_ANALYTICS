@@ -270,3 +270,75 @@ Cost-aware / credit-aware режим принят:
 - generated outputs и `releases/` никогда не staged/committed.
 
 Следующий этап `P2.3 UI launcher contract` является Level 0 / docs-only, если будет меняться только контрактная документация.
+
+## P2.3 - UI launcher contract
+
+Дата: 2026-06-11.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.3 UI launcher contract`.
+
+### 2. Что изменено
+
+Создан документ `docs/07_operations/ui_launcher_contract.md`.
+
+Контракт фиксирует:
+
+- UI launcher вызывает только CLI, а не внутренние Python-функции;
+- supported CLI: `ofz-run`, `ofz-interactive`, `ofz-quality`, `ofz-clean-outputs`, `ofz-schema`, `ofz-build-release-bundle`;
+- валидируемые параметры запуска;
+- cleanup modes и обязательный `DELETE_OUTPUTS` для удаления;
+- release bundle creation только с `--include-outputs --confirm BUILD_RELEASE_BUNDLE`;
+- launcher logs в `outputs/reports/launcher/`;
+- запрет arbitrary shell command, изменения `data/raw`, commit generated outputs и параллельного fast/full quality gate;
+- Word VBA launcher policy: `.bas/.frm` source, `.docm` release artifact;
+- PowerShell GUI launcher policy: recommended first UI implementation, safe process arguments.
+
+PowerShell GUI и Word VBA source в P2.3 не создавались.
+
+### 3. Проверочный уровень
+
+Level 0 / docs-only.
+
+### 4. Какие проверки выполнены
+
+- `git status --short --branch`;
+- `git diff --name-only`;
+- staged generated artifacts check;
+- `Select-String` по `docs/07_operations/ui_launcher_contract.md` на ключевые токены.
+
+### 5. Какие проверки skipped и почему
+
+- `compileall`: skipped, Python-код не менялся.
+- `ofz-quality --fast`: skipped, Python/pipeline/schema/release/telemetry код не менялся.
+- `ofz-quality --full`: skipped, нет release/final close-out trigger.
+- `gh auth status` / CLI help: skipped повторно, session preflight уже выполнен и зафиксирован 2026-06-11.
+
+### 6. Warnings documented
+
+- `prompts/ofz_p2_modernization_system_prompt_v4_cost_aware.md` и `prompts/ofz_p2_modernization_step_by_step_v5_cost_aware.md` остаются untracked source prompt files до отдельного решения о commit.
+- UI launcher log under `outputs/reports/launcher/` является generated artifact и не коммитится.
+
+### 7. Commit
+
+Commit message: `Document UI launcher contract`.
+
+### 8. Push
+
+Push выполняется после commit P2.3.
+
+### 9. Git status
+
+Фиксируется после commit/push P2.3.
+
+### 10. Подтверждения
+
+- generated outputs not staged: проверить перед commit;
+- releases not staged: проверить перед commit;
+- `data/raw` tracked: ранее подтверждено, не менялось;
+- CLI entry points still work: не требовали повторной проверки по cost-aware rules, session preflight OK.
+
+### 11. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: `P2.4 PowerShell GUI launcher MVP`.
