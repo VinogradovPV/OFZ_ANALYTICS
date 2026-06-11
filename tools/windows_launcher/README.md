@@ -16,20 +16,47 @@ The default action is `smoke`. It validates the project environment, checks that
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Gui
 ```
 
+The GUI stays open until the user closes it. For automated smoke checks only, use:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Gui -AutoCloseGuiForCheck
+```
+
 The GUI exposes only whitelisted actions:
 
-- validate environment;
-- run pipeline;
-- schema validation;
-- quality gate fast;
-- cleanup dry-run;
-- release bundle dry-run.
+- validate-environment;
+- run-pipeline;
+- schema;
+- quality-fast;
+- quality-full;
+- cleanup-dry-run;
+- cleanup-archive-all;
+- cleanup-delete-all;
+- release-dry-run;
+- release-build;
+- open-outputs;
+- open-releases.
+
+The GUI includes fields for:
+
+- project root;
+- report date;
+- retrospective years;
+- period type;
+- aggregation mode;
+- action;
+- cleanup mode;
+- schema / quality / release options;
+- `DELETE_OUTPUTS` and `BUILD_RELEASE_BUNDLE` confirmations;
+- command preview;
+- output/status area;
+- launcher log path.
 
 ## CLI actions
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action validate
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action run
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action validate-environment
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action run-pipeline
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action schema
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action quality-fast
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action cleanup-dry-run
@@ -39,13 +66,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_l
 Destructive cleanup requires an explicit confirmation token:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action cleanup-delete-all-with-archive -Confirm DELETE_OUTPUTS
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action cleanup-delete-all -ConfirmDelete DELETE_OUTPUTS
 ```
 
 Release bundle creation requires an explicit confirmation token:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action release-build -Confirm BUILD_RELEASE_BUNDLE
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action release-build -ConfirmBundle BUILD_RELEASE_BUNDLE
 ```
 
 ## Logs

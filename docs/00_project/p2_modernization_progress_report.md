@@ -573,3 +573,99 @@ Push РІС‹РїРѕР»РЅСЏРµС‚СЃСЏ РїРѕСЃР»Рµ commit 
 ### 11. РЎР»РµРґСѓСЋС‰РёР№ СЂРµРєРѕРјРµРЅРґСѓРµРјС‹Р№ P2-СЌС‚Р°Рї
 
 РЎР»РµРґСѓСЋС‰РёР№ СЂРµРєРѕРјРµРЅРґСѓРµРјС‹Р№ СЌС‚Р°Рї: `P2.7 Screenshot visual regression backend`.
+## P2.6.1 - PowerShell GUI launcher hardening close-out
+
+Дата: 2026-06-11.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен обязательный промежуточный этап `P2.6.1 PowerShell GUI launcher hardening close-out`.
+
+### 2. Исходный gap
+
+После P2.4 PowerShell GUI launcher был функциональным smoke-wrapper, но GUI содержал только `Report date` и `Action`. Этого было недостаточно для production-like ручного запуска, потому что нельзя было выбирать:
+
+- `project_root`;
+- `retrospective_years`;
+- `period_type`;
+- `aggregation_mode`;
+- cleanup mode;
+- release/delete confirmation tokens;
+- open outputs/release folders;
+- command preview.
+
+Также GUI закрывался автоматически через таймер, что было допустимо для проверки, но неверно для ручной работы.
+
+### 3. Что изменено
+
+Обновлены:
+
+- `tools/windows_launcher/ofz_launcher.ps1`;
+- `tools/windows_launcher/README.md`;
+- `README.md`;
+- `docs/06_quality/manual_checks_log.md`;
+- `docs/00_project/p2_modernization_progress_report.md`.
+
+GUI теперь содержит:
+
+- project root;
+- report date;
+- retrospective years;
+- period type;
+- aggregation mode;
+- action;
+- cleanup mode;
+- schema/quality/release options;
+- `DELETE_OUTPUTS` confirmation;
+- `BUILD_RELEASE_BUNDLE` confirmation;
+- command preview;
+- output/status area;
+- launcher log path.
+
+### 4. Safety policy
+
+Сохранено:
+
+- только approved CLI entry points;
+- no arbitrary shell command;
+- no internal Python function calls;
+- no `data/raw` changes;
+- no GitHub Release creation;
+- no fast/full quality gate parallel run;
+- delete cleanup blocked without `DELETE_OUTPUTS`;
+- release-build blocked without `BUILD_RELEASE_BUNDLE`.
+
+### 5. Проверочный уровень
+
+Level 1 / UI source only.
+
+### 6. Какие проверки выполнены
+
+- PowerShell parse check for `tools/windows_launcher/ofz_launcher.ps1`: OK;
+- `powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1`: OK;
+- `powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Gui -AutoCloseGuiForCheck`: OK;
+- smoke подтвердил environment validation, bad date block, delete confirmation block, release confirmation block, cleanup dry-run, release bundle dry-run и launcher log creation.
+
+### 7. Какие проверки skipped и почему
+
+- `compileall`: skipped, Python-код не менялся.
+- `ofz-quality --fast`: skipped, UI source only.
+- `ofz-quality --full`: skipped, нет release/final close-out trigger.
+- Ручной interactive GUI smoke пользователем остается желательным: открыть `-Gui`, проверить поля и нажать `Validate`.
+
+### 8. Warnings documented
+
+- `tools/word_launcher/` и prompt v4/v5/v6 файлы остаются вне этого этапа, если отдельно не staged.
+- Запуск smoke создает generated logs under `outputs/reports/launcher/` и cleanup dry-run manifests under `outputs/reports/cleanup/`; они игнорируются Git.
+
+### 9. Commit
+
+Commit message: `Enhance Windows UI launcher parameters`.
+
+### 10. Push
+
+Push выполняется после commit P2.6.1.
+
+### 11. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап после закрытия launcher gap: `P2.7 Screenshot visual regression backend`.

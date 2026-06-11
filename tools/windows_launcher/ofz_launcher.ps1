@@ -8,22 +8,24 @@ param(
     [string]$AggregationMode = "cumulative",
     [ValidateSet(
         "smoke",
-        "validate",
-        "run",
+        "validate-environment",
+        "run-pipeline",
         "schema",
         "quality-fast",
         "quality-full",
         "cleanup-dry-run",
         "cleanup-archive-all",
-        "cleanup-delete-all-with-archive",
+        "cleanup-delete-all",
         "release-dry-run",
         "release-build",
         "open-outputs",
-        "open-release"
+        "open-releases"
     )]
     [string]$Action = "smoke",
-    [string]$Confirm = "",
-    [switch]$Gui
+    [string]$ConfirmDelete = "",
+    [string]$ConfirmBundle = "",
+    [switch]$Gui,
+    [switch]$AutoCloseGuiForCheck
 )
 
 Set-StrictMode -Version Latest
@@ -33,12 +35,20 @@ $LauncherTimestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $LauncherLogDir = Join-Path $ProjectRoot "outputs\reports\launcher"
 $LauncherLogPath = Join-Path $LauncherLogDir "launcher_run_$LauncherTimestamp.log"
 
+function Set-LauncherContext {
+    param([string]$Root)
+
+    $script:ProjectRoot = $Root
+    $script:LauncherLogDir = Join-Path $script:ProjectRoot "outputs\reports\launcher"
+    $script:LauncherLogPath = Join-Path $script:LauncherLogDir "launcher_run_$script:LauncherTimestamp.log"
+}
+
 function Write-LauncherLog {
     param([string]$Message)
 
-    New-Item -ItemType Directory -Force -Path $LauncherLogDir | Out-Null
+    New-Item -ItemType Directory -Force -Path $script:LauncherLogDir | Out-Null
     $line = "[{0}] {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $Message
-    Add-Content -Path $LauncherLogPath -Value $line
+    Add-Content -Path $script:LauncherLogPath -Value $line
     Write-Host $line
 }
 
@@ -49,13 +59,7 @@ function Assert-ProjectEnvironment {
         throw "Project root does not exist: $Root"
     }
 
-    $requiredPaths = @(
-        "pyproject.toml",
-        ".venv\Scripts",
-        "data\raw"
-    )
-
-    foreach ($relativePath in $requiredPaths) {
+    foreach ($relativePath in @("pyproject.toml", ".venv\Scripts", "data\raw")) {
         $fullPath = Join-Path $Root $relativePath
         if (-not (Test-Path $fullPath)) {
             throw "Required project path is missing: $relativePath"
@@ -114,7 +118,7 @@ function Get-CliPath {
         throw "Unsupported CLI: $CliName"
     }
 
-    $path = Join-Path $ProjectRoot $allowedCli[$CliName]
+    $path = Join-Path $script:ProjectRoot $allowedCli[$CliName]
     if (-not (Test-Path $path -PathType Leaf)) {
         throw "CLI entry point is missing: $path"
     }
@@ -123,27 +127,70 @@ function Get-CliPath {
 
 function Get-CommonArgs {
     return @(
-        "--report-date", $ReportDate,
-        "--retrospective-years", "$RetrospectiveYears",
-        "--period-type", $PeriodType,
-        "--aggregation-mode", $AggregationMode
+        "--report-date", $script:ReportDate,
+        "--retrospective-years", "$script:RetrospectiveYears",
+        "--period-type", $script:PeriodType,
+        "--aggregation-mode", $script:AggregationMode
     )
 }
 
+function Assert-DeleteConfirmation {
+    param([string]$SelectedAction, [string]$Value)
+
+    if ($SelectedAction -eq "cleanup-delete-all" -and $Value -ne "DELETE_OUTPUTS") {
+        throw "Delete cleanup is blocked. Pass DELETE_OUTPUTS to continue."
+    }
+}
+
+function Assert-BundleConfirmation {
+    param([string]$SelectedAction, [string]$Value)
+
+    if ($SelectedAction -eq "release-build" -and $Value -ne "BUILD_RELEASE_BUNDLE") {
+        throw "Release bundle creation is blocked. Pass BUILD_RELEASE_BUNDLE to continue."
+    }
+}
+
+function Get-LauncherCommand {
+    param([string]$SelectedAction)
+
+    switch ($SelectedAction) {
+        "validate-environment" { return @{ Cli = ""; Args = @(); Preview = "validate-environment (no CLI process)" } }
+        "run-pipeline" { return @{ Cli = "ofz-run.exe"; Args = @("--all") + (Get-CommonArgs) } }
+        "schema" { return @{ Cli = "ofz-schema.exe"; Args = (Get-CommonArgs) } }
+        "quality-fast" { return @{ Cli = "ofz-quality.exe"; Args = @("--fast") + (Get-CommonArgs) } }
+        "quality-full" { return @{ Cli = "ofz-quality.exe"; Args = @("--full") + (Get-CommonArgs) } }
+        "cleanup-dry-run" { return @{ Cli = "ofz-clean-outputs.exe"; Args = @("--dry-run") } }
+        "cleanup-archive-all" { return @{ Cli = "ofz-clean-outputs.exe"; Args = @("--archive-all") } }
+        "cleanup-delete-all" { return @{ Cli = "ofz-clean-outputs.exe"; Args = @("--archive-all", "--delete-all", "--confirm", "DELETE_OUTPUTS") } }
+        "release-dry-run" { return @{ Cli = "ofz-build-release-bundle.exe"; Args = @("--dry-run") + (Get-CommonArgs) } }
+        "release-build" { return @{ Cli = "ofz-build-release-bundle.exe"; Args = @("--include-outputs", "--confirm", "BUILD_RELEASE_BUNDLE") + (Get-CommonArgs) } }
+        "open-outputs" { return @{ Cli = ""; Args = @(); Preview = "open outputs folder" } }
+        "open-releases" { return @{ Cli = ""; Args = @(); Preview = "open releases folder" } }
+        default { throw "Unsupported action: $SelectedAction" }
+    }
+}
+
+function Format-CommandPreview {
+    param([string]$SelectedAction)
+
+    $command = Get-LauncherCommand $SelectedAction
+    if ($command.Preview) {
+        return [string]$command.Preview
+    }
+    return ("{0} {1}" -f $command.Cli, (($command.Args | ForEach-Object { if ($_ -match "\s") { '"' + $_ + '"' } else { $_ } }) -join " "))
+}
+
 function Invoke-WhitelistedCli {
-    param(
-        [string]$CliName,
-        [string[]]$Arguments
-    )
+    param([string]$CliName, [string[]]$Arguments)
 
     $cliPath = Get-CliPath $CliName
-    $stdoutPath = Join-Path $LauncherLogDir "stdout_$LauncherTimestamp.txt"
-    $stderrPath = Join-Path $LauncherLogDir "stderr_$LauncherTimestamp.txt"
+    $stdoutPath = Join-Path $script:LauncherLogDir "stdout_$script:LauncherTimestamp.txt"
+    $stderrPath = Join-Path $script:LauncherLogDir "stderr_$script:LauncherTimestamp.txt"
 
-    Write-LauncherLog ("Working directory: {0}" -f $ProjectRoot)
+    Write-LauncherLog ("Working directory: {0}" -f $script:ProjectRoot)
     Write-LauncherLog ("Command preview: {0} {1}" -f $CliName, ($Arguments -join " "))
 
-    Push-Location $ProjectRoot
+    Push-Location $script:ProjectRoot
     try {
         & $cliPath @Arguments 1> $stdoutPath 2> $stderrPath
         $exitCode = $LASTEXITCODE
@@ -156,121 +203,67 @@ function Invoke-WhitelistedCli {
     $stderr = ""
     if (Test-Path $stdoutPath) {
         $stdoutContent = Get-Content $stdoutPath -Raw
-        if ($null -ne $stdoutContent) {
-            $stdout = [string]$stdoutContent
-        }
+        if ($null -ne $stdoutContent) { $stdout = [string]$stdoutContent }
     }
     if (Test-Path $stderrPath) {
         $stderrContent = Get-Content $stderrPath -Raw
-        if ($null -ne $stderrContent) {
-            $stderr = [string]$stderrContent
-        }
+        if ($null -ne $stderrContent) { $stderr = [string]$stderrContent }
     }
 
     if ($stdout.Trim()) {
         Write-LauncherLog "STDOUT:"
         Write-Host $stdout
-        Add-Content -Path $LauncherLogPath -Value $stdout
+        Add-Content -Path $script:LauncherLogPath -Value $stdout
     }
     if ($stderr.Trim()) {
         Write-LauncherLog "STDERR:"
         Write-Host $stderr
-        Add-Content -Path $LauncherLogPath -Value $stderr
+        Add-Content -Path $script:LauncherLogPath -Value $stderr
     }
 
     Write-LauncherLog ("Exit code: {0}" -f $exitCode)
     return $exitCode
 }
 
-function Assert-DeleteConfirmation {
-    param(
-        [string]$SelectedAction,
-        [string]$Value
-    )
-
-    if ($SelectedAction -eq "cleanup-delete-all-with-archive" -and $Value -ne "DELETE_OUTPUTS") {
-        throw "Delete cleanup is blocked. Pass -Confirm DELETE_OUTPUTS to continue."
-    }
-}
-
-function Assert-BundleConfirmation {
-    param(
-        [string]$SelectedAction,
-        [string]$Value
-    )
-
-    if ($SelectedAction -eq "release-build" -and $Value -ne "BUILD_RELEASE_BUNDLE") {
-        throw "Release bundle creation is blocked. Pass -Confirm BUILD_RELEASE_BUNDLE to continue."
-    }
-}
-
 function Invoke-LauncherAction {
     param([string]$SelectedAction)
 
-    Assert-ProjectEnvironment $ProjectRoot
-    Assert-ReportDate $ReportDate
-    Assert-RetrospectiveYears $RetrospectiveYears
-    Assert-DeleteConfirmation $SelectedAction $Confirm
-    Assert-BundleConfirmation $SelectedAction $Confirm
+    Set-LauncherContext $script:ProjectRoot
+    Assert-ProjectEnvironment $script:ProjectRoot
+    Assert-ReportDate $script:ReportDate
+    Assert-RetrospectiveYears $script:RetrospectiveYears
+    Assert-DeleteConfirmation $SelectedAction $script:ConfirmDelete
+    Assert-BundleConfirmation $SelectedAction $script:ConfirmBundle
 
-    switch ($SelectedAction) {
-        "validate" {
-            Write-LauncherLog "Validate environment OK."
-            return 0
-        }
-        "run" {
-            return Invoke-WhitelistedCli "ofz-run.exe" (Get-CommonArgs)
-        }
-        "schema" {
-            return Invoke-WhitelistedCli "ofz-schema.exe" (Get-CommonArgs)
-        }
-        "quality-fast" {
-            return Invoke-WhitelistedCli "ofz-quality.exe" (@("--fast") + (Get-CommonArgs))
-        }
-        "quality-full" {
-            return Invoke-WhitelistedCli "ofz-quality.exe" (@("--full") + (Get-CommonArgs))
-        }
-        "cleanup-dry-run" {
-            return Invoke-WhitelistedCli "ofz-clean-outputs.exe" @("--dry-run")
-        }
-        "cleanup-archive-all" {
-            return Invoke-WhitelistedCli "ofz-clean-outputs.exe" @("--archive-all")
-        }
-        "cleanup-delete-all-with-archive" {
-            return Invoke-WhitelistedCli "ofz-clean-outputs.exe" @("--archive-all", "--delete-all", "--confirm", "DELETE_OUTPUTS")
-        }
-        "release-dry-run" {
-            return Invoke-WhitelistedCli "ofz-build-release-bundle.exe" (@("--dry-run") + (Get-CommonArgs))
-        }
-        "release-build" {
-            return Invoke-WhitelistedCli "ofz-build-release-bundle.exe" (@("--include-outputs", "--confirm", "BUILD_RELEASE_BUNDLE") + (Get-CommonArgs))
-        }
-        "open-outputs" {
-            $outputsPath = Join-Path $ProjectRoot "outputs"
-            Invoke-Item $outputsPath
-            Write-LauncherLog "Opened outputs folder: $outputsPath"
-            return 0
-        }
-        "open-release" {
-            $releasePath = Join-Path $ProjectRoot "releases"
-            if (-not (Test-Path $releasePath)) {
-                throw "Release folder does not exist yet: $releasePath"
-            }
-            Invoke-Item $releasePath
-            Write-LauncherLog "Opened release folder: $releasePath"
-            return 0
-        }
-        default {
-            throw "Unsupported action: $SelectedAction"
-        }
+    if ($SelectedAction -eq "validate-environment") {
+        Write-LauncherLog "Validate environment OK."
+        return 0
     }
+    if ($SelectedAction -eq "open-outputs") {
+        $outputsPath = Join-Path $script:ProjectRoot "outputs"
+        Invoke-Item $outputsPath
+        Write-LauncherLog "Opened outputs folder: $outputsPath"
+        return 0
+    }
+    if ($SelectedAction -eq "open-releases") {
+        $releasePath = Join-Path $script:ProjectRoot "releases"
+        if (-not (Test-Path $releasePath)) {
+            throw "Release folder does not exist yet: $releasePath"
+        }
+        Invoke-Item $releasePath
+        Write-LauncherLog "Opened release folder: $releasePath"
+        return 0
+    }
+
+    $command = Get-LauncherCommand $SelectedAction
+    return Invoke-WhitelistedCli ([string]$command.Cli) ([string[]]$command.Args)
 }
 
 function Invoke-SmokeTest {
     Write-LauncherLog "Starting launcher smoke test."
-    Assert-ProjectEnvironment $ProjectRoot
-    Assert-ReportDate $ReportDate
-    Assert-RetrospectiveYears $RetrospectiveYears
+    Assert-ProjectEnvironment $script:ProjectRoot
+    Assert-ReportDate $script:ReportDate
+    Assert-RetrospectiveYears $script:RetrospectiveYears
     Write-LauncherLog "Validate environment OK."
 
     try {
@@ -282,7 +275,7 @@ function Invoke-SmokeTest {
     }
 
     try {
-        Assert-DeleteConfirmation "cleanup-delete-all-with-archive" ""
+        Assert-DeleteConfirmation "cleanup-delete-all" ""
         throw "Delete confirmation validation did not fail."
     }
     catch {
@@ -309,8 +302,46 @@ function Invoke-SmokeTest {
     }
     Write-LauncherLog "Release bundle dry-run starts."
     Write-LauncherLog "Quality gate fast starts only when user selects it."
-    Write-LauncherLog "Launcher log created: $LauncherLogPath"
+    Write-LauncherLog "Launcher log created: $script:LauncherLogPath"
     return 0
+}
+
+function Add-Label {
+    param($Form, [string]$Text, [int]$Left, [int]$Top, [int]$Width = 145)
+
+    $label = New-Object System.Windows.Forms.Label
+    $label.Text = $Text
+    $label.Left = $Left
+    $label.Top = $Top
+    $label.Width = $Width
+    $Form.Controls.Add($label)
+    return $label
+}
+
+function Add-TextBox {
+    param($Form, [string]$Text, [int]$Left, [int]$Top, [int]$Width = 220)
+
+    $box = New-Object System.Windows.Forms.TextBox
+    $box.Text = $Text
+    $box.Left = $Left
+    $box.Top = $Top
+    $box.Width = $Width
+    $Form.Controls.Add($box)
+    return $box
+}
+
+function Add-ComboBox {
+    param($Form, [string[]]$Items, [string]$Selected, [int]$Left, [int]$Top, [int]$Width = 180)
+
+    $box = New-Object System.Windows.Forms.ComboBox
+    $box.DropDownStyle = "DropDownList"
+    [void]$box.Items.AddRange($Items)
+    $box.SelectedItem = $Selected
+    $box.Left = $Left
+    $box.Top = $Top
+    $box.Width = $Width
+    $Form.Controls.Add($box)
+    return $box
 }
 
 function Show-LauncherGui {
@@ -319,74 +350,213 @@ function Show-LauncherGui {
 
     $form = New-Object System.Windows.Forms.Form
     $form.Text = "OFZ Analytics Launcher"
-    $form.Width = 620
-    $form.Height = 420
+    $form.Width = 980
+    $form.Height = 760
     $form.StartPosition = "CenterScreen"
 
-    $label = New-Object System.Windows.Forms.Label
-    $label.Text = "OFZ Analytics CLI launcher. Commands are limited to approved entry points."
-    $label.Left = 12
-    $label.Top = 12
-    $label.Width = 570
-    $form.Controls.Add($label)
+    $info = New-Object System.Windows.Forms.Label
+    $info.Text = "OFZ Analytics CLI launcher. No arbitrary shell commands. UI calls approved entry points only."
+    $info.Left = 12
+    $info.Top = 12
+    $info.Width = 930
+    $form.Controls.Add($info)
 
-    $dateBox = New-Object System.Windows.Forms.TextBox
-    $dateBox.Text = $ReportDate
-    $dateBox.Left = 150
-    $dateBox.Top = 45
-    $dateBox.Width = 120
-    $form.Controls.Add($dateBox)
+    Add-Label $form "Project root" 12 48 | Out-Null
+    $projectRootBox = Add-TextBox $form $script:ProjectRoot 170 45 620
+    $browseButton = New-Object System.Windows.Forms.Button
+    $browseButton.Text = "Browse"
+    $browseButton.Left = 805
+    $browseButton.Top = 43
+    $browseButton.Width = 80
+    $browseButton.Add_Click({
+        $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+        $dialog.SelectedPath = $projectRootBox.Text
+        if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+            $projectRootBox.Text = $dialog.SelectedPath
+        }
+    })
+    $form.Controls.Add($browseButton)
 
-    $dateLabel = New-Object System.Windows.Forms.Label
-    $dateLabel.Text = "Report date"
-    $dateLabel.Left = 12
-    $dateLabel.Top = 48
-    $dateLabel.Width = 120
-    $form.Controls.Add($dateLabel)
+    Add-Label $form "Report date" 12 84 | Out-Null
+    $dateBox = Add-TextBox $form $script:ReportDate 170 81 140
+    Add-Label $form "Retrospective years" 330 84 150 | Out-Null
+    $yearsBox = Add-TextBox $form ([string]$script:RetrospectiveYears) 485 81 70
+    Add-Label $form "Period type" 580 84 90 | Out-Null
+    $periodBox = Add-ComboBox $form @("month", "quarter", "year") $script:PeriodType 675 81 110
+    Add-Label $form "Aggregation" 805 84 90 | Out-Null
+    $aggregationBox = Add-ComboBox $form @("cumulative", "point") $script:AggregationMode 890 81 75
 
-    $actionBox = New-Object System.Windows.Forms.ComboBox
-    $actionBox.DropDownStyle = "DropDownList"
-    [void]$actionBox.Items.AddRange(@(
-        "validate",
-        "run",
+    Add-Label $form "Action" 12 122 | Out-Null
+    $actionBox = Add-ComboBox $form @(
+        "validate-environment",
+        "run-pipeline",
         "schema",
         "quality-fast",
+        "quality-full",
         "cleanup-dry-run",
-        "release-dry-run"
-    ))
-    $actionBox.SelectedItem = "validate"
-    $actionBox.Left = 150
-    $actionBox.Top = 80
-    $actionBox.Width = 170
-    $form.Controls.Add($actionBox)
+        "cleanup-archive-all",
+        "cleanup-delete-all",
+        "release-dry-run",
+        "release-build",
+        "open-outputs",
+        "open-releases"
+    ) "validate-environment" 170 119 220
 
-    $actionLabel = New-Object System.Windows.Forms.Label
-    $actionLabel.Text = "Action"
-    $actionLabel.Left = 12
-    $actionLabel.Top = 84
-    $actionLabel.Width = 120
-    $form.Controls.Add($actionLabel)
+    Add-Label $form "Cleanup mode" 415 122 105 | Out-Null
+    $cleanupModeBox = Add-ComboBox $form @("keep", "dry-run", "archive-all", "delete-all-with-archive") "keep" 525 119 170
 
+    $schemaCheck = New-Object System.Windows.Forms.CheckBox
+    $schemaCheck.Text = "Run schema validation"
+    $schemaCheck.Left = 170
+    $schemaCheck.Top = 158
+    $schemaCheck.Width = 180
+    $form.Controls.Add($schemaCheck)
+
+    $fastCheck = New-Object System.Windows.Forms.CheckBox
+    $fastCheck.Text = "Run quality gate fast"
+    $fastCheck.Left = 360
+    $fastCheck.Top = 158
+    $fastCheck.Width = 180
+    $form.Controls.Add($fastCheck)
+
+    $fullCheck = New-Object System.Windows.Forms.CheckBox
+    $fullCheck.Text = "Run quality gate full (manual)"
+    $fullCheck.Left = 550
+    $fullCheck.Top = 158
+    $fullCheck.Width = 220
+    $form.Controls.Add($fullCheck)
+
+    $bundleCheck = New-Object System.Windows.Forms.CheckBox
+    $bundleCheck.Text = "Build release bundle"
+    $bundleCheck.Left = 170
+    $bundleCheck.Top = 184
+    $bundleCheck.Width = 170
+    $form.Controls.Add($bundleCheck)
+
+    $openOutputsCheck = New-Object System.Windows.Forms.CheckBox
+    $openOutputsCheck.Text = "Open outputs after run"
+    $openOutputsCheck.Left = 360
+    $openOutputsCheck.Top = 184
+    $openOutputsCheck.Width = 180
+    $form.Controls.Add($openOutputsCheck)
+
+    $openReleaseCheck = New-Object System.Windows.Forms.CheckBox
+    $openReleaseCheck.Text = "Open release after bundle"
+    $openReleaseCheck.Left = 550
+    $openReleaseCheck.Top = 184
+    $openReleaseCheck.Width = 205
+    $form.Controls.Add($openReleaseCheck)
+
+    Add-Label $form "Confirm DELETE_OUTPUTS" 12 222 155 | Out-Null
+    $deleteConfirmBox = Add-TextBox $form "" 170 219 220
+    Add-Label $form "Confirm BUILD_RELEASE_BUNDLE" 415 222 190 | Out-Null
+    $bundleConfirmBox = Add-TextBox $form "" 610 219 220
+
+    Add-Label $form "Command preview" 12 260 | Out-Null
+    $previewBox = New-Object System.Windows.Forms.TextBox
+    $previewBox.Multiline = $true
+    $previewBox.ScrollBars = "Vertical"
+    $previewBox.Left = 170
+    $previewBox.Top = 255
+    $previewBox.Width = 760
+    $previewBox.Height = 80
+    $previewBox.ReadOnly = $true
+    $form.Controls.Add($previewBox)
+
+    Add-Label $form "Output / status" 12 355 | Out-Null
     $outputBox = New-Object System.Windows.Forms.TextBox
     $outputBox.Multiline = $true
     $outputBox.ScrollBars = "Vertical"
-    $outputBox.Left = 12
-    $outputBox.Top = 130
-    $outputBox.Width = 570
-    $outputBox.Height = 190
+    $outputBox.Left = 170
+    $outputBox.Top = 350
+    $outputBox.Width = 760
+    $outputBox.Height = 270
     $outputBox.ReadOnly = $true
     $form.Controls.Add($outputBox)
 
+    $logLabel = New-Object System.Windows.Forms.Label
+    $logLabel.Text = "Log: $script:LauncherLogPath"
+    $logLabel.Left = 170
+    $logLabel.Top = 630
+    $logLabel.Width = 760
+    $form.Controls.Add($logLabel)
+
+    function Sync-ContextFromGui {
+        Set-LauncherContext $projectRootBox.Text
+        $script:ReportDate = $dateBox.Text
+        $script:RetrospectiveYears = [int]$yearsBox.Text
+        $script:PeriodType = [string]$periodBox.SelectedItem
+        $script:AggregationMode = [string]$aggregationBox.SelectedItem
+        $script:ConfirmDelete = $deleteConfirmBox.Text
+        $script:ConfirmBundle = $bundleConfirmBox.Text
+        $logLabel.Text = "Log: $script:LauncherLogPath"
+    }
+
+    function Update-CommandPreview {
+        try {
+            Sync-ContextFromGui
+            $previewBox.Text = Format-CommandPreview ([string]$actionBox.SelectedItem)
+        }
+        catch {
+            $previewBox.Text = $_.Exception.Message
+        }
+    }
+
+    function Set-ActionFromCleanupMode {
+        switch ([string]$cleanupModeBox.SelectedItem) {
+            "dry-run" { $actionBox.SelectedItem = "cleanup-dry-run" }
+            "archive-all" { $actionBox.SelectedItem = "cleanup-archive-all" }
+            "delete-all-with-archive" { $actionBox.SelectedItem = "cleanup-delete-all" }
+        }
+        Update-CommandPreview
+    }
+
+    foreach ($control in @($projectRootBox, $dateBox, $yearsBox, $periodBox, $aggregationBox, $actionBox, $deleteConfirmBox, $bundleConfirmBox)) {
+        $control.Add_TextChanged({ Update-CommandPreview })
+        if ($control -is [System.Windows.Forms.ComboBox]) {
+            $control.Add_SelectedIndexChanged({ Update-CommandPreview })
+        }
+    }
+    $cleanupModeBox.Add_SelectedIndexChanged({ Set-ActionFromCleanupMode })
+
+    $previewButton = New-Object System.Windows.Forms.Button
+    $previewButton.Text = "Preview"
+    $previewButton.Left = 170
+    $previewButton.Top = 665
+    $previewButton.Width = 90
+    $previewButton.Add_Click({ Update-CommandPreview })
+    $form.Controls.Add($previewButton)
+
     $runButton = New-Object System.Windows.Forms.Button
-    $runButton.Text = "Run"
-    $runButton.Left = 12
-    $runButton.Top = 335
-    $runButton.Width = 90
+    $runButton.Text = "Run selected"
+    $runButton.Left = 270
+    $runButton.Top = 665
+    $runButton.Width = 110
     $runButton.Add_Click({
         try {
-            $script:ReportDate = $dateBox.Text
-            $exitCode = Invoke-LauncherAction ([string]$actionBox.SelectedItem)
-            $outputBox.Text = "Exit code: $exitCode`r`nLog: $LauncherLogPath"
+            Sync-ContextFromGui
+            $selectedAction = [string]$actionBox.SelectedItem
+            $exitCode = Invoke-LauncherAction $selectedAction
+            $status = "Action: $selectedAction`r`nExit code: $exitCode`r`nLog: $script:LauncherLogPath"
+            if ($schemaCheck.Checked -and $selectedAction -ne "schema") {
+                $status += "`r`nSchema validation selected but not auto-chained; choose Action=schema to run it."
+            }
+            if ($fastCheck.Checked -and $selectedAction -ne "quality-fast") {
+                $status += "`r`nQuality fast selected but not auto-chained; choose Action=quality-fast to run it."
+            }
+            if ($fullCheck.Checked -and $selectedAction -ne "quality-full") {
+                $status += "`r`nQuality full is manual-only; choose Action=quality-full to run it."
+            }
+            if ($bundleCheck.Checked -and $selectedAction -ne "release-build") {
+                $status += "`r`nBuild release bundle selected but not auto-chained; choose Action=release-build to run it."
+            }
+            if ($openOutputsCheck.Checked) {
+                [void](Invoke-LauncherAction "open-outputs")
+            }
+            if ($openReleaseCheck.Checked) {
+                [void](Invoke-LauncherAction "open-releases")
+            }
+            $outputBox.Text = $status
         }
         catch {
             $outputBox.Text = $_.Exception.Message
@@ -394,16 +564,47 @@ function Show-LauncherGui {
     })
     $form.Controls.Add($runButton)
 
+    $validateButton = New-Object System.Windows.Forms.Button
+    $validateButton.Text = "Validate"
+    $validateButton.Left = 390
+    $validateButton.Top = 665
+    $validateButton.Width = 90
+    $validateButton.Add_Click({
+        try {
+            Sync-ContextFromGui
+            [void](Invoke-LauncherAction "validate-environment")
+            $outputBox.Text = "Validate environment OK.`r`nLog: $script:LauncherLogPath"
+        }
+        catch {
+            $outputBox.Text = $_.Exception.Message
+        }
+    })
+    $form.Controls.Add($validateButton)
+
     $closeButton = New-Object System.Windows.Forms.Button
     $closeButton.Text = "Close"
-    $closeButton.Left = 112
-    $closeButton.Top = 335
+    $closeButton.Left = 490
+    $closeButton.Top = 665
     $closeButton.Width = 90
     $closeButton.Add_Click({ $form.Close() })
     $form.Controls.Add($closeButton)
 
+    Update-CommandPreview
+
+    if ($AutoCloseGuiForCheck) {
+        $timer = New-Object System.Windows.Forms.Timer
+        $timer.Interval = 3000
+        $timer.Add_Tick({
+            $timer.Stop()
+            $form.Close()
+        })
+        $timer.Start()
+    }
+
     [void]$form.ShowDialog()
 }
+
+Set-LauncherContext $ProjectRoot
 
 try {
     if ($Gui) {
