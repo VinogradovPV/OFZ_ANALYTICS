@@ -8,13 +8,16 @@ hovertemplate, total labels и volume-scale policy.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import importlib
 import json
 import re
 import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Sequence, cast
+from urllib.parse import quote
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -26,6 +29,8 @@ else:
 VISUAL_REGRESSION_REPORT_DOC = config.get_doc_path("visual_regression_report.md")
 VISUAL_REGRESSION_REPORTS_DIR = config.REPORTS_DIR / "visual_regression"
 VISUAL_REGRESSION_SCREENSHOTS_DIR = VISUAL_REGRESSION_REPORTS_DIR / "screenshots"
+VISUAL_REGRESSION_BASELINE_DIR = VISUAL_REGRESSION_REPORTS_DIR / "baseline"
+VISUAL_REGRESSION_DIFFS_DIR = VISUAL_REGRESSION_REPORTS_DIR / "diffs"
 
 VOLUME_FILENAME_TOKENS = (
     "placement",
@@ -61,6 +66,18 @@ class VisualCheck:
     message: str
 
 
+@dataclass(frozen=True)
+class ScreenshotArtifact:
+    """Screenshot artifact metadata for report and diff manifest."""
+
+    html_file: str
+    screenshot_file: str
+    size_bytes: int
+    sha256: str
+    baseline_status: str
+    diff_message: str
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Запустить visual regression или fallback inspection."""
     logger = utils.setup_logging(config.PIPELINE_LOG_PATH)
@@ -68,15 +85,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     config.ensure_output_directories()
     VISUAL_REGRESSION_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     VISUAL_REGRESSION_SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+    VISUAL_REGRESSION_DIFFS_DIR.mkdir(parents=True, exist_ok=True)
 
     html_files = sorted(args.charts_dir.rglob("*.html"))
     html_files = filter_html_files(html_files, args)
-    backend_status = detect_screenshot_backend(args)
-    checks = inspect_html_files(html_files, args, backend_status)
-    report = render_report(args, backend_status, checks, html_files)
+    run_id = build_run_id(args)
+    backend_status, screenshot_checks, screenshot_artifacts = run_screenshot_backend(html_files, args, run_id)
+    checks = [VisualCheck("-", "visual_regression_mode", "ok", backend_status["message"])]
+    checks.extend(screenshot_checks)
+    checks.extend(inspect_html_files(html_files, args, backend_status))
+    write_screenshot_manifest(args, run_id, backend_status, screenshot_artifacts)
+    report = render_report(args, backend_status, checks, html_files, screenshot_artifacts)
     utils.write_markdown(VISUAL_REGRESSION_REPORT_DOC, report)
 
-    output_report = VISUAL_REGRESSION_REPORTS_DIR / f"visual_regression_report_{build_run_id(args)}.md"
+    output_report = VISUAL_REGRESSION_REPORTS_DIR / f"visual_regression_report_{run_id}.md"
     utils.write_markdown(output_report, report)
     logger.info("Visual regression report записан: %s", output_report)
 
@@ -104,9 +126,15 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--period-type", choices=sorted(report_params.ALLOWED_PERIOD_TYPES), default=None, help="Тип периода.")
     parser.add_argument("--aggregation-mode", choices=sorted(report_params.ALLOWED_AGGREGATION_MODES), default=None, help="Режим агрегации.")
     parser.add_argument(
+        "--mode",
+        choices=("auto", "screenshot", "fallback"),
+        default="auto",
+        help="Visual regression mode: fallback HTML/Plotly inspection, screenshot backend, or auto fallback.",
+    )
+    parser.add_argument(
         "--screenshot-backend",
         choices=("auto", "none"),
-        default="auto",
+        default=None,
         help="Backend скриншотов. Сейчас поддержан fallback inspection; none принудительно отключает screenshots.",
     )
     return parser.parse_args(argv)
@@ -124,6 +152,190 @@ def detect_screenshot_backend(args: argparse.Namespace) -> dict[str, str]:
         "mode": "fallback_static_html",
         "message": "Screenshot backend не настроен; выполнен fallback static HTML / Plotly JSON inspection.",
     }
+
+
+def effective_mode(args: argparse.Namespace) -> str:
+    """Return requested visual regression mode with deprecated flag compatibility."""
+    if args.screenshot_backend == "none":
+        return "fallback"
+    return str(args.mode or "auto")
+
+
+def run_screenshot_backend(
+    html_files: Sequence[Path],
+    args: argparse.Namespace,
+    run_id: str,
+) -> tuple[dict[str, str], list[VisualCheck], list[ScreenshotArtifact]]:
+    """Run Playwright screenshot backend, fallback, or auto mode."""
+    mode = effective_mode(args)
+    if mode == "fallback":
+        return (
+            {
+                "mode": "fallback_static_html",
+                "message": "visual_regression_mode=fallback; screenshot backend disabled by request.",
+            },
+            [],
+            [],
+        )
+    if not html_files:
+        return (
+            {
+                "mode": "screenshot_not_run",
+                "message": f"visual_regression_mode={mode}; no HTML files available for screenshots.",
+            },
+            [],
+            [],
+        )
+
+    try:
+        artifacts = capture_playwright_screenshots(html_files, run_id)
+    except Exception as exc:
+        if mode == "screenshot":
+            return (
+                {
+                    "mode": "screenshot_failed",
+                    "message": f"visual_regression_mode=screenshot; screenshot backend failed: {exc}",
+                },
+                [VisualCheck("-", "screenshot_backend", "fail", f"Playwright screenshot backend failed: {exc}")],
+                [],
+            )
+        return (
+            {
+                "mode": "auto_fallback_static_html",
+                "message": f"visual_regression_mode=auto; screenshot backend unavailable, fallback used: {exc}",
+            },
+            [VisualCheck("-", "screenshot_backend", "warning", f"Playwright unavailable; fallback used: {exc}")],
+            [],
+        )
+
+    checks = [
+        VisualCheck("-", "screenshot_backend", "ok", f"Playwright screenshots created: {len(artifacts)}."),
+        VisualCheck("-", "screenshot_diff_report", "ok", "Screenshot manifest and baseline diff status written."),
+    ]
+    return (
+        {
+            "mode": "screenshot_playwright",
+            "message": "visual_regression_mode=screenshot_playwright; fallback HTML/Plotly inspection also executed.",
+        },
+        checks,
+        artifacts,
+    )
+
+
+def capture_playwright_screenshots(html_files: Sequence[Path], run_id: str) -> list[ScreenshotArtifact]:
+    """Capture stable screenshots for local Plotly HTML files with Playwright."""
+    try:
+        playwright_sync_api = importlib.import_module("playwright.sync_api")
+        playwright_timeout_error = cast(type[BaseException], getattr(playwright_sync_api, "TimeoutError"))
+        sync_playwright = getattr(playwright_sync_api, "sync_playwright")
+    except Exception as exc:  # pragma: no cover - optional dev dependency.
+        raise RuntimeError("Python package 'playwright' is not installed") from exc
+
+    run_dir = VISUAL_REGRESSION_SCREENSHOTS_DIR / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    artifacts: list[ScreenshotArtifact] = []
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        try:
+            page = browser.new_page(viewport={"width": 1920, "height": 1080}, device_scale_factor=1)
+            for html_path in html_files:
+                screenshot_path = run_dir / f"{html_path.stem}.png"
+                page.goto(path_to_file_url(html_path), wait_until="networkidle", timeout=45_000)
+                page.add_style_tag(
+                    content="""
+                    .modebar, .modebar-container { display: none !important; }
+                    * { cursor: default !important; caret-color: transparent !important; }
+                    """
+                )
+                try:
+                    page.wait_for_selector(".plotly-graph-div", timeout=20_000)
+                    page.wait_for_function(
+                        "() => window.Plotly && document.querySelectorAll('.plotly-graph-div .main-svg').length > 0",
+                        timeout=20_000,
+                    )
+                except playwright_timeout_error:
+                    page.wait_for_timeout(2_000)
+                page.mouse.move(0, 0)
+                page.screenshot(path=str(screenshot_path), full_page=True)
+                artifacts.append(build_screenshot_artifact(html_path, screenshot_path))
+        finally:
+            browser.close()
+    return artifacts
+
+
+def build_screenshot_artifact(html_path: Path, screenshot_path: Path) -> ScreenshotArtifact:
+    """Build screenshot metadata and compare checksum with optional baseline file."""
+    digest = sha256_file(screenshot_path)
+    baseline_path = VISUAL_REGRESSION_BASELINE_DIR / screenshot_path.name
+    if baseline_path.exists():
+        baseline_digest = sha256_file(baseline_path)
+        baseline_status = "match" if baseline_digest == digest else "changed"
+        diff_message = "Matches baseline checksum." if baseline_status == "match" else "Checksum differs from baseline."
+    else:
+        baseline_status = "missing_baseline"
+        diff_message = "No baseline screenshot found; current screenshot recorded as generated output."
+    return ScreenshotArtifact(
+        html_file=html_path.relative_to(config.PROJECT_ROOT).as_posix(),
+        screenshot_file=screenshot_path.relative_to(config.PROJECT_ROOT).as_posix(),
+        size_bytes=screenshot_path.stat().st_size,
+        sha256=digest,
+        baseline_status=baseline_status,
+        diff_message=diff_message,
+    )
+
+
+def path_to_file_url(path: Path) -> str:
+    """Convert local path to a file:// URL accepted by Playwright on Windows."""
+    resolved = path.resolve()
+    return "file:///" + quote(str(resolved).replace("\\", "/"), safe="/:")
+
+
+def sha256_file(path: Path) -> str:
+    """Calculate SHA256 for generated screenshot or baseline."""
+    hasher = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def write_screenshot_manifest(
+    args: argparse.Namespace,
+    run_id: str,
+    backend_status: dict[str, str],
+    artifacts: Sequence[ScreenshotArtifact],
+) -> None:
+    """Write screenshot backend manifest and simple diff report as generated outputs."""
+    manifest = {
+        "run_id": run_id,
+        "visual_regression_mode": backend_status["mode"],
+        "message": backend_status["message"],
+        "report_date": args.report_date,
+        "period_type": args.period_type,
+        "aggregation_mode": args.aggregation_mode,
+        "retrospective_years": args.retrospective_years,
+        "artifacts": [artifact.__dict__ for artifact in artifacts],
+    }
+    manifest_path = VISUAL_REGRESSION_REPORTS_DIR / f"screenshot_manifest_{run_id}.json"
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    diff_path = VISUAL_REGRESSION_DIFFS_DIR / f"screenshot_diff_report_{run_id}.md"
+    lines = [
+        "# Screenshot visual regression diff report",
+        "",
+        f"- visual_regression_mode: `{backend_status['mode']}`",
+        f"- run_id: `{run_id}`",
+        f"- screenshots: `{len(artifacts)}`",
+        "",
+        "| HTML | Screenshot | Baseline status | Message |",
+        "| --- | --- | --- | --- |",
+    ]
+    for artifact in artifacts:
+        lines.append(
+            f"| `{artifact.html_file}` | `{artifact.screenshot_file}` | `{artifact.baseline_status}` | {escape_table_text(artifact.diff_message)} |"
+        )
+    diff_path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def filter_html_files(html_files: Sequence[Path], args: argparse.Namespace) -> list[Path]:
@@ -938,6 +1150,7 @@ def render_report(
     backend_status: dict[str, str],
     checks: Sequence[VisualCheck],
     html_files: Sequence[Path],
+    screenshot_artifacts: Sequence[ScreenshotArtifact],
 ) -> str:
     """Сформировать Markdown-отчет visual regression."""
     counts = {
@@ -988,6 +1201,30 @@ def render_report(
             "- Fallback static HTML inspection проверяет структуру Plotly/HTML, но не заменяет визуальный просмотр графика.",
             "- Проверка наложения подписей без screenshot backend является эвристической.",
             "- Полноценное сравнение контрольных зон будет доступно после подключения screenshot backend.",
+        ]
+    )
+    lines.extend(
+        [
+            "",
+            "## Screenshot artifacts",
+            "",
+            f"- Screenshot artifacts count: `{len(screenshot_artifacts)}`",
+            f"- Screenshot manifest directory: `{VISUAL_REGRESSION_REPORTS_DIR.relative_to(config.PROJECT_ROOT).as_posix()}`",
+            f"- Diff report directory: `{VISUAL_REGRESSION_DIFFS_DIR.relative_to(config.PROJECT_ROOT).as_posix()}`",
+            "",
+            "| HTML | Screenshot | Baseline status | SHA256 |",
+            "| --- | --- | --- | --- |",
+        ]
+    )
+    for artifact in screenshot_artifacts:
+        lines.append(
+            f"| `{artifact.html_file}` | `{artifact.screenshot_file}` | `{artifact.baseline_status}` | `{artifact.sha256}` |"
+        )
+    lines.extend(
+        [
+            "",
+            "Screenshot PNG, manifest and diff report files are generated outputs and must not be committed.",
+            "If baseline screenshots are absent, the diff report records `missing_baseline` instead of failing the run.",
         ]
     )
     return "\n".join(lines)

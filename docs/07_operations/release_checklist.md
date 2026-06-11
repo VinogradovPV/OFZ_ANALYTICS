@@ -81,7 +81,10 @@ ofz-run --all --report-date 2026-01-01 --retrospective-years 4 --period-type yea
 - [ ] `.\.venv\Scripts\python.exe scripts\regression_tests.py` OK.
 - [ ] `.\.venv\Scripts\python.exe scripts\anomaly_tests.py` OK or warnings documented.
 - [ ] `.\.venv\Scripts\python.exe scripts\html_chart_qa.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` OK.
-- [ ] `.\.venv\Scripts\python.exe scripts\visual_regression.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` OK.
+- [ ] `.\.venv\Scripts\python.exe scripts\visual_regression.py --mode fallback --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` OK.
+- [ ] `.\.venv\Scripts\python.exe scripts\visual_regression.py --mode auto --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` OK.
+- [ ] If Playwright browser is installed, `.\.venv\Scripts\python.exe scripts\visual_regression.py --mode screenshot --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` OK.
+- [ ] Screenshot artifacts under `outputs/reports/visual_regression/` are treated as generated outputs and are not staged.
 - [ ] `ofz-quality --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` OK.
 - [ ] `ofz-quality --full --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` OK for release.
 

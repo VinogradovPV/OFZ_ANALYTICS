@@ -732,3 +732,71 @@ Level 1 / UI source only.
 ### 8. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап после закрытия Word launcher gap: `P2.7 Screenshot visual regression backend`.
+
+## P2.7 - Screenshot visual regression backend
+
+Дата: 2026-06-11.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.7 Screenshot visual regression backend`.
+
+### 2. Что изменено
+
+Обновлены:
+
+- `scripts/visual_regression.py`;
+- `requirements-dev.txt`;
+- `pyproject.toml`;
+- `README.md`;
+- `docs/06_quality/visual_regression_backend_decision.md`;
+- `docs/07_operations/release_checklist.md`;
+- `docs/06_quality/manual_checks_log.md`;
+- `docs/00_project/p2_modernization_progress_report.md`.
+
+### 3. Backend decision
+
+Основное решение: Playwright screenshot backend для локальных HTML/Plotly charts.
+
+Fallback static HTML / Plotly JSON inspection сохранен как резервный и контрактный режим.
+
+Поддержанные режимы:
+
+- `--mode fallback`;
+- `--mode screenshot`;
+- `--mode auto`.
+
+`auto` сначала пытается использовать Playwright, а если backend или browser binaries недоступны, явно фиксирует warning и переходит в fallback.
+
+### 4. Generated artifacts
+
+Screenshot backend пишет generated outputs:
+
+- `outputs/reports/visual_regression/screenshots/<run_id>/*.png`;
+- `outputs/reports/visual_regression/screenshot_manifest_*.json`;
+- `outputs/reports/visual_regression/diffs/screenshot_diff_report_*.md`.
+
+Эти файлы не коммитятся.
+
+### 5. Проверочный уровень
+
+Level 3 initially. Level 5 only after backend stabilization and explicit full-gate trigger.
+
+### 6. Какие проверки выполнены
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\visual_regression.py`: OK.
+- `.\.venv\Scripts\python.exe scripts\visual_regression.py --mode fallback --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `.\.venv\Scripts\python.exe scripts\visual_regression.py --mode auto --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK, with documented Playwright-unavailable warning and fallback.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- Pylance missing-import issue for `playwright.sync_api`: fixed by replacing direct optional imports with dynamic `importlib.import_module`.
+
+### 7. Какие warnings documented
+
+- Playwright is not installed in the current `.venv`; `--mode auto` uses fallback and records a warning.
+- Screenshot mode requires `requirements-dev.txt` plus `python -m playwright install chromium`.
+- Screenshot PNG/manifest/diff outputs are generated artifacts and must not be committed.
+- Missing baseline screenshots are recorded as `missing_baseline`, not as a failure during backend stabilization.
+
+### 8. Следующий рекомендуемый P2-этап
+
+После завершения P2.7 и стабилизации проверок: `P2.8 CI / GitHub Actions`.

@@ -4,8 +4,8 @@
 
 ## Режим
 
-- Screenshot/backend mode: `fallback_static_html`
-- Комментарий: Screenshot backend не настроен; выполнен fallback static HTML / Plotly JSON inspection.
+- Screenshot/backend mode: `auto_fallback_static_html`
+- Комментарий: visual_regression_mode=auto; screenshot backend unavailable, fallback used: Python package 'playwright' is not installed
 - HTML-файлов в проверке: `50`
 - `report_date`: `2026-05-01`
 - `period_type`: `month`
@@ -14,15 +14,17 @@
 
 ## Сводка
 
-- OK: `1053`
-- Warnings: `0`
+- OK: `1054`
+- Warnings: `1`
 - Failures: `0`
 
 ## Проверки
 
 | Файл | Проверка | Статус | Сообщение |
 | --- | --- | --- | --- |
-| `-` | `screenshot_backend` | `ok` | Screenshot backend не настроен; выполнен fallback static HTML / Plotly JSON inspection. |
+| `-` | `visual_regression_mode` | `ok` | visual_regression_mode=auto; screenshot backend unavailable, fallback used: Python package 'playwright' is not installed |
+| `-` | `screenshot_backend` | `warning` | Playwright unavailable; fallback used: Python package 'playwright' is not installed |
+| `-` | `screenshot_backend` | `ok` | visual_regression_mode=auto; screenshot backend unavailable, fallback used: Python package 'playwright' is not installed |
 | `-` | `html_files_exist` | `ok` | Найдено HTML-файлов: 50. |
 | `-` | `yield_vs_discount_exists` | `ok` | Найдено yield_vs_discount HTML: 3. |
 | `monthly_bid_to_cover_month_cumulative_2026-05-01_retrospective_4.html` | `trace_types` | `ok` | scatter |
@@ -1086,3 +1088,15 @@
 - Fallback static HTML inspection проверяет структуру Plotly/HTML, но не заменяет визуальный просмотр графика.
 - Проверка наложения подписей без screenshot backend является эвристической.
 - Полноценное сравнение контрольных зон будет доступно после подключения screenshot backend.
+
+## Screenshot artifacts
+
+- Screenshot artifacts count: `0`
+- Screenshot manifest directory: `outputs/reports/visual_regression`
+- Diff report directory: `outputs/reports/visual_regression/diffs`
+
+| HTML | Screenshot | Baseline status | SHA256 |
+| --- | --- | --- | --- |
+
+Screenshot PNG, manifest and diff report files are generated outputs and must not be committed.
+If baseline screenshots are absent, the diff report records `missing_baseline` instead of failing the run.

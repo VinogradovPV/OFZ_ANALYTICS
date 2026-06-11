@@ -19,6 +19,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "setuptools>=80,<81",
+    "playwright>=1.45,<2.0",
 ]
 
 [project.scripts]

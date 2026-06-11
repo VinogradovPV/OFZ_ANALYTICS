@@ -3,3 +3,4 @@
 # Additional linters/formatters/screenshot backends are not required yet.
 -r requirements.txt
 setuptools>=80,<81
+playwright>=1.45,<2.0

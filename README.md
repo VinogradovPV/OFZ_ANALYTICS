@@ -402,6 +402,26 @@ Visual regression / fallback HTML inspection:
 .\.venv\Scripts\python.exe scripts\visual_regression.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
+Visual regression modes after P2.7:
+
+```powershell
+# Contract/static inspection only
+.\.venv\Scripts\python.exe scripts\visual_regression.py --mode fallback --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+
+# Try Playwright screenshots, then fallback if unavailable
+.\.venv\Scripts\python.exe scripts\visual_regression.py --mode auto --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+
+# Require screenshot backend
+.\.venv\Scripts\python.exe scripts\visual_regression.py --mode screenshot --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+Playwright screenshot backend is a dev/QA dependency. Install it when screenshot mode is needed:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m playwright install chromium
+```
+
 Anomaly tests:
 
 ```powershell

@@ -324,6 +324,12 @@
 |---|---|---|---|---|
 | 2026-06-11 | Prepared Word VBA launcher assembly source: refreshed `OfzLauncher.bas`, added `frmOfzLauncher.frm`, and added manual `.docm` build instructions. | Level 1 source checks: required `OFZ_*` procedures/functions scanned in `.bas`; required UserForm controls scanned in `.frm`; `.docm`/`releases` staging checks planned before commit. | Source is ready for manual Word import. The module builds only whitelisted CLI commands, blocks delete without `DELETE_OUTPUTS`, blocks release build without `BUILD_RELEASE_BUNDLE`, and logs to `outputs/reports/launcher`. | Word automation was not executed in this environment. `.docm` assembly status is `deferred/manual`; the release artifact must be built in Word under `releases/ui_launcher/` and must not be committed. |
 
+## 2026-06-11 - P2.7 screenshot visual regression backend
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-11 | Added Playwright screenshot backend to `scripts/visual_regression.py` with `--mode fallback`, `--mode screenshot` and `--mode auto`; kept existing static HTML / Plotly JSON fallback. | `.\.venv\Scripts\python.exe -m py_compile scripts\visual_regression.py`; visual regression `--mode fallback`; visual regression `--mode auto`; `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`; Pylance missing-import review. | Passed: py_compile, fallback mode, auto mode and quality gate fast. Screenshot backend opens local HTML, hides Plotly modebar, saves screenshots/manifests/diff reports as generated outputs and writes `visual_regression_mode` to reports. Direct `playwright.sync_api` imports were replaced with dynamic `importlib.import_module` so Playwright remains optional and Pylance does not flag it as a required runtime import. | Playwright is not installed in the current `.venv`, so `--mode auto` records a warning and uses fallback. To enable screenshot mode, install dev dependencies and Chromium via `python -m playwright install chromium`. Missing baseline screenshots are recorded as `missing_baseline`, not as failures during P2.7 stabilization. |
+
 ## 2026-06-09 - P2.1 release bundle automation
 
 | Date | Change | Check | Result | Limitations |
