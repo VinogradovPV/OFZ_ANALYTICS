@@ -132,6 +132,15 @@ Pipeline telemetry:
 
 Each full pipeline run writes telemetry summaries to `outputs/reports/telemetry/telemetry_<run_id>.json` and `.md`. Telemetry records stage durations, artifact counts and sizes, cleanup mode, quality/schema status, Git commit/dirty flag and raw data hashes. These generated telemetry files are not committed and are included in release bundles when present.
 
+Windows UI launcher MVP:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Gui
+```
+
+The default launcher action is a safe smoke check. The GUI mode calls only approved CLI entry points, validates report parameters, writes logs to `outputs/reports/launcher/`, blocks delete cleanup without `DELETE_OUTPUTS`, and blocks release bundle creation without `BUILD_RELEASE_BUNDLE`.
+
 Interactive cleanup pre-flight:
 
 ```powershell

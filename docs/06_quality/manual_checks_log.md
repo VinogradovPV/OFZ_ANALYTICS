@@ -337,3 +337,9 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-11 | Created `docs/07_operations/ui_launcher_contract.md` as the contract for future UI launchers. | Level 0 checks: `git status --short`; `git diff --name-only`; staged generated artifacts filter; `Select-String` for `ofz-build-release-bundle`, `BUILD_RELEASE_BUNDLE`, `DELETE_OUTPUTS`, `release_bundle_plan`, `telemetry`, `docm`, `PowerShell`. | Contract covers CLI-only execution, supported CLI entry points, parameter validation, cleanup safety, release bundle confirmation, launcher logs, prohibited behavior, Word VBA policy and PowerShell GUI policy. | No PowerShell GUI or Word VBA source was created in this stage. `compileall` and quality gates were skipped because this was docs-only and session preflight was already OK. |
+
+## 2026-06-11 - P2.4 PowerShell GUI launcher MVP
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-11 | Added `tools/windows_launcher/ofz_launcher.ps1` and `tools/windows_launcher/README.md` as the Windows UI launcher MVP. | Level 1 checks: `git status --short --branch`; `powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1`; staged generated artifacts filter; `git diff --name-only`. | Launcher smoke passed: environment validation OK, bad date blocked, delete cleanup blocked without `DELETE_OUTPUTS`, release bundle creation blocked without `BUILD_RELEASE_BUNDLE`, cleanup dry-run ran, release bundle dry-run ran, launcher log was created under `outputs/reports/launcher/`. | `compileall` and quality gates were skipped because this was UI source/docs only. Generated launcher logs remain ignored artifacts. P2 prompt v4/v5 files remain untracked until a separate source-prompt decision. |

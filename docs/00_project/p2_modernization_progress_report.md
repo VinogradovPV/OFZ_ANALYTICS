@@ -342,3 +342,82 @@ Push выполняется после commit P2.3.
 ### 11. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: `P2.4 PowerShell GUI launcher MVP`.
+
+## P2.4 - PowerShell GUI launcher MVP
+
+Дата: 2026-06-11.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.4 PowerShell GUI launcher MVP`.
+
+### 2. Что изменено
+
+Созданы:
+
+- `tools/windows_launcher/ofz_launcher.ps1`;
+- `tools/windows_launcher/README.md`.
+
+Обновлены:
+
+- `README.md`;
+- `docs/06_quality/manual_checks_log.md`;
+- `docs/00_project/p2_modernization_progress_report.md`.
+
+Launcher реализован как безопасная оболочка над CLI:
+
+- вызывает только whitelisted CLI entry points;
+- валидирует `project_root`, `.venv`, `pyproject.toml`, `data/raw`, `report_date`, `retrospective_years`, `period_type`, `aggregation_mode` и action;
+- по умолчанию выполняет безопасный smoke-check, а GUI открывает только по `-Gui`;
+- пишет логи в `outputs/reports/launcher/`;
+- блокирует delete cleanup без `DELETE_OUTPUTS`;
+- блокирует release bundle creation без `BUILD_RELEASE_BUNDLE`;
+- не принимает arbitrary shell command input;
+- не создает GitHub release.
+
+### 3. Проверочный уровень
+
+Level 1 / UI source only.
+
+### 4. Какие проверки выполнены
+
+- `git status --short --branch`;
+- `powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1`;
+- staged generated artifacts check;
+- `git diff --name-only`;
+- launcher smoke подтвердил environment validation, bad-date block, delete confirmation block, bundle confirmation block, cleanup dry-run, release bundle dry-run и создание launcher log.
+
+### 5. Какие проверки skipped и почему
+
+- `compileall`: skipped, Python-код не менялся.
+- `ofz-quality --fast`: skipped, pipeline/schema/release/telemetry Python-код не менялся.
+- `ofz-quality --full`: skipped, нет release/final close-out trigger.
+- `gh auth status` и CLI help preflight: skipped повторно, session preflight уже выполнен и зафиксирован.
+
+### 6. Warnings documented
+
+- Smoke launcher создает generated log under `outputs/reports/launcher/`; этот файл игнорируется Git.
+- `prompts/ofz_p2_modernization_system_prompt_v4_cost_aware.md` и `prompts/ofz_p2_modernization_step_by_step_v5_cost_aware.md` остаются untracked source prompt files до отдельного решения.
+
+### 7. Commit
+
+Commit message: `Add Windows UI launcher MVP`.
+
+### 8. Push
+
+Push выполняется после commit P2.4.
+
+### 9. Git status
+
+Фиксируется после commit/push P2.4.
+
+### 10. Подтверждения
+
+- generated outputs not staged: проверить перед commit;
+- releases not staged: проверить перед commit;
+- `data/raw` tracked: ранее подтверждено, не менялось;
+- CLI entry points still work: session preflight OK; launcher вызывает entry points через `.venv\Scripts`.
+
+### 11. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: `P2.5 Word VBA launcher spec and source`.
