@@ -307,6 +307,45 @@ Fallback:
 
 Bundle creates `release_manifest.json` and `release_manifest.md` under ignored `releases/`. Manifest records Git commit, branch, dirty flag, raw file hashes, included file checksums, QA/schema status, visual regression mode and warning summary.
 
+## 17.2 UI launcher usage
+
+CLI remains the main supported production interface. UI launchers are convenience wrappers and must call only approved CLI entry points:
+
+- `ofz-run`;
+- `ofz-interactive`;
+- `ofz-quality`;
+- `ofz-clean-outputs`;
+- `ofz-schema`;
+- `ofz-build-release-bundle`.
+
+PowerShell GUI launcher is the recommended Windows UI MVP:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Gui
+```
+
+Word VBA launcher is optional. Use it only as a controlled launcher source and import it into a trusted document manually when needed:
+
+- `.bas` and `.frm` are source artifacts and may be tracked in Git;
+- `.docm` is a release artifact unless explicitly approved by artifact policy;
+- macro security and trusted location setup must be checked manually.
+
+Safety gates are the same for all UI launchers:
+
+- delete cleanup requires `DELETE_OUTPUTS`;
+- release bundle creation requires `BUILD_RELEASE_BUNDLE`;
+- arbitrary shell commands are not accepted;
+- release bundle remains an external artifact under ignored `releases/`.
+
+Launcher logs are generated outputs:
+
+```text
+outputs/reports/launcher/launcher_run_<timestamp>.log
+```
+
+UI launchers do not replace quality gate. Before release, run the checklist QA commands directly through CLI or through an explicitly selected launcher action. Do not run fast and full quality gates in parallel.
+
 ## 18. Docs cleanup status
 
 Физическое архивирование docs отложено.

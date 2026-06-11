@@ -31,6 +31,17 @@
 - [ ] `ofz-schema --help` OK after `.venv` activation, or `.\.venv\Scripts\ofz-schema.exe --help` OK.
 - [ ] `ofz-build-release-bundle --help` OK after `.venv` activation, or `.\.venv\Scripts\ofz-build-release-bundle.exe --help` OK.
 
+## UI Launchers
+
+- [ ] CLI remains the main supported production interface.
+- [ ] PowerShell GUI launcher smoke OK: `powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1`.
+- [ ] PowerShell GUI launcher is treated as the recommended Windows UI MVP, not as a replacement for CLI.
+- [ ] Word VBA launcher is optional.
+- [ ] `.ps1`, `.bas` and `.frm` files are treated as source artifacts.
+- [ ] `.docm` files are treated as release artifacts unless explicitly approved by artifact policy.
+- [ ] Launcher logs under `outputs/reports/launcher/` are treated as generated outputs.
+- [ ] UI launcher did not skip or replace required quality gate checks.
+
 ## Data
 
 - [ ] `data/raw` tracked in Git.
@@ -82,6 +93,7 @@ ofz-run --all --report-date 2026-01-01 --retrospective-years 4 --period-type yea
 - [ ] Release bundle includes QA reports.
 - [ ] Release bundle includes summaries.
 - [ ] Generated outputs are not committed to Git.
+- [ ] Release bundle remains an external artifact under ignored `releases/`.
 
 ## Documentation And Cleanup Decisions
 

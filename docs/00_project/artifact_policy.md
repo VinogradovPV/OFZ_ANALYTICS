@@ -1,87 +1,87 @@
-# Production artifact policy
+﻿# Production artifact policy
 
-Дата: 2026-06-04.
+Р”Р°С‚Р°: 2026-06-04.
 
-Документ фиксирует, какие файлы проекта OFZ_ANALYTICS считаются исходниками, какие являются воспроизводимыми build artifacts, а какие нужно хранить как release/audit artifacts. На этом этапе файлы не удаляются и не перемещаются.
+Р”РѕРєСѓРјРµРЅС‚ С„РёРєСЃРёСЂСѓРµС‚, РєР°РєРёРµ С„Р°Р№Р»С‹ РїСЂРѕРµРєС‚Р° OFZ_ANALYTICS СЃС‡РёС‚Р°СЋС‚СЃСЏ РёСЃС…РѕРґРЅРёРєР°РјРё, РєР°РєРёРµ СЏРІР»СЏСЋС‚СЃСЏ РІРѕСЃРїСЂРѕРёР·РІРѕРґРёРјС‹РјРё build artifacts, Р° РєР°РєРёРµ РЅСѓР¶РЅРѕ С…СЂР°РЅРёС‚СЊ РєР°Рє release/audit artifacts. РќР° СЌС‚РѕРј СЌС‚Р°РїРµ С„Р°Р№Р»С‹ РЅРµ СѓРґР°Р»СЏСЋС‚СЃСЏ Рё РЅРµ РїРµСЂРµРјРµС‰Р°СЋС‚СЃСЏ.
 
-## Категории артефактов
+## РљР°С‚РµРіРѕСЂРёРё Р°СЂС‚РµС„Р°РєС‚РѕРІ
 
-| Категория | Примеры | Хранить в git | Пересоздается pipeline | Release artifact | Локальное хранение | Правило архивации |
+| РљР°С‚РµРіРѕСЂРёСЏ | РџСЂРёРјРµСЂС‹ | РҐСЂР°РЅРёС‚СЊ РІ git | РџРµСЂРµСЃРѕР·РґР°РµС‚СЃСЏ pipeline | Release artifact | Р›РѕРєР°Р»СЊРЅРѕРµ С…СЂР°РЅРµРЅРёРµ | РџСЂР°РІРёР»Рѕ Р°СЂС…РёРІР°С†РёРё |
 |---|---|---:|---:|---:|---|---|
-| Source code | `scripts/*.py`, `scripts/maintenance/*.py`, `scripts/README.md` | Да | Нет | Нет | Постоянно | Не архивировать автоматически; устаревшие версии переносить только через отдельный migration/cleanup script. |
-| Configuration | `requirements.txt`, future `.gitignore`, настройки запуска без секретов | Да | Нет | Нет | Постоянно | Изменения фиксировать в changelog/manual checks; секреты не хранить в репозитории. |
-| Stable documentation | `README.md`, `docs/index.md`, `docs/00_project/`, `docs/01_methodology/`, `docs/02_data_pipeline/`, `docs/03_analytics/`, `docs/04_visualization/`, `docs/05_dashboard/`, `docs/06_quality/` | Да | Частично | Нет | Постоянно | Устаревшие документы переносить в `docs/90_archive/` через maintenance-скрипты. |
-| Generated reports | `outputs/reports/*.md`, `outputs/reports/*.xlsx`, analytical/monthly/revenue reports | По решению релиза | Да | Да, для утвержденных запусков | 30-90 дней локально для рабочих запусков | После утверждения релиза сохранять в release bundle; старые рабочие результаты переносить в `outputs/archive/`. |
-| Chart HTML | `outputs/charts/**/*.html` | По решению релиза; не игнорировать до финального решения | Да | Да, для утвержденных запусков | 30 дней локально для рабочих запусков; дольше для релизов | Тяжелые HTML складывать в release artifact или архивировать; не удалять без `--dry-run` и `--archive`. |
-| Chart data CSV | `outputs/exports/chart_data/**/*.csv` | По решению релиза; не игнорировать до финального решения | Да | Да, если нужен audit/reproducibility package | 30-90 дней локально | Архивировать вместе с соответствующими HTML, чтобы график можно было проверить без пересчета. |
-| Dashboard exports | `outputs/dashboards/**/*.csv`, semantic model v2 | По решению релиза | Да | Да | 30-90 дней локально; релизные версии хранить дольше | Архивировать по run_id/report_date; не смешивать разные `aggregation_mode`. |
-| Run manifests | `outputs/reports/run_manifest_*.json`, `outputs/reports/run_manifest_*.md`, `data/processed/run_manifest_latest.json` | Latest можно не хранить; релизные manifests хранить как audit artifact | Да | Да | Постоянно для релизов; 90 дней для рабочих запусков | Релизные manifests не удалять; рабочие переносить в archive после устаревания. |
-| Logs | `logs/*.log`, runtime traces | Нет | Да | Нет, кроме инцидентов | 14-30 дней локально | Ротировать/архивировать при инцидентах; обычные logs можно исключить из git. |
-| Archive | `outputs/archive/`, `docs/90_archive/` | Docs archive можно хранить; outputs archive обычно не хранить | Нет | Только если архив является частью релиза | По политике релиза | Удаление только после `--dry-run`, затем `--archive`, затем `--delete-archived` при явном разрешении. |
+| Source code | `scripts/*.py`, `scripts/maintenance/*.py`, `scripts/README.md` | Р”Р° | РќРµС‚ | РќРµС‚ | РџРѕСЃС‚РѕСЏРЅРЅРѕ | РќРµ Р°СЂС…РёРІРёСЂРѕРІР°С‚СЊ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё; СѓСЃС‚Р°СЂРµРІС€РёРµ РІРµСЂСЃРёРё РїРµСЂРµРЅРѕСЃРёС‚СЊ С‚РѕР»СЊРєРѕ С‡РµСЂРµР· РѕС‚РґРµР»СЊРЅС‹Р№ migration/cleanup script. |
+| Configuration | `requirements.txt`, future `.gitignore`, РЅР°СЃС‚СЂРѕР№РєРё Р·Р°РїСѓСЃРєР° Р±РµР· СЃРµРєСЂРµС‚РѕРІ | Р”Р° | РќРµС‚ | РќРµС‚ | РџРѕСЃС‚РѕСЏРЅРЅРѕ | РР·РјРµРЅРµРЅРёСЏ С„РёРєСЃРёСЂРѕРІР°С‚СЊ РІ changelog/manual checks; СЃРµРєСЂРµС‚С‹ РЅРµ С…СЂР°РЅРёС‚СЊ РІ СЂРµРїРѕР·РёС‚РѕСЂРёРё. |
+| Stable documentation | `README.md`, `docs/index.md`, `docs/00_project/`, `docs/01_methodology/`, `docs/02_data_pipeline/`, `docs/03_analytics/`, `docs/04_visualization/`, `docs/05_dashboard/`, `docs/06_quality/` | Р”Р° | Р§Р°СЃС‚РёС‡РЅРѕ | РќРµС‚ | РџРѕСЃС‚РѕСЏРЅРЅРѕ | РЈСЃС‚Р°СЂРµРІС€РёРµ РґРѕРєСѓРјРµРЅС‚С‹ РїРµСЂРµРЅРѕСЃРёС‚СЊ РІ `docs/90_archive/` С‡РµСЂРµР· maintenance-СЃРєСЂРёРїС‚С‹. |
+| Generated reports | `outputs/reports/*.md`, `outputs/reports/*.xlsx`, analytical/monthly/revenue reports | РџРѕ СЂРµС€РµРЅРёСЋ СЂРµР»РёР·Р° | Р”Р° | Р”Р°, РґР»СЏ СѓС‚РІРµСЂР¶РґРµРЅРЅС‹С… Р·Р°РїСѓСЃРєРѕРІ | 30-90 РґРЅРµР№ Р»РѕРєР°Р»СЊРЅРѕ РґР»СЏ СЂР°Р±РѕС‡РёС… Р·Р°РїСѓСЃРєРѕРІ | РџРѕСЃР»Рµ СѓС‚РІРµСЂР¶РґРµРЅРёСЏ СЂРµР»РёР·Р° СЃРѕС…СЂР°РЅСЏС‚СЊ РІ release bundle; СЃС‚Р°СЂС‹Рµ СЂР°Р±РѕС‡РёРµ СЂРµР·СѓР»СЊС‚Р°С‚С‹ РїРµСЂРµРЅРѕСЃРёС‚СЊ РІ `outputs/archive/`. |
+| Chart HTML | `outputs/charts/**/*.html` | РџРѕ СЂРµС€РµРЅРёСЋ СЂРµР»РёР·Р°; РЅРµ РёРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ РґРѕ С„РёРЅР°Р»СЊРЅРѕРіРѕ СЂРµС€РµРЅРёСЏ | Р”Р° | Р”Р°, РґР»СЏ СѓС‚РІРµСЂР¶РґРµРЅРЅС‹С… Р·Р°РїСѓСЃРєРѕРІ | 30 РґРЅРµР№ Р»РѕРєР°Р»СЊРЅРѕ РґР»СЏ СЂР°Р±РѕС‡РёС… Р·Р°РїСѓСЃРєРѕРІ; РґРѕР»СЊС€Рµ РґР»СЏ СЂРµР»РёР·РѕРІ | РўСЏР¶РµР»С‹Рµ HTML СЃРєР»Р°РґС‹РІР°С‚СЊ РІ release artifact РёР»Рё Р°СЂС…РёРІРёСЂРѕРІР°С‚СЊ; РЅРµ СѓРґР°Р»СЏС‚СЊ Р±РµР· `--dry-run` Рё `--archive`. |
+| Chart data CSV | `outputs/exports/chart_data/**/*.csv` | РџРѕ СЂРµС€РµРЅРёСЋ СЂРµР»РёР·Р°; РЅРµ РёРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ РґРѕ С„РёРЅР°Р»СЊРЅРѕРіРѕ СЂРµС€РµРЅРёСЏ | Р”Р° | Р”Р°, РµСЃР»Рё РЅСѓР¶РµРЅ audit/reproducibility package | 30-90 РґРЅРµР№ Р»РѕРєР°Р»СЊРЅРѕ | РђСЂС…РёРІРёСЂРѕРІР°С‚СЊ РІРјРµСЃС‚Рµ СЃ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёРјРё HTML, С‡С‚РѕР±С‹ РіСЂР°С„РёРє РјРѕР¶РЅРѕ Р±С‹Р»Рѕ РїСЂРѕРІРµСЂРёС‚СЊ Р±РµР· РїРµСЂРµСЃС‡РµС‚Р°. |
+| Dashboard exports | `outputs/dashboards/**/*.csv`, semantic model v2 | РџРѕ СЂРµС€РµРЅРёСЋ СЂРµР»РёР·Р° | Р”Р° | Р”Р° | 30-90 РґРЅРµР№ Р»РѕРєР°Р»СЊРЅРѕ; СЂРµР»РёР·РЅС‹Рµ РІРµСЂСЃРёРё С…СЂР°РЅРёС‚СЊ РґРѕР»СЊС€Рµ | РђСЂС…РёРІРёСЂРѕРІР°С‚СЊ РїРѕ run_id/report_date; РЅРµ СЃРјРµС€РёРІР°С‚СЊ СЂР°Р·РЅС‹Рµ `aggregation_mode`. |
+| Run manifests | `outputs/reports/run_manifest_*.json`, `outputs/reports/run_manifest_*.md`, `data/processed/run_manifest_latest.json` | Latest РјРѕР¶РЅРѕ РЅРµ С…СЂР°РЅРёС‚СЊ; СЂРµР»РёР·РЅС‹Рµ manifests С…СЂР°РЅРёС‚СЊ РєР°Рє audit artifact | Р”Р° | Р”Р° | РџРѕСЃС‚РѕСЏРЅРЅРѕ РґР»СЏ СЂРµР»РёР·РѕРІ; 90 РґРЅРµР№ РґР»СЏ СЂР°Р±РѕС‡РёС… Р·Р°РїСѓСЃРєРѕРІ | Р РµР»РёР·РЅС‹Рµ manifests РЅРµ СѓРґР°Р»СЏС‚СЊ; СЂР°Р±РѕС‡РёРµ РїРµСЂРµРЅРѕСЃРёС‚СЊ РІ archive РїРѕСЃР»Рµ СѓСЃС‚Р°СЂРµРІР°РЅРёСЏ. |
+| Logs | `logs/*.log`, runtime traces | РќРµС‚ | Р”Р° | РќРµС‚, РєСЂРѕРјРµ РёРЅС†РёРґРµРЅС‚РѕРІ | 14-30 РґРЅРµР№ Р»РѕРєР°Р»СЊРЅРѕ | Р РѕС‚РёСЂРѕРІР°С‚СЊ/Р°СЂС…РёРІРёСЂРѕРІР°С‚СЊ РїСЂРё РёРЅС†РёРґРµРЅС‚Р°С…; РѕР±С‹С‡РЅС‹Рµ logs РјРѕР¶РЅРѕ РёСЃРєР»СЋС‡РёС‚СЊ РёР· git. |
+| Archive | `outputs/archive/`, `docs/90_archive/` | Docs archive РјРѕР¶РЅРѕ С…СЂР°РЅРёС‚СЊ; outputs archive РѕР±С‹С‡РЅРѕ РЅРµ С…СЂР°РЅРёС‚СЊ | РќРµС‚ | РўРѕР»СЊРєРѕ РµСЃР»Рё Р°СЂС…РёРІ СЏРІР»СЏРµС‚СЃСЏ С‡Р°СЃС‚СЊСЋ СЂРµР»РёР·Р° | РџРѕ РїРѕР»РёС‚РёРєРµ СЂРµР»РёР·Р° | РЈРґР°Р»РµРЅРёРµ С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ `--dry-run`, Р·Р°С‚РµРј `--archive`, Р·Р°С‚РµРј `--delete-archived` РїСЂРё СЏРІРЅРѕРј СЂР°Р·СЂРµС€РµРЅРёРё. |
 
-## Специальные правила outputs
+## РЎРїРµС†РёР°Р»СЊРЅС‹Рµ РїСЂР°РІРёР»Р° outputs
 
 ### `outputs/charts/`
 
-`outputs/charts/` содержит тяжелые HTML artifacts. Baseline перед production-cleanup показывал около 97 HTML-файлов и примерно 447 MB в `outputs/charts/`.
+`outputs/charts/` СЃРѕРґРµСЂР¶РёС‚ С‚СЏР¶РµР»С‹Рµ HTML artifacts. Baseline РїРµСЂРµРґ production-cleanup РїРѕРєР°Р·С‹РІР°Р» РѕРєРѕР»Рѕ 97 HTML-С„Р°Р№Р»РѕРІ Рё РїСЂРёРјРµСЂРЅРѕ 447 MB РІ `outputs/charts/`.
 
-Правило:
+РџСЂР°РІРёР»Рѕ:
 
-- HTML-графики считаются build artifacts, потому что пересоздаются pipeline.
-- Для рабочих запусков HTML не обязаны храниться в git.
-- Для релизного запуска HTML должны сохраняться как release artifact вместе с run manifest и chart data CSV.
-- До окончательного решения по релизному процессу не добавлять `outputs/charts/**/*.html` в `.gitignore`.
+- HTML-РіСЂР°С„РёРєРё СЃС‡РёС‚Р°СЋС‚СЃСЏ build artifacts, РїРѕС‚РѕРјСѓ С‡С‚Рѕ РїРµСЂРµСЃРѕР·РґР°СЋС‚СЃСЏ pipeline.
+- Р”Р»СЏ СЂР°Р±РѕС‡РёС… Р·Р°РїСѓСЃРєРѕРІ HTML РЅРµ РѕР±СЏР·Р°РЅС‹ С…СЂР°РЅРёС‚СЊСЃСЏ РІ git.
+- Р”Р»СЏ СЂРµР»РёР·РЅРѕРіРѕ Р·Р°РїСѓСЃРєР° HTML РґРѕР»Р¶РЅС‹ СЃРѕС…СЂР°РЅСЏС‚СЊСЃСЏ РєР°Рє release artifact РІРјРµСЃС‚Рµ СЃ run manifest Рё chart data CSV.
+- Р”Рѕ РѕРєРѕРЅС‡Р°С‚РµР»СЊРЅРѕРіРѕ СЂРµС€РµРЅРёСЏ РїРѕ СЂРµР»РёР·РЅРѕРјСѓ РїСЂРѕС†РµСЃСЃСѓ РЅРµ РґРѕР±Р°РІР»СЏС‚СЊ `outputs/charts/**/*.html` РІ `.gitignore`.
 
 ### `outputs/exports/chart_data/`
 
-`outputs/exports/chart_data/` содержит воспроизводимые CSV-основы графиков.
+`outputs/exports/chart_data/` СЃРѕРґРµСЂР¶РёС‚ РІРѕСЃРїСЂРѕРёР·РІРѕРґРёРјС‹Рµ CSV-РѕСЃРЅРѕРІС‹ РіСЂР°С„РёРєРѕРІ.
 
-Правило:
+РџСЂР°РІРёР»Рѕ:
 
-- CSV-основы считаются build artifacts, но важны для аудита графиков.
-- Для production release рекомендуется хранить их как release artifact вместе с HTML-графиками.
-- Все поля `*_volume_bln` должны сопровождаться unit-полями согласно `docs/02_data_contracts/chart_data_contract.md`.
-- До окончательного решения по релизному процессу не добавлять `outputs/exports/**/*.csv` в `.gitignore`.
+- CSV-РѕСЃРЅРѕРІС‹ СЃС‡РёС‚Р°СЋС‚СЃСЏ build artifacts, РЅРѕ РІР°Р¶РЅС‹ РґР»СЏ Р°СѓРґРёС‚Р° РіСЂР°С„РёРєРѕРІ.
+- Р”Р»СЏ production release СЂРµРєРѕРјРµРЅРґСѓРµС‚СЃСЏ С…СЂР°РЅРёС‚СЊ РёС… РєР°Рє release artifact РІРјРµСЃС‚Рµ СЃ HTML-РіСЂР°С„РёРєР°РјРё.
+- Р’СЃРµ РїРѕР»СЏ `*_volume_bln` РґРѕР»Р¶РЅС‹ СЃРѕРїСЂРѕРІРѕР¶РґР°С‚СЊСЃСЏ unit-РїРѕР»СЏРјРё СЃРѕРіР»Р°СЃРЅРѕ `docs/02_data_contracts/chart_data_contract.md`.
+- Р”Рѕ РѕРєРѕРЅС‡Р°С‚РµР»СЊРЅРѕРіРѕ СЂРµС€РµРЅРёСЏ РїРѕ СЂРµР»РёР·РЅРѕРјСѓ РїСЂРѕС†РµСЃСЃСѓ РЅРµ РґРѕР±Р°РІР»СЏС‚СЊ `outputs/exports/**/*.csv` РІ `.gitignore`.
 
 ### `outputs/dashboards/`
 
-`outputs/dashboards/` содержит BI-ready exports, semantic model v2 и словари.
+`outputs/dashboards/` СЃРѕРґРµСЂР¶РёС‚ BI-ready exports, semantic model v2 Рё СЃР»РѕРІР°СЂРё.
 
-Правило:
+РџСЂР°РІРёР»Рѕ:
 
-- Dashboard exports считаются release artifacts, если запуск утвержден как отчетный.
-- Для рабочих прогонов они пересоздаются pipeline и могут архивироваться по run_id/report_date.
-- Semantic model v2 и data dictionaries должны храниться вместе с релизным dashboard package.
+- Dashboard exports СЃС‡РёС‚Р°СЋС‚СЃСЏ release artifacts, РµСЃР»Рё Р·Р°РїСѓСЃРє СѓС‚РІРµСЂР¶РґРµРЅ РєР°Рє РѕС‚С‡РµС‚РЅС‹Р№.
+- Р”Р»СЏ СЂР°Р±РѕС‡РёС… РїСЂРѕРіРѕРЅРѕРІ РѕРЅРё РїРµСЂРµСЃРѕР·РґР°СЋС‚СЃСЏ pipeline Рё РјРѕРіСѓС‚ Р°СЂС…РёРІРёСЂРѕРІР°С‚СЊСЃСЏ РїРѕ run_id/report_date.
+- Semantic model v2 Рё data dictionaries РґРѕР»Р¶РЅС‹ С…СЂР°РЅРёС‚СЊСЃСЏ РІРјРµСЃС‚Рµ СЃ СЂРµР»РёР·РЅС‹Рј dashboard package.
 
 ### `outputs/reports/run_manifests/`
 
-Текущая структура проекта сохраняет run manifests в `outputs/reports/` и latest manifest в `data/processed/run_manifest_latest.json`. Логическая production-категория: `outputs/reports/run_manifests/`.
+РўРµРєСѓС‰Р°СЏ СЃС‚СЂСѓРєС‚СѓСЂР° РїСЂРѕРµРєС‚Р° СЃРѕС…СЂР°РЅСЏРµС‚ run manifests РІ `outputs/reports/` Рё latest manifest РІ `data/processed/run_manifest_latest.json`. Р›РѕРіРёС‡РµСЃРєР°СЏ production-РєР°С‚РµРіРѕСЂРёСЏ: `outputs/reports/run_manifests/`.
 
-Правило:
+РџСЂР°РІРёР»Рѕ:
 
-- Run manifest является audit trail.
-- Релизный manifest хранить как release artifact.
-- `run_manifest_latest.json` является рабочим указателем и может пересоздаваться.
-- При будущей реорганизации допустимо выделить физическую папку `outputs/reports/run_manifests/`, но только через отдельный dry-run/apply maintenance-блок.
+- Run manifest СЏРІР»СЏРµС‚СЃСЏ audit trail.
+- Р РµР»РёР·РЅС‹Р№ manifest С…СЂР°РЅРёС‚СЊ РєР°Рє release artifact.
+- `run_manifest_latest.json` СЏРІР»СЏРµС‚СЃСЏ СЂР°Р±РѕС‡РёРј СѓРєР°Р·Р°С‚РµР»РµРј Рё РјРѕР¶РµС‚ РїРµСЂРµСЃРѕР·РґР°РІР°С‚СЊСЃСЏ.
+- РџСЂРё Р±СѓРґСѓС‰РµР№ СЂРµРѕСЂРіР°РЅРёР·Р°С†РёРё РґРѕРїСѓСЃС‚РёРјРѕ РІС‹РґРµР»РёС‚СЊ С„РёР·РёС‡РµСЃРєСѓСЋ РїР°РїРєСѓ `outputs/reports/run_manifests/`, РЅРѕ С‚РѕР»СЊРєРѕ С‡РµСЂРµР· РѕС‚РґРµР»СЊРЅС‹Р№ dry-run/apply maintenance-Р±Р»РѕРє.
 
 ## Release bundle
 
-Минимальный production release bundle должен включать:
+РњРёРЅРёРјР°Р»СЊРЅС‹Р№ production release bundle РґРѕР»Р¶РµРЅ РІРєР»СЋС‡Р°С‚СЊ:
 
-- run manifest (`json` и `md`);
-- параметры запуска (`report_date`, `period_type`, `aggregation_mode`, `retrospective_years`);
+- run manifest (`json` Рё `md`);
+- РїР°СЂР°РјРµС‚СЂС‹ Р·Р°РїСѓСЃРєР° (`report_date`, `period_type`, `aggregation_mode`, `retrospective_years`);
 - analytical/monthly/revenue reports;
-- dashboard exports и semantic model v2;
-- HTML-графики;
+- dashboard exports Рё semantic model v2;
+- HTML-РіСЂР°С„РёРєРё;
 - chart data CSV;
 - quality gate report;
-- visual regression report или fallback inspection report;
+- visual regression report РёР»Рё fallback inspection report;
 - schema validation report;
-- anomaly/regression/smoke test reports, если они запускались.
+- anomaly/regression/smoke test reports, РµСЃР»Рё РѕРЅРё Р·Р°РїСѓСЃРєР°Р»РёСЃСЊ.
 
-## Рекомендуемый `.gitignore`
+## Р РµРєРѕРјРµРЅРґСѓРµРјС‹Р№ `.gitignore`
 
-`.gitignore` в проекте на момент создания policy отсутствует. Ниже приведен рекомендуемый шаблон. Не выполнять `git init` и не создавать `.gitignore` без отдельного подтверждения.
+`.gitignore` РІ РїСЂРѕРµРєС‚Рµ РЅР° РјРѕРјРµРЅС‚ СЃРѕР·РґР°РЅРёСЏ policy РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚. РќРёР¶Рµ РїСЂРёРІРµРґРµРЅ СЂРµРєРѕРјРµРЅРґСѓРµРјС‹Р№ С€Р°Р±Р»РѕРЅ. РќРµ РІС‹РїРѕР»РЅСЏС‚СЊ `git init` Рё РЅРµ СЃРѕР·РґР°РІР°С‚СЊ `.gitignore` Р±РµР· РѕС‚РґРµР»СЊРЅРѕРіРѕ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ.
 
 ```gitignore
 .venv/
@@ -101,103 +101,103 @@ outputs/cache/
 
 ## Production cleanup addendum
 
-Этот раздел уточняет правила полной очистки `outputs/` перед production-перегенерацией.
+Р­С‚РѕС‚ СЂР°Р·РґРµР» СѓС‚РѕС‡РЅСЏРµС‚ РїСЂР°РІРёР»Р° РїРѕР»РЅРѕР№ РѕС‡РёСЃС‚РєРё `outputs/` РїРµСЂРµРґ production-РїРµСЂРµРіРµРЅРµСЂР°С†РёРµР№.
 
 ### Working, release, archive and audit outputs
 
-| Состояние | Что это | Git policy | Cleanup policy |
+| РЎРѕСЃС‚РѕСЏРЅРёРµ | Р§С‚Рѕ СЌС‚Рѕ | Git policy | Cleanup policy |
 |---|---|---|---|
-| Working outputs | Текущие результаты локальных прогонов pipeline в `outputs/`. | Обычно не коммитить без решения release process. | Можно очищать перед production-перегенерацией только через `scripts/maintenance/cleanup_outputs.py`. |
-| Release artifacts | Утвержденный набор отчетов, графиков, CSV и dashboard exports для конкретного запуска. | По решению релиза; может храниться вне git как release package. | Не удалять обычным cleanup без отдельного решения. |
-| Archive outputs | Перенесенные старые или рабочие результаты в `outputs/archive/`. | Обычно не хранить в git. | Удаление только после отдельного dry-run/archive/delete протокола. |
-| Audit artifacts | Run manifest, quality gate, schema validation, visual regression, executive summary и data quality summary. | Релизные версии хранить как audit trail. | Релизные audit artifacts не удалять; disposable latest-файлы можно пересоздавать. |
+| Working outputs | РўРµРєСѓС‰РёРµ СЂРµР·СѓР»СЊС‚Р°С‚С‹ Р»РѕРєР°Р»СЊРЅС‹С… РїСЂРѕРіРѕРЅРѕРІ pipeline РІ `outputs/`. | РћР±С‹С‡РЅРѕ РЅРµ РєРѕРјРјРёС‚РёС‚СЊ Р±РµР· СЂРµС€РµРЅРёСЏ release process. | РњРѕР¶РЅРѕ РѕС‡РёС‰Р°С‚СЊ РїРµСЂРµРґ production-РїРµСЂРµРіРµРЅРµСЂР°С†РёРµР№ С‚РѕР»СЊРєРѕ С‡РµСЂРµР· `scripts/maintenance/cleanup_outputs.py`. |
+| Release artifacts | РЈС‚РІРµСЂР¶РґРµРЅРЅС‹Р№ РЅР°Р±РѕСЂ РѕС‚С‡РµС‚РѕРІ, РіСЂР°С„РёРєРѕРІ, CSV Рё dashboard exports РґР»СЏ РєРѕРЅРєСЂРµС‚РЅРѕРіРѕ Р·Р°РїСѓСЃРєР°. | РџРѕ СЂРµС€РµРЅРёСЋ СЂРµР»РёР·Р°; РјРѕР¶РµС‚ С…СЂР°РЅРёС‚СЊСЃСЏ РІРЅРµ git РєР°Рє release package. | РќРµ СѓРґР°Р»СЏС‚СЊ РѕР±С‹С‡РЅС‹Рј cleanup Р±РµР· РѕС‚РґРµР»СЊРЅРѕРіРѕ СЂРµС€РµРЅРёСЏ. |
+| Archive outputs | РџРµСЂРµРЅРµСЃРµРЅРЅС‹Рµ СЃС‚Р°СЂС‹Рµ РёР»Рё СЂР°Р±РѕС‡РёРµ СЂРµР·СѓР»СЊС‚Р°С‚С‹ РІ `outputs/archive/`. | РћР±С‹С‡РЅРѕ РЅРµ С…СЂР°РЅРёС‚СЊ РІ git. | РЈРґР°Р»РµРЅРёРµ С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ РѕС‚РґРµР»СЊРЅРѕРіРѕ dry-run/archive/delete РїСЂРѕС‚РѕРєРѕР»Р°. |
+| Audit artifacts | Run manifest, quality gate, schema validation, visual regression, executive summary Рё data quality summary. | Р РµР»РёР·РЅС‹Рµ РІРµСЂСЃРёРё С…СЂР°РЅРёС‚СЊ РєР°Рє audit trail. | Р РµР»РёР·РЅС‹Рµ audit artifacts РЅРµ СѓРґР°Р»СЏС‚СЊ; disposable latest-С„Р°Р№Р»С‹ РјРѕР¶РЅРѕ РїРµСЂРµСЃРѕР·РґР°РІР°С‚СЊ. |
 
 ### Clean outputs before production run
 
-Перед production-перегенерацией outputs допускается полностью очищать generated artifacts, но только по явному протоколу.
+РџРµСЂРµРґ production-РїРµСЂРµРіРµРЅРµСЂР°С†РёРµР№ outputs РґРѕРїСѓСЃРєР°РµС‚СЃСЏ РїРѕР»РЅРѕСЃС‚СЊСЋ РѕС‡РёС‰Р°С‚СЊ generated artifacts, РЅРѕ С‚РѕР»СЊРєРѕ РїРѕ СЏРІРЅРѕРјСѓ РїСЂРѕС‚РѕРєРѕР»Сѓ.
 
-Разрешенный инструмент:
+Р Р°Р·СЂРµС€РµРЅРЅС‹Р№ РёРЅСЃС‚СЂСѓРјРµРЅС‚:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --dry-run
 ```
 
-Порядок действий:
+РџРѕСЂСЏРґРѕРє РґРµР№СЃС‚РІРёР№:
 
-1. Выполнить `--dry-run` и проверить отчет.
-2. Если текущие результаты могут понадобиться для аудита, сначала создать archive bundle:
+1. Р’С‹РїРѕР»РЅРёС‚СЊ `--dry-run` Рё РїСЂРѕРІРµСЂРёС‚СЊ РѕС‚С‡РµС‚.
+2. Р•СЃР»Рё С‚РµРєСѓС‰РёРµ СЂРµР·СѓР»СЊС‚Р°С‚С‹ РјРѕРіСѓС‚ РїРѕРЅР°РґРѕР±РёС‚СЊСЃСЏ РґР»СЏ Р°СѓРґРёС‚Р°, СЃРЅР°С‡Р°Р»Р° СЃРѕР·РґР°С‚СЊ archive bundle:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --archive-all
 ```
 
-3. Только после проверки archive policy выполнить удаление:
+3. РўРѕР»СЊРєРѕ РїРѕСЃР»Рµ РїСЂРѕРІРµСЂРєРё archive policy РІС‹РїРѕР»РЅРёС‚СЊ СѓРґР°Р»РµРЅРёРµ:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\maintenance\cleanup_outputs.py --delete-all --confirm DELETE_OUTPUTS
 ```
 
-4. После очистки обязательно выполнить production-перегенерацию:
+4. РџРѕСЃР»Рµ РѕС‡РёСЃС‚РєРё РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ РІС‹РїРѕР»РЅРёС‚СЊ production-РїРµСЂРµРіРµРЅРµСЂР°С†РёСЋ:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_pipeline.py --all --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-5. После pipeline обязательно выполнить quality gate:
+5. РџРѕСЃР»Рµ pipeline РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ РІС‹РїРѕР»РЅРёС‚СЊ quality gate:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\quality_gate.py --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-Предупреждение: полная очистка outputs удаляет все generated artifacts, кроме сохраненного archive. Запускать только после dry-run и проверки archive policy.
+РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ: РїРѕР»РЅР°СЏ РѕС‡РёСЃС‚РєР° outputs СѓРґР°Р»СЏРµС‚ РІСЃРµ generated artifacts, РєСЂРѕРјРµ СЃРѕС…СЂР°РЅРµРЅРЅРѕРіРѕ archive. Р—Р°РїСѓСЃРєР°С‚СЊ С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ dry-run Рё РїСЂРѕРІРµСЂРєРё archive policy.
 
 ### Archive bundle before cleanup
 
-Перед полной очисткой outputs, если результаты могут понадобиться для аудита, нужно создать release/work archive bundle.
+РџРµСЂРµРґ РїРѕР»РЅРѕР№ РѕС‡РёСЃС‚РєРѕР№ outputs, РµСЃР»Рё СЂРµР·СѓР»СЊС‚Р°С‚С‹ РјРѕРіСѓС‚ РїРѕРЅР°РґРѕР±РёС‚СЊСЃСЏ РґР»СЏ Р°СѓРґРёС‚Р°, РЅСѓР¶РЅРѕ СЃРѕР·РґР°С‚СЊ release/work archive bundle.
 
-Минимальный состав archive bundle:
+РњРёРЅРёРјР°Р»СЊРЅС‹Р№ СЃРѕСЃС‚Р°РІ archive bundle:
 
-- run manifest `json` и `md`;
+- run manifest `json` Рё `md`;
 - quality gate report;
 - schema validation report;
 - HTML charts;
 - chart data CSV;
 - dashboard exports;
 - executive summary;
-- data quality summary, если есть.
+- data quality summary, РµСЃР»Рё РµСЃС‚СЊ.
 
-Archive bundle должен быть связан с параметрами запуска: `report_date`, `period_type`, `aggregation_mode`, `retrospective_years`, `run_id`.
+Archive bundle РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ СЃРІСЏР·Р°РЅ СЃ РїР°СЂР°РјРµС‚СЂР°РјРё Р·Р°РїСѓСЃРєР°: `report_date`, `period_type`, `aggregation_mode`, `retrospective_years`, `run_id`.
 
 ### Run manifest retention
 
-Run manifest является audit trail.
+Run manifest СЏРІР»СЏРµС‚СЃСЏ audit trail.
 
-Правила:
+РџСЂР°РІРёР»Р°:
 
-- релизные manifests не удалять;
-- `run_manifest_latest.json` можно пересоздавать;
-- если outputs очищаются, текущий manifest должен быть либо заархивирован, либо явно признан disposable в cleanup report;
-- для release bundle manifest является обязательным файлом.
+- СЂРµР»РёР·РЅС‹Рµ manifests РЅРµ СѓРґР°Р»СЏС‚СЊ;
+- `run_manifest_latest.json` РјРѕР¶РЅРѕ РїРµСЂРµСЃРѕР·РґР°РІР°С‚СЊ;
+- РµСЃР»Рё outputs РѕС‡РёС‰Р°СЋС‚СЃСЏ, С‚РµРєСѓС‰РёР№ manifest РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ Р»РёР±Рѕ Р·Р°Р°СЂС…РёРІРёСЂРѕРІР°РЅ, Р»РёР±Рѕ СЏРІРЅРѕ РїСЂРёР·РЅР°РЅ disposable РІ cleanup report;
+- РґР»СЏ release bundle manifest СЏРІР»СЏРµС‚СЃСЏ РѕР±СЏР·Р°С‚РµР»СЊРЅС‹Рј С„Р°Р№Р»РѕРј.
 
 ### `outputs/archive/`
 
-`outputs/archive/` обычно не хранится в git, потому что содержит тяжелые и устаревающие generated artifacts.
+`outputs/archive/` РѕР±С‹С‡РЅРѕ РЅРµ С…СЂР°РЅРёС‚СЃСЏ РІ git, РїРѕС‚РѕРјСѓ С‡С‚Рѕ СЃРѕРґРµСЂР¶РёС‚ С‚СЏР¶РµР»С‹Рµ Рё СѓСЃС‚Р°СЂРµРІР°СЋС‰РёРµ generated artifacts.
 
-Исключение: release archive может храниться как внешний release artifact, если он нужен для аудита или передачи результата.
+РСЃРєР»СЋС‡РµРЅРёРµ: release archive РјРѕР¶РµС‚ С…СЂР°РЅРёС‚СЊСЃСЏ РєР°Рє РІРЅРµС€РЅРёР№ release artifact, РµСЃР»Рё РѕРЅ РЅСѓР¶РµРЅ РґР»СЏ Р°СѓРґРёС‚Р° РёР»Рё РїРµСЂРµРґР°С‡Рё СЂРµР·СѓР»СЊС‚Р°С‚Р°.
 
-`cleanup_outputs.py` не должен удалять archive, созданный в том же запуске. Это защищает сценарий `--archive-all` -> проверка -> последующая очистка working outputs.
+`cleanup_outputs.py` РЅРµ РґРѕР»Р¶РµРЅ СѓРґР°Р»СЏС‚СЊ archive, СЃРѕР·РґР°РЅРЅС‹Р№ РІ С‚РѕРј Р¶Рµ Р·Р°РїСѓСЃРєРµ. Р­С‚Рѕ Р·Р°С‰РёС‰Р°РµС‚ СЃС†РµРЅР°СЂРёР№ `--archive-all` -> РїСЂРѕРІРµСЂРєР° -> РїРѕСЃР»РµРґСѓСЋС‰Р°СЏ РѕС‡РёСЃС‚РєР° working outputs.
 
-Важно: не добавлять `outputs/charts/**/*.html` и `outputs/exports/**/*.csv` в `.gitignore`, пока artifact policy и release process явно не решат, что эти артефакты не коммитятся.
+Р’Р°Р¶РЅРѕ: РЅРµ РґРѕР±Р°РІР»СЏС‚СЊ `outputs/charts/**/*.html` Рё `outputs/exports/**/*.csv` РІ `.gitignore`, РїРѕРєР° artifact policy Рё release process СЏРІРЅРѕ РЅРµ СЂРµС€Р°С‚, С‡С‚Рѕ СЌС‚Рё Р°СЂС‚РµС„Р°РєС‚С‹ РЅРµ РєРѕРјРјРёС‚СЏС‚СЃСЏ.
 
 ## Cleanup gates
 
-Перед очисткой артефактов обязательно:
+РџРµСЂРµРґ РѕС‡РёСЃС‚РєРѕР№ Р°СЂС‚РµС„Р°РєС‚РѕРІ РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ:
 
-1. Выполнить cleanup script в режиме `--dry-run`.
-2. Проверить отчет dry-run.
-3. Выполнить `--archive`, если перенос согласован.
-4. Выполнить `--delete-archived` только после отдельного явного разрешения.
-5. После крупного блока запустить:
+1. Р’С‹РїРѕР»РЅРёС‚СЊ cleanup script РІ СЂРµР¶РёРјРµ `--dry-run`.
+2. РџСЂРѕРІРµСЂРёС‚СЊ РѕС‚С‡РµС‚ dry-run.
+3. Р’С‹РїРѕР»РЅРёС‚СЊ `--archive`, РµСЃР»Рё РїРµСЂРµРЅРѕСЃ СЃРѕРіР»Р°СЃРѕРІР°РЅ.
+4. Р’С‹РїРѕР»РЅРёС‚СЊ `--delete-archived` С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ РѕС‚РґРµР»СЊРЅРѕРіРѕ СЏРІРЅРѕРіРѕ СЂР°Р·СЂРµС€РµРЅРёСЏ.
+5. РџРѕСЃР»Рµ РєСЂСѓРїРЅРѕРіРѕ Р±Р»РѕРєР° Р·Р°РїСѓСЃС‚РёС‚СЊ:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\quality_gate.py --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
@@ -500,6 +500,42 @@ The implemented cleanup command also preserves existing `outputs/archive/` durin
 Generated outputs are prohibited from ordinary commits. The only allowed tracked files under `outputs/` are skeleton/navigation files described above.
 ## P2.1 release bundle automation note
 
-Дата: 2026-06-09.
+Р”Р°С‚Р°: 2026-06-09.
 
 External release bundles are created under `releases/` by `ofz-build-release-bundle` / `scripts/maintenance/build_release_bundle.py`. The `releases/` directory is ignored by Git. A real bundle requires `--include-outputs --confirm BUILD_RELEASE_BUNDLE`; dry-run reports planned contents and missing categories without writing files.
+
+## P2.6 UI launcher artifact policy
+
+Р”Р°С‚Р°: 2026-06-11.
+
+CLI remains the main supported production interface. UI launchers are controlled wrappers around approved CLI entry points and do not replace `ofz-quality`, `ofz-schema`, release checklist or manual release approval.
+
+### Source artifacts
+
+The following UI launcher files are source artifacts and may be tracked in Git:
+
+- PowerShell launcher source: `tools/windows_launcher/*.ps1`;
+- Word VBA source modules: `tools/word_launcher/*.bas`;
+- Word VBA form source: `tools/word_launcher/*.frm`;
+- launcher documentation under `docs/07_operations/`.
+
+PowerShell GUI launcher is the recommended Windows UI MVP. Word VBA launcher is optional.
+
+### Generated and release artifacts
+
+The following files are not ordinary source artifacts:
+
+- launcher logs: `outputs/reports/launcher/*.log`;
+- Word macro-enabled documents: `*.docm`;
+- release bundles under `releases/`.
+
+Policy:
+
+- launcher logs are generated outputs and must not be committed;
+- `.docm` is a release artifact unless explicitly approved by a separate artifact policy decision;
+- release bundle remains an external artifact and must not be committed to ordinary Git history;
+- delete cleanup from any UI launcher requires `DELETE_OUTPUTS`;
+- release bundle creation from any UI launcher requires `BUILD_RELEASE_BUNDLE`;
+- UI launchers must not create GitHub releases without a separate explicit release command and policy;
+- UI launchers must not accept arbitrary shell command input;
+- UI launchers may start quality checks only by explicit user selection and must not run fast/full quality gates in parallel.

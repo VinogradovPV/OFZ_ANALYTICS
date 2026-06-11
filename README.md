@@ -141,6 +141,20 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_l
 
 The default launcher action is a safe smoke check. The GUI mode calls only approved CLI entry points, validates report parameters, writes logs to `outputs/reports/launcher/`, blocks delete cleanup without `DELETE_OUTPUTS`, and blocks release bundle creation without `BUILD_RELEASE_BUNDLE`.
 
+UI launchers do not replace the CLI or quality gate. The supported production interface remains the CLI (`ofz-run`, `ofz-quality`, `ofz-schema`, `ofz-clean-outputs`, `ofz-build-release-bundle`). The PowerShell launcher is the recommended Windows UI MVP for operators who need a guided local launcher.
+
+Word VBA launcher source:
+
+```text
+tools/word_launcher/OfzLauncher.bas
+tools/word_launcher/README.md
+docs/07_operations/word_vba_launcher_spec.md
+```
+
+The `.bas` source can be committed. A future `.docm` file is a release artifact, not a source artifact, and must not be committed without a separate artifact policy decision. The VBA launcher calls only whitelisted CLI entry points and applies the same `DELETE_OUTPUTS` and `BUILD_RELEASE_BUNDLE` confirmation gates.
+
+Word VBA is optional. Text source files (`.bas`, `.frm`) are source artifacts; `.docm` packages are release artifacts unless explicitly approved by artifact policy. Launcher logs under `outputs/reports/launcher/` are generated outputs and are excluded from Git. Release bundles remain external artifacts under ignored `releases/`.
+
 Interactive cleanup pre-flight:
 
 ```powershell
