@@ -126,3 +126,15 @@ git diff --cached --name-only | Select-String "outputs/charts|outputs/exports|ou
 - [ ] Generated outputs not staged.
 - [ ] Commit contains only intended source/docs/config changes.
 - [ ] Commit pushed to `origin/main`.
+
+## CI / GitHub Actions release checks
+
+- [ ] `.github/workflows/quality.yml` exists.
+- [ ] `quality-fast` runs on `push` and `pull_request` to `main`.
+- [ ] `quality-fast` installs runtime/dev dependencies, editable package, runs `pip check`, `compileall`, `ofz-schema` and `ofz-quality --fast`.
+- [ ] `quality-full` is manual-only via `workflow_dispatch` and depends on `quality-fast`.
+- [ ] Workflow uses pip cache only and does not cache `outputs/` or `releases/`.
+- [ ] Workflow uploads QA reports as GitHub Actions artifacts.
+- [ ] Generated outputs and release bundles are not committed by CI.
+- [ ] GitHub-side workflow state reviewed with `gh workflow list` and `gh run list`.
+- [ ] If a CI run failed, `gh run view <run-id> --log` was reviewed and the failure was documented.

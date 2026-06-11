@@ -1,0 +1,151 @@
+name: OFZ Analytics Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ofz-quality-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REPORT_DATE: "2026-05-01"
+  RETROSPECTIVE_YEARS: "4"
+  PERIOD_TYPE: "month"
+  AGGREGATION_MODE: "cumulative"
+
+jobs:
+  quality-fast:
+    name: Quality fast
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+            pyproject.toml
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          if (Test-Path requirements-dev.txt) {
+            python -m pip install -r requirements-dev.txt
+          }
+          python -m pip install -e .
+
+      - name: Check environment
+        shell: pwsh
+        run: |
+          python -m pip check
+          python -m compileall -q scripts
+
+      - name: Schema validation
+        shell: pwsh
+        run: |
+          ofz-schema --report-date $env:REPORT_DATE --retrospective-years $env:RETROSPECTIVE_YEARS --period-type $env:PERIOD_TYPE --aggregation-mode $env:AGGREGATION_MODE
+
+      - name: Quality gate fast
+        shell: pwsh
+        run: |
+          ofz-quality --fast --report-date $env:REPORT_DATE --retrospective-years $env:RETROSPECTIVE_YEARS --period-type $env:PERIOD_TYPE --aggregation-mode $env:AGGREGATION_MODE
+
+      - name: Generated artifact guard
+        if: always()
+        shell: pwsh
+        run: |
+          git status --short -- outputs/charts outputs/exports outputs/reports outputs/dashboards outputs/archive outputs/tmp outputs/cache data/processed logs releases
+          git ls-files outputs releases data/processed logs
+
+      - name: Upload QA reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-reports-fast
+          if-no-files-found: warn
+          path: |
+            docs/06_quality/*.md
+            docs/02_data_pipeline/schema_validation_report.md
+            outputs/reports/quality/**
+            outputs/reports/run_manifests/**
+            outputs/reports/visual_regression/**
+            outputs/reports/telemetry/**
+
+  quality-full:
+    name: Quality full (manual)
+    runs-on: windows-latest
+    timeout-minutes: 90
+    needs: quality-fast
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+            pyproject.toml
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          if (Test-Path requirements-dev.txt) {
+            python -m pip install -r requirements-dev.txt
+          }
+          python -m pip install -e .
+
+      - name: Check environment
+        shell: pwsh
+        run: |
+          python -m pip check
+          python -m compileall -q scripts
+
+      - name: Quality gate full
+        shell: pwsh
+        run: |
+          ofz-quality --full --report-date $env:REPORT_DATE --retrospective-years $env:RETROSPECTIVE_YEARS --period-type $env:PERIOD_TYPE --aggregation-mode $env:AGGREGATION_MODE
+
+      - name: Generated artifact guard
+        if: always()
+        shell: pwsh
+        run: |
+          git status --short -- outputs/charts outputs/exports outputs/reports outputs/dashboards outputs/archive outputs/tmp outputs/cache data/processed logs releases
+          git ls-files outputs releases data/processed logs
+
+      - name: Upload QA reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-reports-full
+          if-no-files-found: warn
+          path: |
+            docs/06_quality/*.md
+            docs/02_data_pipeline/schema_validation_report.md
+            outputs/reports/quality/**
+            outputs/reports/run_manifests/**
+            outputs/reports/visual_regression/**
+            outputs/reports/telemetry/**

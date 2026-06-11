@@ -5,7 +5,7 @@
 ## Режим
 
 - Screenshot/backend mode: `auto_fallback_static_html`
-- Комментарий: visual_regression_mode=auto; screenshot backend unavailable, fallback used: Python package 'playwright' is not installed
+- Комментарий: visual_regression_mode=auto; screenshot backend unavailable, fallback used: [WinError 5] Отказано в доступе
 - HTML-файлов в проверке: `50`
 - `report_date`: `2026-05-01`
 - `period_type`: `month`
@@ -22,9 +22,9 @@
 
 | Файл | Проверка | Статус | Сообщение |
 | --- | --- | --- | --- |
-| `-` | `visual_regression_mode` | `ok` | visual_regression_mode=auto; screenshot backend unavailable, fallback used: Python package 'playwright' is not installed |
-| `-` | `screenshot_backend` | `warning` | Playwright unavailable; fallback used: Python package 'playwright' is not installed |
-| `-` | `screenshot_backend` | `ok` | visual_regression_mode=auto; screenshot backend unavailable, fallback used: Python package 'playwright' is not installed |
+| `-` | `visual_regression_mode` | `ok` | visual_regression_mode=auto; screenshot backend unavailable, fallback used: [WinError 5] Отказано в доступе |
+| `-` | `screenshot_backend` | `warning` | Playwright unavailable; fallback used: [WinError 5] Отказано в доступе |
+| `-` | `screenshot_backend` | `ok` | visual_regression_mode=auto; screenshot backend unavailable, fallback used: [WinError 5] Отказано в доступе |
 | `-` | `html_files_exist` | `ok` | Найдено HTML-файлов: 50. |
 | `-` | `yield_vs_discount_exists` | `ok` | Найдено yield_vs_discount HTML: 3. |
 | `monthly_bid_to_cover_month_cumulative_2026-05-01_retrospective_4.html` | `trace_types` | `ok` | scatter |

@@ -800,3 +800,55 @@ Level 3 initially. Level 5 only after backend stabilization and explicit full-ga
 ### 8. Следующий рекомендуемый P2-этап
 
 После завершения P2.7 и стабилизации проверок: `P2.8 CI / GitHub Actions`.
+
+## P2.8 - CI / GitHub Actions
+
+Дата: 2026-06-11.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.8 CI / GitHub Actions`.
+
+### 2. Что изменено
+
+Добавлены и обновлены:
+
+- `.github/workflows/quality.yml`;
+- `docs/07_operations/ci_workflow.md`;
+- `README.md`;
+- `docs/07_operations/release_checklist.md`;
+- `docs/06_quality/manual_checks_log.md`;
+- `docs/00_project/p2_modernization_progress_report.md`.
+
+### 3. CI contract
+
+Workflow запускает `quality-fast` на `push`/`pull_request` в `main` и через `workflow_dispatch`.
+
+`quality-fast` выполняет checkout, setup Python, install runtime/dev dependencies, editable install, `pip check`, `compileall`, `ofz-schema` и `ofz-quality --fast`.
+
+`quality-full` доступен только вручную через `workflow_dispatch`, зависит от `quality-fast` и не запускается параллельно с fast job.
+
+### 4. Artifact policy
+
+CI не коммитит generated outputs. QA reports сохраняются как GitHub Actions artifacts. Кешируется только pip cache; `outputs/` и `releases/` не кешируются.
+
+### 5. Проверочный уровень
+
+Level 2 locally. GitHub-side validation через `gh workflow list` / `gh run list` после push.
+
+### 6. Какие проверки выполнены
+
+- `.\.venv\Scripts\python.exe -m pip check`: OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK.
+- `.\.venv\Scripts\ofz-schema.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK, 16/16 checks passed.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- staged generated artifacts check: OK before commit.
+- GitHub-side `gh workflow list` / `gh run list`: planned after push.
+
+### 7. Warnings documented
+
+Screenshot backend browser binaries are not installed in CI during P2.8. Local fast gate completed with expected warning: screenshot backend unavailable and visual regression used fallback/static inspection mode.
+
+### 8. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: `P2.9 Controlled docs archive apply`.
