@@ -232,3 +232,41 @@ Push выполняется после commit P2.2.
 - Latest run manifest contains telemetry links.
 - Initial P2.2 validation run found and fixed a runtime cast issue in `scripts/generate_executive_summary.py`: `pd.Series[Any]` was replaced with runtime-safe `pd.Series` inside `cast`.
 - Generated outputs and telemetry reports remain ignored and must not be staged.
+
+## Cost-aware rules accepted / session preflight
+
+Дата: 2026-06-11.
+
+Приняты актуальные рабочие правила:
+
+- `prompts/ofz_p2_modernization_system_prompt_v4_cost_aware.md`;
+- `prompts/ofz_p2_modernization_step_by_step_v5_cost_aware.md`.
+
+Текущий статус P2 подтвержден:
+
+- `P2.0 Starting checkpoint`: completed;
+- `P2.1 Release bundle automation`: completed;
+- `P2.2 Pipeline telemetry`: completed;
+- следующий этап: `P2.3 UI launcher contract`.
+
+Session preflight выполнен один раз для текущей рабочей сессии:
+
+- `git status --short --branch`: branch `main`, remote `origin/main`, untracked только новые prompt-инструкции v4/v5;
+- `git branch --show-current`: `main`;
+- `git remote -v`: `origin https://github.com/VinogradovPV/OFZ_ANALYTICS.git`;
+- `git log --oneline -5`: latest commit `1b07100 Add pipeline telemetry reporting`;
+- `gh --version`: OK;
+- `gh auth status`: OK after approved outside-sandbox check;
+- `gh repo view VinogradovPV/OFZ_ANALYTICS`: OK after approved outside-sandbox check;
+- CLI help OK: `ofz-run`, `ofz-interactive`, `ofz-quality`, `ofz-clean-outputs`, `ofz-schema`, `ofz-build-release-bundle`.
+
+Cost-aware / credit-aware режим принят:
+
+- session preflight выполняется один раз в начале рабочей сессии;
+- docs-only этапы используют Level 0 checks;
+- UI source only этапы используют Level 1 checks;
+- Python/pipeline/schema/release/telemetry изменения запускают targeted checks;
+- full quality gate запускается только по явным триггерам или перед release/final close-out;
+- generated outputs и `releases/` никогда не staged/committed.
+
+Следующий этап `P2.3 UI launcher contract` является Level 0 / docs-only, если будет меняться только контрактная документация.
