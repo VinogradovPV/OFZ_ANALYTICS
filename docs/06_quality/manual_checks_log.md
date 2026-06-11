@@ -318,6 +318,12 @@
 |---|---|---|---|---|
 | 2026-06-09 | Replaced the initial P2 modernization system prompt with `prompts/ofz_p2_modernization_system_prompt_v3.md`. | Reference scan for old/new prompt filenames; Git status review. | Old prompt filename references were updated in P2 checkpoint/progress docs. The old prompt file was removed from the active source prompt set; v3 is tracked as the current source prompt asset. | Documentation/source-prompt change only. No pipeline code or generated outputs changed. |
 
+## 2026-06-11 - P2.6.2 Word VBA docm assembly source
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-11 | Prepared Word VBA launcher assembly source: refreshed `OfzLauncher.bas`, added `frmOfzLauncher.frm`, and added manual `.docm` build instructions. | Level 1 source checks: required `OFZ_*` procedures/functions scanned in `.bas`; required UserForm controls scanned in `.frm`; `.docm`/`releases` staging checks planned before commit. | Source is ready for manual Word import. The module builds only whitelisted CLI commands, blocks delete without `DELETE_OUTPUTS`, blocks release build without `BUILD_RELEASE_BUNDLE`, and logs to `outputs/reports/launcher`. | Word automation was not executed in this environment. `.docm` assembly status is `deferred/manual`; the release artifact must be built in Word under `releases/ui_launcher/` and must not be committed. |
+
 ## 2026-06-09 - P2.1 release bundle automation
 
 | Date | Change | Check | Result | Limitations |

@@ -539,3 +539,29 @@ Policy:
 - UI launchers must not create GitHub releases without a separate explicit release command and policy;
 - UI launchers must not accept arbitrary shell command input;
 - UI launchers may start quality checks only by explicit user selection and must not run fast/full quality gates in parallel.
+
+## P2.6.2 Word DOCM Assembly Policy
+
+Дата: 2026-06-11.
+
+Word launcher source files are tracked source artifacts:
+
+- `tools/word_launcher/OfzLauncher.bas`;
+- `tools/word_launcher/frmOfzLauncher.frm`;
+- `tools/word_launcher/word_docm_build_instructions.md`.
+
+Word macro-enabled documents are release artifacts:
+
+- `*.docm`;
+- `*.dotm`;
+- `releases/ui_launcher/ofz_launcher_word_<timestamp>.docm`.
+
+Rules:
+
+- `.docm` is not committed to ordinary Git history without a separate explicit artifact policy approval;
+- `releases/` remains ignored and external;
+- Word launcher logs under `outputs/reports/launcher/` remain generated outputs;
+- Word launcher source must call only whitelisted CLI entry points;
+- delete cleanup requires `DELETE_OUTPUTS`;
+- release bundle creation requires `BUILD_RELEASE_BUNDLE`;
+- macro security must be handled through Trusted Location and, for broad use, code signing.

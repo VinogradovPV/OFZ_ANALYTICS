@@ -669,3 +669,66 @@ Push выполняется после commit P2.6.1.
 ### 11. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап после закрытия launcher gap: `P2.7 Screenshot visual regression backend`.
+
+## P2.6.2 - Word VBA docm assembly and UserForm
+
+Дата: 2026-06-11.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен обязательный промежуточный этап `P2.6.2 Word VBA docm assembly and UserForm`.
+
+### 2. Что изменено
+
+Обновлены и добавлены:
+
+- `tools/word_launcher/OfzLauncher.bas`;
+- `tools/word_launcher/frmOfzLauncher.frm`;
+- `tools/word_launcher/word_docm_build_instructions.md`;
+- `tools/word_launcher/README.md`;
+- `docs/07_operations/word_vba_launcher_spec.md`;
+- `docs/07_operations/release_checklist.md`;
+- `docs/00_project/artifact_policy.md`;
+- `docs/06_quality/manual_checks_log.md`;
+- `docs/00_project/p2_modernization_progress_report.md`.
+
+`OfzLauncher.bas` теперь содержит required `OFZ_*` procedures/functions, validation, command preview/build logic, safe CLI-only process execution and launcher logging.
+
+`frmOfzLauncher.frm` содержит source UserForm `frmOfzLauncher` с required controls for project root, report params, action, confirmation tokens, command preview, log output and action buttons.
+
+### 3. Artifact status
+
+- `.bas` / `.frm` / build instructions are source artifacts.
+- `.docm` is a release artifact.
+- Recommended `.docm` path: `releases/ui_launcher/ofz_launcher_word_<timestamp>.docm`.
+- `.docm` and `releases/` must not be committed.
+
+### 4. Проверочный уровень
+
+Level 1 / UI source only.
+
+### 5. Какие проверки выполнены
+
+- required `OFZ_*` procedure/function scan in `OfzLauncher.bas`;
+- required UserForm control scan in `frmOfzLauncher.frm`;
+- `.docm` / `releases/` not staged check before commit;
+- generated outputs not staged check before commit.
+
+### 6. Какие проверки skipped и почему
+
+- Word automation/manual import: skipped in this environment; `.docm` assembly is `deferred/manual`.
+- `compileall`: skipped, Python-код не менялся.
+- `ofz-quality --fast`: skipped, UI source/docs only.
+- `ofz-quality --full`: skipped, нет release/final close-out trigger.
+
+### 7. Warnings documented
+
+- `.docm` must be assembled manually in Word or by a controlled Word automation step on an operator workstation.
+- Macros can be blocked; use Trusted Location and consider code signing.
+- Word launcher does not accept arbitrary shell commands and calls only whitelisted CLI.
+- Delete cleanup requires `DELETE_OUTPUTS`.
+- Release bundle creation requires `BUILD_RELEASE_BUNDLE`.
+
+### 8. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап после закрытия Word launcher gap: `P2.7 Screenshot visual regression backend`.

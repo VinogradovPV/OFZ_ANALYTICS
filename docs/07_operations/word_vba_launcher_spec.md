@@ -165,3 +165,80 @@ Logs являются generated artifacts и не коммитятся.
 - Оба launcher вызывают один и тот же CLI-контракт.
 - UI launcher contract: `docs/07_operations/ui_launcher_contract.md`.
 - Release bundle behavior: `docs/07_operations/release_bundle_plan.md`.
+## P2.6.2 Word DOCM Assembly Contract
+
+Дата: 2026-06-11.
+
+`P2.6.2` добавляет source-файл UserForm и инструкцию сборки `.docm`.
+
+Tracked source:
+
+- `tools/word_launcher/OfzLauncher.bas`;
+- `tools/word_launcher/frmOfzLauncher.frm`;
+- `tools/word_launcher/word_docm_build_instructions.md`.
+
+Release artifact:
+
+- `releases/ui_launcher/ofz_launcher_word_<timestamp>.docm`.
+
+`.docm` не коммитится в Git и собирается вручную или через Word automation на рабочей станции, где доступен Microsoft Word.
+
+### Required VBA entry points
+
+`OfzLauncher.bas` экспортирует:
+
+- `OFZ_ShowLauncher`;
+- `OFZ_RunPipeline`;
+- `OFZ_RunSchemaValidation`;
+- `OFZ_RunQualityGateFast`;
+- `OFZ_RunQualityGateFull`;
+- `OFZ_CleanupDryRun`;
+- `OFZ_CleanupArchiveAll`;
+- `OFZ_CleanupDeleteAll`;
+- `OFZ_ReleaseBundleDryRun`;
+- `OFZ_ReleaseBundleBuild`;
+- `OFZ_OpenOutputsFolder`;
+- `OFZ_OpenReleasesFolder`.
+
+Обязательные validation/helper functions:
+
+- `OFZ_ValidateProjectRoot`;
+- `OFZ_ValidateReportDate`;
+- `OFZ_ValidateRetrospectiveYears`;
+- `OFZ_BuildCommand`;
+- `OFZ_RunCommand`;
+- `OFZ_LogPath`.
+
+### UserForm controls
+
+Form name: `frmOfzLauncher`.
+
+Required controls:
+
+- `txtProjectRoot`;
+- `btnBrowseProjectRoot`;
+- `btnValidateProject`;
+- `txtReportDate`;
+- `cmbRetrospectiveYears`;
+- `cmbPeriodType`;
+- `cmbAggregationMode`;
+- `cmbAction`;
+- `chkRunSchema`;
+- `chkRunQualityFast`;
+- `chkRunQualityFull`;
+- `chkBuildReleaseBundle`;
+- `chkOpenOutputs`;
+- `chkOpenReleases`;
+- `txtDeleteConfirm`;
+- `txtReleaseConfirm`;
+- `txtCommandPreview`;
+- `txtLogOutput`;
+- `btnPreviewCommand`;
+- `btnRun`;
+- `btnOpenOutputs`;
+- `btnOpenReleases`;
+- `btnClose`.
+
+### Assembly status
+
+Автоматическая сборка `.docm` не имитируется, если Word automation недоступна. В этом случае статус: `docm assembly deferred/manual`, а ручная сборка выполняется по `tools/word_launcher/word_docm_build_instructions.md`.

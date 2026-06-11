@@ -41,6 +41,12 @@
 - [ ] `.docm` files are treated as release artifacts unless explicitly approved by artifact policy.
 - [ ] Launcher logs under `outputs/reports/launcher/` are treated as generated outputs.
 - [ ] UI launcher did not skip or replace required quality gate checks.
+- [ ] Word launcher source includes `OfzLauncher.bas` and `frmOfzLauncher.frm`.
+- [ ] Word `.docm` assembly follows `tools/word_launcher/word_docm_build_instructions.md`.
+- [ ] Word `.docm` is saved under `releases/ui_launcher/` or another external release location, not staged in Git.
+- [ ] Word launcher blocks `cleanup-delete-all` without `DELETE_OUTPUTS`.
+- [ ] Word launcher blocks `release-build` without `BUILD_RELEASE_BUNDLE`.
+- [ ] Word launcher command preview contains only whitelisted `ofz-*` CLI entry points.
 
 ## Data
 

@@ -1,338 +1,325 @@
 Attribute VB_Name = "OfzLauncher"
 Option Explicit
 
-' OFZ Analytics Word launcher source module.
-' Import this .bas file into a trusted .docm release artifact.
-' Do not commit .docm files without a separate artifact policy decision.
+Public Const OFZ_DEFAULT_REPORT_DATE As String = "2026-05-01"
+Public Const OFZ_DEFAULT_RETROSPECTIVE_YEARS As String = "4"
+Public Const OFZ_DEFAULT_PERIOD_TYPE As String = "month"
+Public Const OFZ_DEFAULT_AGGREGATION_MODE As String = "cumulative"
 
-Private Const DEFAULT_REPORT_DATE As String = "2026-05-01"
-Private Const DEFAULT_RETROSPECTIVE_YEARS As Long = 4
-Private Const DEFAULT_PERIOD_TYPE As String = "month"
-Private Const DEFAULT_AGGREGATION_MODE As String = "cumulative"
-Private Const ENV_PROJECT_ROOT As String = "OFZ_PROJECT_ROOT"
+Private Const OFZ_DELETE_CONFIRM As String = "DELETE_OUTPUTS"
+Private Const OFZ_RELEASE_CONFIRM As String = "BUILD_RELEASE_BUNDLE"
 
-Public Sub OfzValidateEnvironment()
-    Dim projectRoot As String
-    projectRoot = OfzProjectRoot()
-    ValidateProjectEnvironment projectRoot
-    MsgBox "OFZ Analytics environment OK." & vbCrLf & projectRoot, vbInformation, "OFZ Launcher"
+Public Sub OFZ_ShowLauncher()
+    frmOfzLauncher.Show
 End Sub
 
-Public Sub OfzSmokeTest()
-    Dim projectRoot As String
-    Dim blocked As Boolean
-
-    projectRoot = OfzProjectRoot()
-    ValidateProjectEnvironment projectRoot
-    ValidateReportDate DEFAULT_REPORT_DATE
-    ValidateRetrospectiveYears DEFAULT_RETROSPECTIVE_YEARS
-    ValidatePeriodType DEFAULT_PERIOD_TYPE
-    ValidateAggregationMode DEFAULT_AGGREGATION_MODE
-
-    blocked = False
-    On Error Resume Next
-    ValidateReportDate "2026-05-15"
-    blocked = (Err.Number <> 0)
-    Err.Clear
-    On Error GoTo 0
-    If Not blocked Then
-        Err.Raise vbObjectError + 100, , "Bad date validation did not fail."
-    End If
-
-    blocked = False
-    On Error Resume Next
-    ValidateSafetyGate "cleanup-delete-all-with-archive", vbNullString
-    blocked = (Err.Number <> 0)
-    Err.Clear
-    On Error GoTo 0
-    If Not blocked Then
-        Err.Raise vbObjectError + 101, , "Delete confirmation validation did not fail."
-    End If
-
-    blocked = False
-    On Error Resume Next
-    ValidateSafetyGate "release-build", vbNullString
-    blocked = (Err.Number <> 0)
-    Err.Clear
-    On Error GoTo 0
-    If Not blocked Then
-        Err.Raise vbObjectError + 102, , "Bundle confirmation validation did not fail."
-    End If
-
-    MsgBox "OFZ Word launcher smoke OK." & vbCrLf & _
-           "Environment validated; bad date, delete and bundle gates blocked.", _
-           vbInformation, "OFZ Launcher"
+Public Sub OFZ_RunPipeline()
+    OFZ_RunAction "run-pipeline"
 End Sub
 
-Public Function OfzRunAction(Optional ByVal actionName As String = "validate", Optional ByVal confirmToken As String = "") As Long
-    Dim projectRoot As String
-    Dim commandLine As String
-    Dim logPath As String
+Public Sub OFZ_RunSchemaValidation()
+    OFZ_RunAction "schema"
+End Sub
 
-    projectRoot = OfzProjectRoot()
-    ValidateProjectEnvironment projectRoot
-    ValidateAction actionName
-    ValidateReportDate DEFAULT_REPORT_DATE
-    ValidateRetrospectiveYears DEFAULT_RETROSPECTIVE_YEARS
-    ValidatePeriodType DEFAULT_PERIOD_TYPE
-    ValidateAggregationMode DEFAULT_AGGREGATION_MODE
-    ValidateSafetyGate actionName, confirmToken
+Public Sub OFZ_RunQualityGateFast()
+    OFZ_RunAction "quality-fast"
+End Sub
 
-    If actionName = "validate" Then
-        OfzRunAction = 0
-        MsgBox "OFZ Analytics environment OK.", vbInformation, "OFZ Launcher"
-        Exit Function
-    End If
+Public Sub OFZ_RunQualityGateFull()
+    OFZ_RunAction "quality-full"
+End Sub
 
-    logPath = CreateLauncherLogPath(projectRoot)
-    commandLine = BuildCommandLine(projectRoot, actionName)
-    OfzRunAction = ExecuteCommand(commandLine, projectRoot, logPath)
+Public Sub OFZ_CleanupDryRun()
+    OFZ_RunAction "cleanup-dry-run"
+End Sub
 
-    MsgBox "Action: " & actionName & vbCrLf & _
-           "Exit code: " & CStr(OfzRunAction) & vbCrLf & _
-           "Log: " & logPath, vbInformation, "OFZ Launcher"
-End Function
+Public Sub OFZ_CleanupArchiveAll()
+    OFZ_RunAction "cleanup-archive-all"
+End Sub
 
-Private Function OfzProjectRoot() As String
+Public Sub OFZ_CleanupDeleteAll()
+    OFZ_RunAction "cleanup-delete-all", OFZ_DELETE_CONFIRM
+End Sub
+
+Public Sub OFZ_ReleaseBundleDryRun()
+    OFZ_RunAction "release-dry-run"
+End Sub
+
+Public Sub OFZ_ReleaseBundleBuild()
+    OFZ_RunAction "release-build", "", OFZ_RELEASE_CONFIRM
+End Sub
+
+Public Sub OFZ_OpenOutputsFolder()
+    OFZ_OpenSafeFolder OFZ_CombinePath(OFZ_DefaultProjectRoot(), "outputs")
+End Sub
+
+Public Sub OFZ_OpenReleasesFolder()
+    OFZ_OpenSafeFolder OFZ_CombinePath(OFZ_DefaultProjectRoot(), "releases")
+End Sub
+
+Public Function OFZ_DefaultProjectRoot() As String
     Dim envRoot As String
-    envRoot = Environ$(ENV_PROJECT_ROOT)
-
-    If Len(Trim$(envRoot)) > 0 Then
-        OfzProjectRoot = envRoot
+    envRoot = Trim$(Environ$("OFZ_PROJECT_ROOT"))
+    If Len(envRoot) > 0 Then
+        OFZ_DefaultProjectRoot = envRoot
     Else
-        OfzProjectRoot = CurDir$
+        OFZ_DefaultProjectRoot = CurDir$
     End If
 End Function
 
-Private Sub ValidateProjectEnvironment(ByVal projectRoot As String)
-    RequireFolder projectRoot, "project_root"
-    RequireFile CombinePath(projectRoot, "pyproject.toml"), "pyproject.toml"
-    RequireFolder CombinePath(projectRoot, ".venv\Scripts"), ".venv\Scripts"
-    RequireFolder CombinePath(projectRoot, "data\raw"), "data\raw"
-End Sub
+Public Function OFZ_ValidateProjectRoot(projectRoot As String) As Boolean
+    Dim root As String
+    root = OFZ_NormalizePath(projectRoot)
+    OFZ_ValidateProjectRoot = False
 
-Private Sub ValidateReportDate(ByVal value As String)
-    Dim yyyy As Long
-    Dim mm As Long
-    Dim dd As Long
+    If Len(root) = 0 Then Exit Function
+    If Dir$(root, vbDirectory) = vbNullString Then Exit Function
+    If Dir$(OFZ_CombinePath(root, "pyproject.toml")) = vbNullString Then Exit Function
+    If Dir$(OFZ_CombinePath(root, ".venv\Scripts"), vbDirectory) = vbNullString Then Exit Function
+    If Dir$(OFZ_CombinePath(root, "data\raw"), vbDirectory) = vbNullString Then Exit Function
+
+    OFZ_ValidateProjectRoot = True
+End Function
+
+Public Function OFZ_ValidateReportDate(reportDate As String) As Boolean
+    On Error GoTo InvalidDate
+
+    Dim yyyy As Integer
+    Dim mm As Integer
+    Dim dd As Integer
     Dim parsed As Date
 
-    If Len(value) <> 10 Then
-        Err.Raise vbObjectError + 200, , "report_date must use YYYY-MM-DD format."
-    End If
-    If Mid$(value, 5, 1) <> "-" Or Mid$(value, 8, 1) <> "-" Then
-        Err.Raise vbObjectError + 201, , "report_date must use YYYY-MM-DD format."
-    End If
-    If Not IsNumeric(Left$(value, 4)) Or Not IsNumeric(Mid$(value, 6, 2)) Or Not IsNumeric(Right$(value, 2)) Then
-        Err.Raise vbObjectError + 202, , "report_date must use YYYY-MM-DD format."
-    End If
+    OFZ_ValidateReportDate = False
+    If Len(reportDate) <> 10 Then Exit Function
+    If Mid$(reportDate, 5, 1) <> "-" Or Mid$(reportDate, 8, 1) <> "-" Then Exit Function
+    If Not IsNumeric(Left$(reportDate, 4)) Then Exit Function
+    If Not IsNumeric(Mid$(reportDate, 6, 2)) Then Exit Function
+    If Not IsNumeric(Right$(reportDate, 2)) Then Exit Function
 
-    yyyy = CLng(Left$(value, 4))
-    mm = CLng(Mid$(value, 6, 2))
-    dd = CLng(Right$(value, 2))
+    yyyy = CInt(Left$(reportDate, 4))
+    mm = CInt(Mid$(reportDate, 6, 2))
+    dd = CInt(Right$(reportDate, 2))
     parsed = DateSerial(yyyy, mm, dd)
 
-    If Year(parsed) <> yyyy Or Month(parsed) <> mm Or Day(parsed) <> dd Then
-        Err.Raise vbObjectError + 203, , "report_date is not a valid calendar date."
-    End If
-    If dd <> 1 Then
-        Err.Raise vbObjectError + 204, , "report_date must be the first day of a month."
-    End If
-End Sub
+    If Year(parsed) <> yyyy Or Month(parsed) <> mm Or Day(parsed) <> dd Then Exit Function
+    If dd <> 1 Then Exit Function
 
-Private Sub ValidateRetrospectiveYears(ByVal value As Long)
-    If value < 1 Or value > 10 Then
-        Err.Raise vbObjectError + 205, , "retrospective_years must be in range 1..10."
-    End If
-End Sub
+    OFZ_ValidateReportDate = True
+    Exit Function
 
-Private Sub ValidatePeriodType(ByVal value As String)
-    Select Case value
-        Case "month", "quarter", "year"
-            Exit Sub
-        Case Else
-            Err.Raise vbObjectError + 206, , "Unsupported period_type."
-    End Select
-End Sub
+InvalidDate:
+    OFZ_ValidateReportDate = False
+End Function
 
-Private Sub ValidateAggregationMode(ByVal value As String)
-    Select Case value
-        Case "cumulative", "point"
-            Exit Sub
-        Case Else
-            Err.Raise vbObjectError + 207, , "Unsupported aggregation_mode."
-    End Select
-End Sub
+Public Function OFZ_ValidateRetrospectiveYears(value As String) As Boolean
+    Dim n As Integer
+    OFZ_ValidateRetrospectiveYears = False
+    If Len(Trim$(value)) = 0 Then Exit Function
+    If Not IsNumeric(value) Then Exit Function
+    n = CInt(value)
+    OFZ_ValidateRetrospectiveYears = (n >= 1 And n <= 10 And CStr(n) = Trim$(value))
+End Function
 
-Private Sub ValidateAction(ByVal actionName As String)
-    Select Case actionName
-        Case "validate", "run", "schema", "quality-fast", "quality-full", _
-             "cleanup-dry-run", "cleanup-archive-all", "cleanup-delete-all-with-archive", _
-             "release-dry-run", "release-build"
-            Exit Sub
-        Case Else
-            Err.Raise vbObjectError + 208, , "Unsupported action."
-    End Select
-End Sub
+Public Function OFZ_BuildCommand( _
+    ByVal projectRoot As String, _
+    ByVal actionName As String, _
+    ByVal reportDate As String, _
+    ByVal retrospectiveYears As String, _
+    ByVal periodType As String, _
+    ByVal aggregationMode As String, _
+    Optional ByVal deleteConfirm As String = "", _
+    Optional ByVal releaseConfirm As String = "" _
+) As String
+    Dim root As String
+    Dim commonArgs As String
+    Dim action As String
 
-Private Sub ValidateSafetyGate(ByVal actionName As String, ByVal confirmToken As String)
-    If actionName = "cleanup-delete-all-with-archive" And confirmToken <> "DELETE_OUTPUTS" Then
-        Err.Raise vbObjectError + 209, , "Delete cleanup is blocked. Use DELETE_OUTPUTS."
-    End If
+    root = OFZ_NormalizePath(projectRoot)
+    action = LCase$(Trim$(actionName))
 
-    If actionName = "release-build" And confirmToken <> "BUILD_RELEASE_BUNDLE" Then
-        Err.Raise vbObjectError + 210, , "Release bundle creation is blocked. Use BUILD_RELEASE_BUNDLE."
-    End If
-End Sub
+    If Not OFZ_ValidateProjectRoot(root) Then Err.Raise vbObjectError + 100, , "Invalid project_root"
+    If Not OFZ_ValidateReportDate(reportDate) Then Err.Raise vbObjectError + 101, , "Invalid report_date; expected YYYY-MM-DD and first day of month"
+    If Not OFZ_ValidateRetrospectiveYears(retrospectiveYears) Then Err.Raise vbObjectError + 102, , "Invalid retrospective_years; expected integer 1..10"
+    If Not OFZ_IsAllowedValue(periodType, "month,quarter,year") Then Err.Raise vbObjectError + 103, , "Invalid period_type"
+    If Not OFZ_IsAllowedValue(aggregationMode, "cumulative,point") Then Err.Raise vbObjectError + 104, , "Invalid aggregation_mode"
 
-Private Function BuildCommandLine(ByVal projectRoot As String, ByVal actionName As String) As String
-    Dim cliPath As String
-    Dim args As String
+    commonArgs = " --report-date " & OFZ_QuoteArg(reportDate) & _
+        " --retrospective-years " & OFZ_QuoteArg(retrospectiveYears) & _
+        " --period-type " & OFZ_QuoteArg(periodType) & _
+        " --aggregation-mode " & OFZ_QuoteArg(aggregationMode)
 
-    Select Case actionName
-        Case "run"
-            cliPath = CliPath(projectRoot, "ofz-run.exe")
-            args = CommonArgs()
+    Select Case action
+        Case "validate-environment"
+            OFZ_BuildCommand = OFZ_QuoteArg(OFZ_CliPath(root, "ofz-schema.exe")) & " --help"
+        Case "run-pipeline"
+            OFZ_BuildCommand = OFZ_QuoteArg(OFZ_CliPath(root, "ofz-run.exe")) & commonArgs
         Case "schema"
-            cliPath = CliPath(projectRoot, "ofz-schema.exe")
-            args = CommonArgs()
+            OFZ_BuildCommand = OFZ_QuoteArg(OFZ_CliPath(root, "ofz-schema.exe")) & commonArgs
         Case "quality-fast"
-            cliPath = CliPath(projectRoot, "ofz-quality.exe")
-            args = "--fast " & CommonArgs()
+            OFZ_BuildCommand = OFZ_QuoteArg(OFZ_CliPath(root, "ofz-quality.exe")) & " --fast" & commonArgs
         Case "quality-full"
-            cliPath = CliPath(projectRoot, "ofz-quality.exe")
-            args = "--full " & CommonArgs()
+            OFZ_BuildCommand = OFZ_QuoteArg(OFZ_CliPath(root, "ofz-quality.exe")) & " --full" & commonArgs
         Case "cleanup-dry-run"
-            cliPath = CliPath(projectRoot, "ofz-clean-outputs.exe")
-            args = "--dry-run"
+            OFZ_BuildCommand = OFZ_QuoteArg(OFZ_CliPath(root, "ofz-clean-outputs.exe")) & " --dry-run"
         Case "cleanup-archive-all"
-            cliPath = CliPath(projectRoot, "ofz-clean-outputs.exe")
-            args = "--archive-all"
-        Case "cleanup-delete-all-with-archive"
-            cliPath = CliPath(projectRoot, "ofz-clean-outputs.exe")
-            args = "--archive-all --delete-all --confirm DELETE_OUTPUTS"
+            OFZ_BuildCommand = OFZ_QuoteArg(OFZ_CliPath(root, "ofz-clean-outputs.exe")) & " --archive-all"
+        Case "cleanup-delete-all"
+            If deleteConfirm <> OFZ_DELETE_CONFIRM Then Err.Raise vbObjectError + 105, , "DELETE_OUTPUTS confirmation is required"
+            OFZ_BuildCommand = OFZ_QuoteArg(OFZ_CliPath(root, "ofz-clean-outputs.exe")) & " --archive-all --delete-all --confirm " & OFZ_QuoteArg(OFZ_DELETE_CONFIRM)
         Case "release-dry-run"
-            cliPath = CliPath(projectRoot, "ofz-build-release-bundle.exe")
-            args = "--dry-run " & CommonArgs()
+            OFZ_BuildCommand = OFZ_QuoteArg(OFZ_CliPath(root, "ofz-build-release-bundle.exe")) & " --dry-run" & commonArgs
         Case "release-build"
-            cliPath = CliPath(projectRoot, "ofz-build-release-bundle.exe")
-            args = "--include-outputs --confirm BUILD_RELEASE_BUNDLE " & CommonArgs()
+            If releaseConfirm <> OFZ_RELEASE_CONFIRM Then Err.Raise vbObjectError + 106, , "BUILD_RELEASE_BUNDLE confirmation is required"
+            OFZ_BuildCommand = OFZ_QuoteArg(OFZ_CliPath(root, "ofz-build-release-bundle.exe")) & " --include-outputs --confirm " & OFZ_QuoteArg(OFZ_RELEASE_CONFIRM) & commonArgs
+        Case "open-outputs", "open-releases"
+            OFZ_BuildCommand = action
         Case Else
-            Err.Raise vbObjectError + 211, , "Unsupported action."
-    End Select
-
-    BuildCommandLine = QuoteArg(cliPath) & " " & args
-End Function
-
-Private Function CommonArgs() As String
-    CommonArgs = "--report-date " & QuoteArg(DEFAULT_REPORT_DATE) & _
-                 " --retrospective-years " & CStr(DEFAULT_RETROSPECTIVE_YEARS) & _
-                 " --period-type " & QuoteArg(DEFAULT_PERIOD_TYPE) & _
-                 " --aggregation-mode " & QuoteArg(DEFAULT_AGGREGATION_MODE)
-End Function
-
-Private Function CliPath(ByVal projectRoot As String, ByVal cliName As String) As String
-    Select Case cliName
-        Case "ofz-run.exe", "ofz-interactive.exe", "ofz-quality.exe", _
-             "ofz-clean-outputs.exe", "ofz-schema.exe", "ofz-build-release-bundle.exe"
-            CliPath = CombinePath(projectRoot, ".venv\Scripts\" & cliName)
-            RequireFile CliPath, cliName
-        Case Else
-            Err.Raise vbObjectError + 212, , "CLI is not whitelisted."
+            Err.Raise vbObjectError + 107, , "Action is not whitelisted"
     End Select
 End Function
 
-Private Function ExecuteCommand(ByVal commandLine As String, ByVal projectRoot As String, ByVal logPath As String) As Long
-    Dim shell As Object
-    Dim exec As Object
+Public Function OFZ_RunCommand(commandLine As String, workingDirectory As String) As Long
+    Dim shellObj As Object
+    Dim execObj As Object
+    Dim logPath As String
     Dim stdoutText As String
     Dim stderrText As String
 
-    WriteLog logPath, "Working directory: " & projectRoot
-    WriteLog logPath, "Command preview: " & commandLine
+    If Not OFZ_ValidateProjectRoot(workingDirectory) Then Err.Raise vbObjectError + 120, , "Invalid working directory"
+    If Not OFZ_IsWhitelistedCommandLine(commandLine, workingDirectory) Then Err.Raise vbObjectError + 121, , "Command is not approved by the Word launcher whitelist"
 
-    Set shell = CreateObject("WScript.Shell")
-    shell.CurrentDirectory = projectRoot
-    Set exec = shell.Exec(commandLine)
+    logPath = OFZ_LogPath(workingDirectory)
+    Set shellObj = CreateObject("WScript.Shell")
+    shellObj.CurrentDirectory = OFZ_NormalizePath(workingDirectory)
 
-    Do While exec.Status = 0
+    OFZ_AppendLog logPath, "Working directory: " & OFZ_NormalizePath(workingDirectory)
+    OFZ_AppendLog logPath, "Command: " & commandLine
+
+    Set execObj = shellObj.Exec(commandLine)
+    Do While execObj.Status = 0
         DoEvents
     Loop
 
-    stdoutText = exec.StdOut.ReadAll
-    stderrText = exec.StdErr.ReadAll
+    stdoutText = execObj.StdOut.ReadAll
+    stderrText = execObj.StdErr.ReadAll
 
-    If Len(stdoutText) > 0 Then
-        WriteLog logPath, "STDOUT:"
-        WriteLog logPath, stdoutText
-    End If
-    If Len(stderrText) > 0 Then
-        WriteLog logPath, "STDERR:"
-        WriteLog logPath, stderrText
-    End If
+    OFZ_AppendLog logPath, "Exit code: " & CStr(execObj.ExitCode)
+    If Len(stdoutText) > 0 Then OFZ_AppendLog logPath, "STDOUT:" & vbCrLf & stdoutText
+    If Len(stderrText) > 0 Then OFZ_AppendLog logPath, "STDERR:" & vbCrLf & stderrText
 
-    WriteLog logPath, "Exit code: " & CStr(exec.ExitCode)
-    ExecuteCommand = exec.ExitCode
+    OFZ_RunCommand = CLng(execObj.ExitCode)
 End Function
 
-Private Function CreateLauncherLogPath(ByVal projectRoot As String) As String
+Public Function OFZ_LogPath(projectRoot As String) As String
     Dim logDir As String
-    logDir = CombinePath(projectRoot, "outputs\reports\launcher")
-    CreateFolderRecursive logDir
-    CreateLauncherLogPath = CombinePath(logDir, "word_launcher_run_" & Format$(Now, "yyyymmdd_hhnnss") & ".log")
+    logDir = OFZ_CombinePath(OFZ_NormalizePath(projectRoot), "outputs\reports\launcher")
+    OFZ_CreateFolderRecursive logDir
+    OFZ_LogPath = OFZ_CombinePath(logDir, "word_launcher_run_" & Format$(Now, "yyyymmdd_hhnnss") & ".log")
 End Function
 
-Private Sub WriteLog(ByVal logPath As String, ByVal message As String)
-    Dim fso As Object
-    Dim stream As Object
+Public Sub OFZ_RunAction( _
+    ByVal actionName As String, _
+    Optional ByVal deleteConfirm As String = "", _
+    Optional ByVal releaseConfirm As String = "" _
+)
+    Dim root As String
+    Dim commandLine As String
+    Dim exitCode As Long
 
-    Set fso = CreateObject("Scripting.FileSystemObject")
-    Set stream = fso.OpenTextFile(logPath, 8, True)
-    stream.WriteLine "[" & Format$(Now, "yyyy-mm-dd hh:nn:ss") & "] " & message
-    stream.Close
-End Sub
+    root = OFZ_DefaultProjectRoot()
+    commandLine = OFZ_BuildCommand(root, actionName, OFZ_DEFAULT_REPORT_DATE, OFZ_DEFAULT_RETROSPECTIVE_YEARS, OFZ_DEFAULT_PERIOD_TYPE, OFZ_DEFAULT_AGGREGATION_MODE, deleteConfirm, releaseConfirm)
 
-Private Function CombinePath(ByVal leftPart As String, ByVal rightPart As String) As String
-    If Right$(leftPart, 1) = "\" Then
-        CombinePath = leftPart & rightPart
-    Else
-        CombinePath = leftPart & "\" & rightPart
+    If commandLine = "open-outputs" Then
+        OFZ_OpenOutputsFolder
+        Exit Sub
     End If
-End Function
-
-Private Function QuoteArg(ByVal value As String) As String
-    QuoteArg = """" & Replace(value, """", """""") & """"
-End Function
-
-Private Sub RequireFile(ByVal pathValue As String, ByVal label As String)
-    Dim fso As Object
-    Set fso = CreateObject("Scripting.FileSystemObject")
-    If Not fso.FileExists(pathValue) Then
-        Err.Raise vbObjectError + 300, , "Required file is missing: " & label & " (" & pathValue & ")"
-    End If
-End Sub
-
-Private Sub RequireFolder(ByVal pathValue As String, ByVal label As String)
-    Dim fso As Object
-    Set fso = CreateObject("Scripting.FileSystemObject")
-    If Not fso.FolderExists(pathValue) Then
-        Err.Raise vbObjectError + 301, , "Required folder is missing: " & label & " (" & pathValue & ")"
-    End If
-End Sub
-
-Private Sub CreateFolderRecursive(ByVal folderPath As String)
-    Dim fso As Object
-    Dim parentPath As String
-
-    Set fso = CreateObject("Scripting.FileSystemObject")
-    If fso.FolderExists(folderPath) Then
+    If commandLine = "open-releases" Then
+        OFZ_OpenReleasesFolder
         Exit Sub
     End If
 
-    parentPath = fso.GetParentFolderName(folderPath)
-    If Len(parentPath) > 0 And Not fso.FolderExists(parentPath) Then
-        CreateFolderRecursive parentPath
-    End If
-
-    fso.CreateFolder folderPath
+    exitCode = OFZ_RunCommand(commandLine, root)
+    MsgBox "OFZ launcher finished with exit code " & CStr(exitCode), vbInformation, "OFZ Analytics"
 End Sub
+
+Public Function OFZ_IsAllowedValue(ByVal value As String, ByVal csvValues As String) As Boolean
+    Dim items() As String
+    Dim item As Variant
+    items = Split(csvValues, ",")
+    For Each item In items
+        If LCase$(Trim$(value)) = LCase$(Trim$(CStr(item))) Then
+            OFZ_IsAllowedValue = True
+            Exit Function
+        End If
+    Next item
+    OFZ_IsAllowedValue = False
+End Function
+
+Public Function OFZ_CombinePath(ByVal leftPart As String, ByVal rightPart As String) As String
+    If Right$(leftPart, 1) = "\" Then
+        OFZ_CombinePath = leftPart & rightPart
+    Else
+        OFZ_CombinePath = leftPart & "\" & rightPart
+    End If
+End Function
+
+Public Function OFZ_NormalizePath(ByVal pathValue As String) As String
+    OFZ_NormalizePath = Trim$(Replace(pathValue, "/", "\"))
+End Function
+
+Public Function OFZ_QuoteArg(ByVal value As String) As String
+    OFZ_QuoteArg = """" & Replace(value, """", """""") & """"
+End Function
+
+Private Function OFZ_CliPath(ByVal projectRoot As String, ByVal cliName As String) As String
+    Dim pathValue As String
+    pathValue = OFZ_CombinePath(OFZ_CombinePath(projectRoot, ".venv\Scripts"), cliName)
+    If Dir$(pathValue) = vbNullString Then Err.Raise vbObjectError + 130, , "Missing CLI entry point: " & pathValue
+    OFZ_CliPath = pathValue
+End Function
+
+Private Function OFZ_IsWhitelistedCommandLine(ByVal commandLine As String, ByVal projectRoot As String) As Boolean
+    Dim allowed As Variant
+    Dim cliName As Variant
+    allowed = Array("ofz-run.exe", "ofz-schema.exe", "ofz-quality.exe", "ofz-clean-outputs.exe", "ofz-build-release-bundle.exe")
+
+    For Each cliName In allowed
+        If InStr(1, commandLine, OFZ_QuoteArg(OFZ_CliPath(projectRoot, CStr(cliName))), vbTextCompare) = 1 Then
+            OFZ_IsWhitelistedCommandLine = True
+            Exit Function
+        End If
+    Next cliName
+
+    OFZ_IsWhitelistedCommandLine = False
+End Function
+
+Private Sub OFZ_CreateFolderRecursive(ByVal folderPath As String)
+    Dim parts() As String
+    Dim currentPath As String
+    Dim i As Long
+
+    parts = Split(OFZ_NormalizePath(folderPath), "\")
+    currentPath = parts(0)
+    For i = 1 To UBound(parts)
+        currentPath = currentPath & "\" & parts(i)
+        If Len(currentPath) > 2 Then
+            If Dir$(currentPath, vbDirectory) = vbNullString Then MkDir currentPath
+        End If
+    Next i
+End Sub
+
+Private Sub OFZ_AppendLog(ByVal logPath As String, ByVal message As String)
+    Dim fileNo As Integer
+    fileNo = FreeFile
+    Open logPath For Append As #fileNo
+    Print #fileNo, Format$(Now, "yyyy-mm-dd hh:nn:ss") & " | " & message
+    Close #fileNo
+End Sub
+
+Private Sub OFZ_OpenSafeFolder(ByVal folderPath As String)
+    Dim shellObj As Object
+    If Dir$(folderPath, vbDirectory) = vbNullString Then MkDir folderPath
+    Set shellObj = CreateObject("WScript.Shell")
+    shellObj.Run "explorer.exe " & OFZ_QuoteArg(folderPath), 1, False
+End Sub
+
