@@ -1005,3 +1005,40 @@ Visual regression in `auto` mode recorded the known warning that the screenshot 
 ### 6. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: `P2.11.2 Chart family modules`, but only as another small extraction with the same no-behavior-change rule.
+
+## P2.11.2 - Chart family module skeleton
+
+Дата: 2026-06-15.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен второй малый шаг `P2.11 Controlled module decomposition`: создан behavior-neutral skeleton для chart-family modules.
+
+### 2. Что изменено
+
+Добавлены family modules:
+
+- `scripts/charts/structure.py`;
+- `scripts/charts/scatter.py`;
+- `scripts/charts/monthly.py`;
+- `scripts/charts/revenue.py`;
+- `scripts/charts/boxplot.py`.
+
+В `scripts/charts/__init__.py` добавлен список `CHART_FAMILY_MODULES`.
+
+### 3. Что не делалось
+
+- Chart builders не переносились из `scripts/06_build_charts.py`.
+- Monthly builders не переносились из `scripts/10_build_monthly_charts.py`.
+- Output filenames, CLI behavior, chart contracts and schema contracts were not changed.
+- Generated outputs were not staged.
+
+### 4. Проверки
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\charts\__init__.py scripts\charts\structure.py scripts\charts\scatter.py scripts\charts\monthly.py scripts\charts\revenue.py scripts\charts\boxplot.py`: OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+
+### 5. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: первый реальный перенос одной небольшой chart family или pure-helper группы в созданные modules.

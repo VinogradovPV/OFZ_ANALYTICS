@@ -398,3 +398,9 @@
 |---|---|---|---|---|
 | 2026-06-15 | Extracted pure chart formatting helpers from `scripts/06_build_charts.py` into `scripts/charts/common.py`; added `scripts/charts/__init__.py`. | `.\.venv\Scripts\python.exe -m py_compile scripts\06_build_charts.py scripts\charts\common.py scripts\charts\__init__.py`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; targeted chart build; HTML QA; visual regression; `ofz-quality --fast`. | Passed: py_compile, compileall, `06_build_charts.py`, `html_chart_qa.py`, `visual_regression.py`, and quality gate fast. CLI behavior, output filenames, chart contracts and schema contracts were unchanged. | Visual regression used the existing fallback mode because screenshot backend was unavailable in the current environment. Generated outputs remain ignored and were not staged. |
 
+## 2026-06-15 - P2.11.2 chart family module skeleton
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-15 | Added behavior-neutral chart family modules under `scripts/charts/`: `structure`, `scatter`, `monthly`, `revenue`, `boxplot`; added `CHART_FAMILY_MODULES` in `scripts/charts/__init__.py`. | `.\.venv\Scripts\python.exe -m py_compile scripts\charts\__init__.py scripts\charts\structure.py scripts\charts\scatter.py scripts\charts\monthly.py scripts\charts\revenue.py scripts\charts\boxplot.py`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `ofz-quality --fast`. | Passed: py_compile, compileall and quality gate fast. No chart builders were moved in this step, so CLI behavior and output contracts remain unchanged. | This is a skeleton step only. Actual builder extraction remains incremental and must be done one family/helper group per commit. |
+
