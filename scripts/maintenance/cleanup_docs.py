@@ -34,8 +34,13 @@ ACTIVE_EXACT_PATHS = {
     "docs/00_project/production_readiness_report.md",
     "docs/00_project/project_inventory.md",
     "docs/00_project/docs_cleanup_apply_decision.md",
+    "docs/00_project/docs_archive_apply_report.md",
     "docs/00_project/docs_inventory_before_cleanup.md",
     "docs/00_project/docs_inventory_after_cleanup.md",
+    "docs/00_project/p2_modernization_progress_report.md",
+    "docs/00_project/p2_roadmap_after_production_ready_v1.md",
+    "docs/00_project/p2_starting_checkpoint.md",
+    "docs/00_project/scripts_archive_decision.md",
     "docs/00_project/scripts_inventory_before_cleanup.md",
     "docs/00_project/scripts_migration_plan.md",
     "docs/00_project/scripts_structure_plan.md",
@@ -72,10 +77,15 @@ ACTIVE_EXACT_PATHS = {
     "docs/06_quality/manual_checks_log.md",
     "docs/06_quality/quality_gate_report.md",
     "docs/06_quality/run_manifest_report.md",
+    "docs/06_quality/visual_regression_backend_decision.md",
     "docs/06_quality/visual_regression_report.md",
+    "docs/07_operations/ci_workflow.md",
     "docs/07_operations/environment.md",
     "docs/07_operations/production_runbook.md",
     "docs/07_operations/release_checklist.md",
+    "docs/07_operations/release_bundle_plan.md",
+    "docs/07_operations/ui_launcher_contract.md",
+    "docs/07_operations/word_vba_launcher_spec.md",
     "docs/03_pipeline/module_decomposition_plan.md",
 }
 
@@ -88,16 +98,15 @@ ACTIVE_NAME_HINTS = {
     "environment.md",
 }
 
-MERGE_CANDIDATE_NAMES = {
-    "boxplot_diagnostics.md",
-    "chart_improvement_diagnostics.md",
-    "chart_improvement_scope.md",
-    "format_revenue_discount_chart_diagnostics.md",
-}
+MERGE_CANDIDATE_NAMES: set[str] = set()
 
 ARCHIVE_CANDIDATE_NAMES = {
+    "boxplot_diagnostics.md",
     "charts_reorganization_report.md",
+    "chart_improvement_diagnostics.md",
+    "chart_improvement_scope.md",
     "docs_reorganization_report.md",
+    "format_revenue_discount_chart_diagnostics.md",
     "legacy_docs_archive_migration_dry_run.md",
     "legacy_docs_archive_migration_report.md",
 }

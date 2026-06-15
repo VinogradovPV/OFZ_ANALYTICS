@@ -284,8 +284,8 @@ def check_docs_structure(_context: GateContext) -> GateResult:
     ]
     required_files = [
         config.DOCS_DIR / "index.md",
-        config.get_doc_path("docs_reorganization_report.md"),
-        config.get_doc_path("charts_reorganization_report.md"),
+        config.DOCS_PROJECT_DIR / "docs_inventory_before_cleanup.md",
+        config.DOCS_PROJECT_DIR / "docs_cleanup_apply_decision.md",
         config.get_doc_path("scripts_structure_plan.md"),
         config.get_doc_path("scripts_migration_plan.md"),
     ]
@@ -318,7 +318,7 @@ def check_charts_structure(_context: GateContext) -> GateResult:
     ]
     required_files = [
         config.CHARTS_DIR / "index.md",
-        config.get_doc_path("charts_reorganization_report.md"),
+        config.DOCS_PROJECT_DIR / "outputs_structure.md",
     ]
     missing_dirs = [path.relative_to(config.PROJECT_ROOT).as_posix() for path in required_dirs if not path.exists()]
     missing_files = [path.relative_to(config.PROJECT_ROOT).as_posix() for path in required_files if not path.exists()]

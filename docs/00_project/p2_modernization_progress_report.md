@@ -852,3 +852,54 @@ Screenshot backend browser binaries are not installed in CI during P2.8. Local f
 ### 8. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: `P2.9 Controlled docs archive apply`.
+
+## P2.9 - Controlled docs archive apply
+
+Дата: 2026-06-15.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.9 Controlled docs archive apply`.
+
+### 2. Что изменено
+
+Обновлены и созданы:
+
+- `scripts/maintenance/cleanup_docs.py`;
+- `scripts/quality_gate.py`;
+- `docs/index.md`;
+- `docs/00_project/docs_inventory_before_cleanup.md`;
+- `docs/00_project/docs_inventory_after_cleanup.md`;
+- `docs/00_project/docs_archive_apply_report.md`;
+- `docs/archive/2026-06-15/`;
+- `README.md`.
+
+### 3. Результат cleanup
+
+После повторного dry-run активные P2 operation docs сохранены как `keep_active`, а legacy diagnostics/stage/reproducibility reports переведены в controlled archive.
+
+Итог archive mode:
+
+- `keep_active`: 61 documents;
+- `archive_candidate`: 39 documents;
+- archive folder: `docs/archive/2026-06-15/`;
+- `--delete-archived`: not executed.
+
+### 4. Что не делалось
+
+- Generated cleanup manifests under `outputs/reports/cleanup/` are not committed.
+- No archived docs were deleted.
+- No scripts were moved or deleted.
+- P2.10 legacy scripts archive remains a separate controlled stage.
+
+### 5. Проверки
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\cleanup_docs.py scripts\quality_gate.py`: OK.
+- `.\.venv\Scripts\python.exe scripts\maintenance\cleanup_docs.py --dry-run`: OK.
+- `.\.venv\Scripts\python.exe scripts\maintenance\cleanup_docs.py --archive`: OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+
+### 6. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: `P2.10 Controlled legacy scripts archive apply`.
