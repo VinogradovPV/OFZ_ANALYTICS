@@ -24,8 +24,26 @@ except ImportError:
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from scripts import config, palette, report_params, scatter_chart_policy, utils
+    from scripts.charts.common import (
+        format_bln,
+        format_hover_number,
+        format_metric_value,
+        format_number_text,
+        format_percent_label,
+        format_ru_number,
+        format_signed_metric_value,
+    )
 else:
     from . import config, palette, report_params, scatter_chart_policy, utils
+    from .charts.common import (
+        format_bln,
+        format_hover_number,
+        format_metric_value,
+        format_number_text,
+        format_percent_label,
+        format_ru_number,
+        format_signed_metric_value,
+    )
 
 
 ChartBuilder = Callable[[pd.DataFrame, report_params.ReportParams, list[str]], "ChartResult | None"]
@@ -280,35 +298,12 @@ def apply_common_layout(figure: Any, legend_title: str | None = None) -> None:
         uniformtext_mode="hide",
     )
 
-
-def format_number_text(series: pd.Series, digits: int = 1) -> pd.Series:
-    numeric = pd.to_numeric(series, errors="coerce")
-    return numeric.map(lambda value: "" if pd.isna(value) else f"{value:,.{digits}f}".replace(",", " "))
-
-
-def format_hover_number(value: Any, digits: int = 2) -> str:
-    numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
-    if pd.isna(numeric):
-        return ""
-    return f"{float(numeric):,.{digits}f}".replace(",", " ")
-
-
 def volume_to_bln(value: Any) -> Any:
     """Перевести объем из млн рублей в млрд рублей для визуализаций."""
     numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
     if pd.isna(numeric):
         return pd.NA
     return float(numeric) / 1000.0
-
-
-def format_bln(value: Any, suffix: bool = True) -> str:
-    """Отформатировать млрд рублей для подписей и hover."""
-    numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
-    if pd.isna(numeric):
-        return ""
-    text = f"{float(numeric):,.1f}".replace(",", " ").replace(".", ",")
-    return f"{text} млрд руб." if suffix else text
-
 
 def add_placement_bln_columns(data: pd.DataFrame, source_column: str = "_placement") -> pd.DataFrame:
     """Добавить display-колонки объема размещения без изменения исходных млн рублей."""
@@ -371,15 +366,6 @@ def add_stacked_structure_metrics(
     result["format_share_pct"] = result["segment_share_in_column"] * 100.0
     result["Сегмент"] = result[category_column].astype("string")
     return result
-
-
-def format_percent_label(value: Any) -> str:
-    """Отформатировать долю как проценты с одним знаком."""
-    numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
-    if pd.isna(numeric):
-        return ""
-    return f"{float(numeric) * 100:,.1f}".replace(",", " ").replace(".", ",")
-
 
 def combine_quality_flags(values: pd.Series) -> str:
     """Свернуть флаги качества данных в короткий список уникальных значений."""
@@ -2004,26 +1990,6 @@ def first_non_null(group: pd.DataFrame, column: str, fallback: Any = pd.NA) -> A
         return fallback
     values = group[column].dropna()
     return values.iloc[0] if not values.empty else fallback
-
-
-def format_metric_value(value: Any, digits: int = 1) -> str:
-    """Форматировать числовую метрику для подписи/hover без единицы измерения."""
-    numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
-    if pd.isna(numeric):
-        return ""
-    return f"{float(numeric):,.{digits}f}".replace(",", " ").replace(".", ",")
-
-
-def format_signed_metric_value(value: Any, digits: int = 1) -> str:
-    """Форматировать дельту со знаком для аналитических подписей."""
-    numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
-    if pd.isna(numeric):
-        return ""
-    if abs(float(numeric)) < 10 ** (-digits):
-        return f"{0:,.{digits}f}".replace(",", " ").replace(".", ",")
-    sign = "+" if float(numeric) > 0 else ""
-    return f"{sign}{float(numeric):,.{digits}f}".replace(",", " ").replace(".", ",")
-
 
 def aggregate_format_discount_data(
     df: pd.DataFrame,
@@ -6998,14 +6964,6 @@ def sankey_export_columns(flows: pd.DataFrame) -> pd.DataFrame:
             "auction_count",
         ]
     ].copy()
-
-
-def format_ru_number(value: Any, digits: int = 1) -> str:
-    numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
-    if pd.isna(numeric):
-        return ""
-    return f"{float(numeric):,.{digits}f}".replace(",", " ").replace(".", ",")
-
 
 def hex_to_rgba(hex_color: str, alpha: float) -> str:
     color = hex_color.lstrip("#")

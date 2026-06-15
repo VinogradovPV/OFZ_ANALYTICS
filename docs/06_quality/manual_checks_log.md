@@ -392,3 +392,9 @@
 |---|---|---|---|---|
 | 2026-06-15 | Applied controlled legacy scripts archive. | Reference scan across `README.md`, `docs/**`, `scripts/**`, `pyproject.toml`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; CLI help checks; `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`. | Five legacy maintenance scripts moved to `scripts/archive/2026-06-15/`; no files deleted; no entry points changed. | Archived scripts are audit artifacts only. Current production maintenance uses `ofz-clean-outputs`, `scripts/maintenance/cleanup_outputs.py`, `scripts/maintenance/cleanup_docs.py` and release bundle tooling. |
 
+## 2026-06-15 - P2.11.1 chart common helpers
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-15 | Extracted pure chart formatting helpers from `scripts/06_build_charts.py` into `scripts/charts/common.py`; added `scripts/charts/__init__.py`. | `.\.venv\Scripts\python.exe -m py_compile scripts\06_build_charts.py scripts\charts\common.py scripts\charts\__init__.py`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; targeted chart build; HTML QA; visual regression; `ofz-quality --fast`. | Passed: py_compile, compileall, `06_build_charts.py`, `html_chart_qa.py`, `visual_regression.py`, and quality gate fast. CLI behavior, output filenames, chart contracts and schema contracts were unchanged. | Visual regression used the existing fallback mode because screenshot backend was unavailable in the current environment. Generated outputs remain ignored and were not staged. |
+

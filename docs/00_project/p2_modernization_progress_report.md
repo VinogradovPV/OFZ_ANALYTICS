@@ -953,3 +953,55 @@ Screenshot backend browser binaries are not installed in CI during P2.8. Local f
 ### 5. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: `P2.11 Controlled module decomposition`.
+
+## P2.11.1 - Chart common helpers
+
+Дата: 2026-06-15.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен первый малый шаг `P2.11 Controlled module decomposition`: `P2.11.1 Chart common helpers`.
+
+### 2. Что изменено
+
+Создан пакет `scripts/charts/`:
+
+- `scripts/charts/__init__.py`;
+- `scripts/charts/common.py`.
+
+Из `scripts/06_build_charts.py` вынесены только pure formatting helpers:
+
+- `format_number_text`;
+- `format_hover_number`;
+- `format_bln`;
+- `format_percent_label`;
+- `format_metric_value`;
+- `format_signed_metric_value`;
+- `format_ru_number`.
+
+`scripts/06_build_charts.py` остается стабильным wrapper/orchestrator. CLI behavior, output filenames, chart contracts and schema contracts were not changed.
+
+### 3. Что не делалось
+
+- No chart family builders were moved.
+- No QA modules were extracted.
+- No output filename changes.
+- No generated outputs were staged.
+- Physical module decomposition remains incremental: one small extraction per commit.
+
+### 4. Проверки
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\06_build_charts.py scripts\charts\common.py scripts\charts\__init__.py`: OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK.
+- `.\.venv\Scripts\python.exe scripts\06_build_charts.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `.\.venv\Scripts\python.exe scripts\html_chart_qa.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `.\.venv\Scripts\python.exe scripts\visual_regression.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+
+### 5. Warnings documented
+
+Visual regression in `auto` mode recorded the known warning that the screenshot backend was unavailable in the current environment and fallback static inspection was used.
+
+### 6. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: `P2.11.2 Chart family modules`, but only as another small extraction with the same no-behavior-change rule.
