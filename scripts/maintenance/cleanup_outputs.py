@@ -211,6 +211,9 @@ def format_bytes(size: int) -> str:
 def manifest_markdown(manifest: dict[str, object]) -> str:
     candidates = manifest["candidates"]
     assert isinstance(candidates, list)
+    candidates_size_bytes = manifest.get("candidates_size_bytes", 0)
+    if not isinstance(candidates_size_bytes, (int, float, str)):
+        candidates_size_bytes = 0
     lines = [
         "# Outputs cleanup manifest",
         "",
@@ -220,15 +223,18 @@ def manifest_markdown(manifest: dict[str, object]) -> str:
         f"- archive_root: `{manifest['archive_root']}`",
         f"- delete_confirmed: `{manifest['delete_confirmed']}`",
         f"- candidates_count: `{manifest['candidates_count']}`",
-        f"- candidates_size: `{format_bytes(int(manifest['candidates_size_bytes']))}`",
+        f"- candidates_size: `{format_bytes(int(candidates_size_bytes))}`",
         "",
         "| Path | Kind | Size |",
         "|---|---|---:|",
     ]
     for item in candidates:
         assert isinstance(item, dict)
+        item_size_bytes = item.get("size_bytes", 0)
+        if not isinstance(item_size_bytes, (int, float, str)):
+            item_size_bytes = 0
         lines.append(
-            f"| `{item['path']}` | {item['kind']} | {format_bytes(int(item['size_bytes']))} |"
+            f"| `{item['path']}` | {item['kind']} | {format_bytes(int(item_size_bytes))} |"
         )
     return "\n".join(lines) + "\n"
 

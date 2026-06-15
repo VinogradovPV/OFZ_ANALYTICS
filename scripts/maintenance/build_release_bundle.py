@@ -293,6 +293,13 @@ def build_manifest(
 
 
 def manifest_markdown(manifest: dict[str, object]) -> str:
+    missing_raw = manifest.get("missing_required_categories")
+    missing = [str(item) for item in missing_raw] if isinstance(missing_raw, list) else []
+    warnings_raw = manifest.get("warning_summary")
+    warnings = [str(item) for item in warnings_raw] if isinstance(warnings_raw, list) else []
+    included_raw = manifest.get("included_files")
+    included_files = included_raw if isinstance(included_raw, list) else []
+
     lines = [
         "# OFZ_ANALYTICS release manifest",
         "",
@@ -316,19 +323,17 @@ def manifest_markdown(manifest: dict[str, object]) -> str:
         "## Missing required categories",
         "",
     ]
-    missing = manifest.get("missing_required_categories") or []
     if missing:
         lines.extend(f"- `{item}`" for item in missing)
     else:
         lines.append("- none")
     lines.extend(["", "## Warnings", ""])
-    warnings = manifest.get("warning_summary") or []
     if warnings:
         lines.extend(f"- {item}" for item in warnings)
     else:
         lines.append("- none")
     lines.extend(["", "## Included files", ""])
-    for entry in manifest.get("included_files", []):
+    for entry in included_files:
         if isinstance(entry, dict):
             lines.append(
                 f"- `{entry['path']}` ({entry['category']}, {entry['size_bytes']} bytes, sha256 `{entry['sha256']}`)"
