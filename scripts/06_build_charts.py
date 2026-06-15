@@ -236,6 +236,32 @@ def safe_divide_series(numerator: pd.Series, denominator: pd.Series) -> pd.Serie
     return numerator_numeric / denominator_numeric.mask(denominator_numeric == 0)
 
 
+def is_missing_value(value: object) -> bool:
+    """Return True for scalar missing values without confusing static checkers."""
+    if value is None:
+        return True
+    try:
+        missing = pd.Series([value]).isna().iloc[0]
+    except (TypeError, ValueError):
+        return False
+    return bool(missing)
+
+
+def to_optional_float(value: object) -> float | None:
+    """Convert a scalar-like value to float, returning None for missing/non-numeric values."""
+    numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
+    if is_missing_value(numeric):
+        return None
+    return float(numeric)
+
+
+def get_bool_series(data: pd.DataFrame, column: str, default: bool = True) -> pd.Series:
+    """Return a boolean Series for optional DataFrame flags."""
+    if column not in data.columns:
+        return pd.Series(default, index=data.index, dtype=bool)
+    return data[column].fillna(default).astype(bool)
+
+
 def resolve_numeric(
     df: pd.DataFrame,
     candidates: list[str],
@@ -330,7 +356,7 @@ def add_stacked_structure_metrics(
     result["segment_share_total"] = result["placement_volume_bln"] / grand_total if grand_total else pd.NA
     label_categories = [item.lower() for item in (always_label_categories or [])]
     category_text = result[category_column].fillna("").astype(str).str.lower()
-    always_visible = category_text.map(lambda value: any(item in value for item in label_categories))
+    always_visible = category_text.map(lambda value: any(item in str(value) for item in label_categories))
     values = pd.to_numeric(result["placement_volume_bln"], errors="coerce")
     shares = pd.to_numeric(result["segment_share_in_column"], errors="coerce")
     result["label_visible"] = (
@@ -632,7 +658,7 @@ def add_format_discount_badges(
 
 def format_stack_order(value: object) -> int:
     """Вернуть порядок форматов в stacked bar: аукцион ниже, ДРПА выше."""
-    text = "" if pd.isna(value) else str(value).strip().lower()
+    text = "" if is_missing_value(value) else str(value).strip().lower()
     if "аукцион" in text or "auction" in text:
         return 1
     if "дрпа" in text or "drpa" in text:
@@ -1281,7 +1307,7 @@ def build_format_terms_comparison_chart(
     ]
     long_rows: list[dict[str, Any]] = []
     for _, row in data.iterrows():
-        base = row.to_dict()
+        base: dict[str, Any] = dict(row.to_dict())
         for metric_code, metric_name_ru, metric_unit, digits, source_column, aggregation_method, weight_field in panel_metrics:
             actual_source_column = source_column
             if metric_code in {"revenue_to_nominal_pct", "nominal_revenue_gap_bln"}:
@@ -1479,7 +1505,9 @@ def build_format_terms_delta_by_format_chart(
         limitations.append(
             "График `format_terms_delta_by_format` пропущен: дельты не рассчитаны из-за отсутствия одного из форматов в периодах."
         )
-        return make_result("format_terms_delta_by_format", empty_figure("Разница условий размещения: ДРПА минус Аукцион"), delta_data, params)
+        fig = go.Figure()
+        fig.update_layout(title="Разница условий размещения: ДРПА минус Аукцион")
+        return make_result("format_terms_delta_by_format", fig, delta_data, params)
     plot_data["delta_display"] = plot_data.apply(
         lambda row: format_signed_metric_value(row["delta_drpa_minus_auction"], 1 if row["metric_unit"] != "п.п." else 2),
         axis=1,
@@ -1679,8 +1707,9 @@ def build_format_terms_delta_data(aggregate: pd.DataFrame) -> pd.DataFrame:
     ]
     rows: list[dict[str, Any]] = []
     for period_label, period_group in aggregate.groupby("report_period_label", dropna=False):
-        auction_rows = period_group.loc[(period_group["format"] == "Аукцион") & (period_group.get("format_available", True).astype(bool))]
-        drpa_rows = period_group.loc[(period_group["format"] == "ДРПА") & (period_group.get("format_available", True).astype(bool))]
+        format_available = get_bool_series(period_group, "format_available", default=True)
+        auction_rows = period_group.loc[(period_group["format"] == "Аукцион") & format_available]
+        drpa_rows = period_group.loc[(period_group["format"] == "ДРПА") & format_available]
         auction = auction_rows.iloc[0] if not auction_rows.empty else None
         drpa = drpa_rows.iloc[0] if not drpa_rows.empty else None
         period_display = first_available_from_rows(period_group, "report_period_display_label", str(period_label))
@@ -1700,8 +1729,10 @@ def build_format_terms_delta_data(aggregate: pd.DataFrame) -> pd.DataFrame:
         ) in metrics:
             auction_value = auction.get(value_column) if auction is not None else pd.NA
             drpa_value = drpa.get(value_column) if drpa is not None else pd.NA
-            delta_available = auction is not None and drpa is not None and pd.notna(auction_value) and pd.notna(drpa_value)
-            delta_value = float(drpa_value) - float(auction_value) if delta_available else pd.NA
+            auction_numeric = to_optional_float(auction_value)
+            drpa_numeric = to_optional_float(drpa_value)
+            delta_available = auction is not None and drpa is not None and auction_numeric is not None and drpa_numeric is not None
+            delta_value = drpa_numeric - auction_numeric if delta_available else pd.NA
             missing_parts: list[str] = []
             if auction is None:
                 missing_parts.append("no_auction")
