@@ -1,8 +1,8 @@
-# Структура outputs
+﻿# РЎС‚СЂСѓРєС‚СѓСЂР° outputs
 
-Документ фиксирует целевую структуру `outputs/` и проверки, которые должны покрываться smoke tests после нового запуска pipeline.
+Р”РѕРєСѓРјРµРЅС‚ С„РёРєСЃРёСЂСѓРµС‚ С†РµР»РµРІСѓСЋ СЃС‚СЂСѓРєС‚СѓСЂСѓ `outputs/` Рё РїСЂРѕРІРµСЂРєРё, РєРѕС‚РѕСЂС‹Рµ РґРѕР»Р¶РЅС‹ РїРѕРєСЂС‹РІР°С‚СЊСЃСЏ smoke tests РїРѕСЃР»Рµ РЅРѕРІРѕРіРѕ Р·Р°РїСѓСЃРєР° pipeline.
 
-## Целевая структура
+## Р¦РµР»РµРІР°СЏ СЃС‚СЂСѓРєС‚СѓСЂР°
 
 ```text
 outputs/reports/
@@ -23,27 +23,27 @@ outputs/dashboards/
 outputs/archive/
 ```
 
-## Назначение папок
+## РќР°Р·РЅР°С‡РµРЅРёРµ РїР°РїРѕРє
 
-| Папка | Назначение |
+| РџР°РїРєР° | РќР°Р·РЅР°С‡РµРЅРёРµ |
 | --- | --- |
-| `outputs/reports/` | Человекочитаемые отчетные таблицы и отчетные файлы. |
-| `outputs/reports/analytical_tables/` | XLSX обязательных аналитических таблиц. |
-| `outputs/reports/monthly_tables/` | XLSX помесячных отчетных таблиц и monthly layer reports. |
-| `outputs/exports/analytical_csv/` | CSV-копии отчетных таблиц. |
-| `outputs/exports/chart_data/` | Технические таблицы-основы визуализаций. |
-| `outputs/exports/chart_data/risk_quadrant/` | CSV-основы risk quadrant, demand cutoff и ratio-графиков. |
-| `outputs/exports/chart_data/sankey/` | CSV-основы Sankey-графиков. |
-| `outputs/exports/chart_data/boxplot/` | CSV-основы boxplot-графиков и статистики распределений. |
-| `outputs/exports/chart_data/structure/` | CSV-основы структурных визуализаций. |
-| `outputs/exports/technical/` | Технические exports, не относящиеся к отчетным таблицам или chart data. |
-| `outputs/exports/technical/review_required/` | Файлы, назначение которых требует ручной проверки. |
+| `outputs/reports/` | Р§РµР»РѕРІРµРєРѕС‡РёС‚Р°РµРјС‹Рµ РѕС‚С‡РµС‚РЅС‹Рµ С‚Р°Р±Р»РёС†С‹ Рё РѕС‚С‡РµС‚РЅС‹Рµ С„Р°Р№Р»С‹. |
+| `outputs/reports/analytical_tables/` | XLSX РѕР±СЏР·Р°С‚РµР»СЊРЅС‹С… Р°РЅР°Р»РёС‚РёС‡РµСЃРєРёС… С‚Р°Р±Р»РёС†. |
+| `outputs/reports/monthly_tables/` | XLSX РїРѕРјРµСЃСЏС‡РЅС‹С… РѕС‚С‡РµС‚РЅС‹С… С‚Р°Р±Р»РёС† Рё monthly layer reports. |
+| `outputs/exports/analytical_csv/` | CSV-РєРѕРїРёРё РѕС‚С‡РµС‚РЅС‹С… С‚Р°Р±Р»РёС†. |
+| `outputs/exports/chart_data/` | РўРµС…РЅРёС‡РµСЃРєРёРµ С‚Р°Р±Р»РёС†С‹-РѕСЃРЅРѕРІС‹ РІРёР·СѓР°Р»РёР·Р°С†РёР№. |
+| `outputs/exports/chart_data/risk_quadrant/` | CSV-РѕСЃРЅРѕРІС‹ risk quadrant, demand cutoff Рё ratio-РіСЂР°С„РёРєРѕРІ. |
+| `outputs/exports/chart_data/sankey/` | CSV-РѕСЃРЅРѕРІС‹ Sankey-РіСЂР°С„РёРєРѕРІ. |
+| `outputs/exports/chart_data/boxplot/` | CSV-РѕСЃРЅРѕРІС‹ boxplot-РіСЂР°С„РёРєРѕРІ Рё СЃС‚Р°С‚РёСЃС‚РёРєРё СЂР°СЃРїСЂРµРґРµР»РµРЅРёР№. |
+| `outputs/exports/chart_data/structure/` | CSV-РѕСЃРЅРѕРІС‹ СЃС‚СЂСѓРєС‚СѓСЂРЅС‹С… РІРёР·СѓР°Р»РёР·Р°С†РёР№. |
+| `outputs/exports/technical/` | РўРµС…РЅРёС‡РµСЃРєРёРµ exports, РЅРµ РѕС‚РЅРѕСЃСЏС‰РёРµСЃСЏ Рє РѕС‚С‡РµС‚РЅС‹Рј С‚Р°Р±Р»РёС†Р°Рј РёР»Рё chart data. |
+| `outputs/exports/technical/review_required/` | Р¤Р°Р№Р»С‹, РЅР°Р·РЅР°С‡РµРЅРёРµ РєРѕС‚РѕСЂС‹С… С‚СЂРµР±СѓРµС‚ СЂСѓС‡РЅРѕР№ РїСЂРѕРІРµСЂРєРё. |
 | `outputs/dashboards/` | BI-ready dashboard exports. |
-| `outputs/archive/` | Устаревшие или перенесенные outputs, которые не удаляются автоматически. |
+| `outputs/archive/` | РЈСЃС‚Р°СЂРµРІС€РёРµ РёР»Рё РїРµСЂРµРЅРµСЃРµРЅРЅС‹Рµ outputs, РєРѕС‚РѕСЂС‹Рµ РЅРµ СѓРґР°Р»СЏСЋС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё. |
 
 ## Smoke checks
 
-Smoke tests, если они будут добавлены в проект, должны проверять наличие:
+Smoke tests, РµСЃР»Рё РѕРЅРё Р±СѓРґСѓС‚ РґРѕР±Р°РІР»РµРЅС‹ РІ РїСЂРѕРµРєС‚, РґРѕР»Р¶РЅС‹ РїСЂРѕРІРµСЂСЏС‚СЊ РЅР°Р»РёС‡РёРµ:
 
 - `outputs/reports/analytical_tables/`
 - `outputs/reports/monthly_tables/`
@@ -54,32 +54,32 @@ Smoke tests, если они будут добавлены в проект, до
 - `outputs/exports/chart_data/structure/`
 - `outputs/dashboards/`
 
-После нового запуска pipeline smoke tests также должны проверять, что отчетные `.xlsx` не сохраняются напрямую в корень `outputs/exports/`.
+РџРѕСЃР»Рµ РЅРѕРІРѕРіРѕ Р·Р°РїСѓСЃРєР° pipeline smoke tests С‚Р°РєР¶Рµ РґРѕР»Р¶РЅС‹ РїСЂРѕРІРµСЂСЏС‚СЊ, С‡С‚Рѕ РѕС‚С‡РµС‚РЅС‹Рµ `.xlsx` РЅРµ СЃРѕС…СЂР°РЅСЏСЋС‚СЃСЏ РЅР°РїСЂСЏРјСѓСЋ РІ РєРѕСЂРµРЅСЊ `outputs/exports/`.
 
-## Правило хранения
+## РџСЂР°РІРёР»Рѕ С…СЂР°РЅРµРЅРёСЏ
 
-Новые генерации должны сохранять файлы сразу в профильную папку. Старые или неоднозначные outputs не удаляются безвозвратно и при необходимости переносятся в `outputs/archive/` или `outputs/exports/technical/review_required/`.
+РќРѕРІС‹Рµ РіРµРЅРµСЂР°С†РёРё РґРѕР»Р¶РЅС‹ СЃРѕС…СЂР°РЅСЏС‚СЊ С„Р°Р№Р»С‹ СЃСЂР°Р·Сѓ РІ РїСЂРѕС„РёР»СЊРЅСѓСЋ РїР°РїРєСѓ. РЎС‚Р°СЂС‹Рµ РёР»Рё РЅРµРѕРґРЅРѕР·РЅР°С‡РЅС‹Рµ outputs РЅРµ СѓРґР°Р»СЏСЋС‚СЃСЏ Р±РµР·РІРѕР·РІСЂР°С‚РЅРѕ Рё РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РїРµСЂРµРЅРѕСЃСЏС‚СЃСЏ РІ `outputs/archive/` РёР»Рё `outputs/exports/technical/review_required/`.
 
-## Актуализация структуры на 2026-05-25
+## РђРєС‚СѓР°Р»РёР·Р°С†РёСЏ СЃС‚СЂСѓРєС‚СѓСЂС‹ РЅР° 2026-05-25
 
-| Тип результата | Целевая папка | Комментарий |
+| РўРёРї СЂРµР·СѓР»СЊС‚Р°С‚Р° | Р¦РµР»РµРІР°СЏ РїР°РїРєР° | РљРѕРјРјРµРЅС‚Р°СЂРёР№ |
 | --- | --- | --- |
-| Обязательные XLSX-таблицы | `outputs/reports/analytical_tables/` | Человекочитаемые аналитические таблицы. |
-| Помесячные XLSX-таблицы | `outputs/reports/monthly_tables/` | Monthly layer и monthly reports. |
-| CSV-копии отчетных таблиц | `outputs/exports/analytical_csv/` | Машиночитаемые версии отчетных таблиц. |
-| HTML-графики | `outputs/charts/` | Интерактивные визуализации. |
-| Risk/scatter chart data | `outputs/exports/chart_data/risk_quadrant/` | Основы risk quadrant, demand cutoff, scatter/outlier/log/facet версий. |
-| Sankey chart data | `outputs/exports/chart_data/sankey/` | Потоки Sankey и таблицы-основы. |
-| Boxplot chart data | `outputs/exports/chart_data/boxplot/` | Статистики boxplot, включая long-mode/facet diagnostics. |
-| Structure chart data | `outputs/exports/chart_data/structure/` | Stacked structure charts, итоги столбцов и доли сегментов. |
+| РћР±СЏР·Р°С‚РµР»СЊРЅС‹Рµ XLSX-С‚Р°Р±Р»РёС†С‹ | `outputs/reports/analytical_tables/` | Р§РµР»РѕРІРµРєРѕС‡РёС‚Р°РµРјС‹Рµ Р°РЅР°Р»РёС‚РёС‡РµСЃРєРёРµ С‚Р°Р±Р»РёС†С‹. |
+| РџРѕРјРµСЃСЏС‡РЅС‹Рµ XLSX-С‚Р°Р±Р»РёС†С‹ | `outputs/reports/monthly_tables/` | Monthly layer Рё monthly reports. |
+| CSV-РєРѕРїРёРё РѕС‚С‡РµС‚РЅС‹С… С‚Р°Р±Р»РёС† | `outputs/exports/analytical_csv/` | РњР°С€РёРЅРѕС‡РёС‚Р°РµРјС‹Рµ РІРµСЂСЃРёРё РѕС‚С‡РµС‚РЅС‹С… С‚Р°Р±Р»РёС†. |
+| HTML-РіСЂР°С„РёРєРё | `outputs/charts/` | РРЅС‚РµСЂР°РєС‚РёРІРЅС‹Рµ РІРёР·СѓР°Р»РёР·Р°С†РёРё. |
+| Risk/scatter chart data | `outputs/exports/chart_data/risk_quadrant/` | РћСЃРЅРѕРІС‹ risk quadrant, demand cutoff, scatter/outlier/log/facet РІРµСЂСЃРёР№. |
+| Sankey chart data | `outputs/exports/chart_data/sankey/` | РџРѕС‚РѕРєРё Sankey Рё С‚Р°Р±Р»РёС†С‹-РѕСЃРЅРѕРІС‹. |
+| Boxplot chart data | `outputs/exports/chart_data/boxplot/` | РЎС‚Р°С‚РёСЃС‚РёРєРё boxplot, РІРєР»СЋС‡Р°СЏ long-mode/facet diagnostics. |
+| Structure chart data | `outputs/exports/chart_data/structure/` | Stacked structure charts, РёС‚РѕРіРё СЃС‚РѕР»Р±С†РѕРІ Рё РґРѕР»Рё СЃРµРіРјРµРЅС‚РѕРІ. |
 | Dashboard exports | `outputs/dashboards/` | BI-ready datasets, metadata, data dictionary, semantic layer. |
-| Executive summary | `outputs/reports/` | Параметризуемое управленческое резюме. |
+| Executive summary | `outputs/reports/` | РџР°СЂР°РјРµС‚СЂРёР·СѓРµРјРѕРµ СѓРїСЂР°РІР»РµРЅС‡РµСЃРєРѕРµ СЂРµР·СЋРјРµ. |
 
-Новые файлы не должны сохраняться напрямую в корень `outputs/exports/`. Исключение допускается только для архивных/наследованных файлов до миграции; такие файлы должны быть перенесены через `scripts/reorganize_outputs.py` или `scripts/migrate_outputs_structure.py`.
+Новые файлы не должны сохраняться напрямую в корень `outputs/exports/`. Production cleanup выполняется через `ofz-clean-outputs` / `scripts/maintenance/cleanup_outputs.py`; legacy migration helpers хранятся в `scripts/archive/2026-06-15/` только для audit trail.
 
-## Проверки структуры
+## РџСЂРѕРІРµСЂРєРё СЃС‚СЂСѓРєС‚СѓСЂС‹
 
-Рекомендуемые команды ручной проверки:
+Р РµРєРѕРјРµРЅРґСѓРµРјС‹Рµ РєРѕРјР°РЅРґС‹ СЂСѓС‡РЅРѕР№ РїСЂРѕРІРµСЂРєРё:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\schema_validation.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative

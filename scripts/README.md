@@ -1,80 +1,79 @@
-# scripts/
+﻿# scripts/
 
-Папка `scripts/` содержит Python-first pipeline проекта OFZ_ANALITICS: от чтения и нормализации исходных данных до построения графиков, аналитических таблиц, dashboard-ready exports и проверок качества.
+РџР°РїРєР° `scripts/` СЃРѕРґРµСЂР¶РёС‚ Python-first pipeline РїСЂРѕРµРєС‚Р° OFZ_ANALITICS: РѕС‚ С‡С‚РµРЅРёСЏ Рё РЅРѕСЂРјР°Р»РёР·Р°С†РёРё РёСЃС…РѕРґРЅС‹С… РґР°РЅРЅС‹С… РґРѕ РїРѕСЃС‚СЂРѕРµРЅРёСЏ РіСЂР°С„РёРєРѕРІ, Р°РЅР°Р»РёС‚РёС‡РµСЃРєРёС… С‚Р°Р±Р»РёС†, dashboard-ready exports Рё РїСЂРѕРІРµСЂРѕРє РєР°С‡РµСЃС‚РІР°.
 
-## Почему скрипты пока не переносятся физически
+## РџРѕС‡РµРјСѓ СЃРєСЂРёРїС‚С‹ РїРѕРєР° РЅРµ РїРµСЂРµРЅРѕСЃСЏС‚СЃСЏ С„РёР·РёС‡РµСЃРєРё
 
-Основные скрипты остаются в корне `scripts/`, чтобы не ломать существующие команды запуска, импорты, `run_pipeline.py`, README и ручные проверки. На текущем этапе выполнена логическая классификация и наведены правила размещения outputs/docs, но физическая миграция Python-модулей не проводится.
+РћСЃРЅРѕРІРЅС‹Рµ СЃРєСЂРёРїС‚С‹ РѕСЃС‚Р°СЋС‚СЃСЏ РІ РєРѕСЂРЅРµ `scripts/`, С‡С‚РѕР±С‹ РЅРµ Р»РѕРјР°С‚СЊ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРµ РєРѕРјР°РЅРґС‹ Р·Р°РїСѓСЃРєР°, РёРјРїРѕСЂС‚С‹, `run_pipeline.py`, README Рё СЂСѓС‡РЅС‹Рµ РїСЂРѕРІРµСЂРєРё. РќР° С‚РµРєСѓС‰РµРј СЌС‚Р°РїРµ РІС‹РїРѕР»РЅРµРЅР° Р»РѕРіРёС‡РµСЃРєР°СЏ РєР»Р°СЃСЃРёС„РёРєР°С†РёСЏ Рё РЅР°РІРµРґРµРЅС‹ РїСЂР°РІРёР»Р° СЂР°Р·РјРµС‰РµРЅРёСЏ outputs/docs, РЅРѕ С„РёР·РёС‡РµСЃРєР°СЏ РјРёРіСЂР°С†РёСЏ Python-РјРѕРґСѓР»РµР№ РЅРµ РїСЂРѕРІРѕРґРёС‚СЃСЏ.
 
-Если в будущем понадобится переносить скрипты по подпапкам, сначала нужен отдельный план миграции с dry-run, проверкой импортов и обратной совместимостью CLI.
+Р•СЃР»Рё РІ Р±СѓРґСѓС‰РµРј РїРѕРЅР°РґРѕР±РёС‚СЃСЏ РїРµСЂРµРЅРѕСЃРёС‚СЊ СЃРєСЂРёРїС‚С‹ РїРѕ РїРѕРґРїР°РїРєР°Рј, СЃРЅР°С‡Р°Р»Р° РЅСѓР¶РµРЅ РѕС‚РґРµР»СЊРЅС‹Р№ РїР»Р°РЅ РјРёРіСЂР°С†РёРё СЃ dry-run, РїСЂРѕРІРµСЂРєРѕР№ РёРјРїРѕСЂС‚РѕРІ Рё РѕР±СЂР°С‚РЅРѕР№ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊСЋ CLI.
 
-## Логическая классификация
+## Р›РѕРіРёС‡РµСЃРєР°СЏ РєР»Р°СЃСЃРёС„РёРєР°С†РёСЏ
 
 ### Pipeline
 
-- `run_pipeline.py` — основной оркестратор этапов.
-- `interactive_pipeline.py` — интерактивный launcher для ручного выбора параметров.
-- `report_params.py` — расчет отчетных периодов и `aggregation_mode`.
-- `period_filter.py` — формирование `ofz_auctions_report_scope.csv`.
+- `run_pipeline.py` вЂ” РѕСЃРЅРѕРІРЅРѕР№ РѕСЂРєРµСЃС‚СЂР°С‚РѕСЂ СЌС‚Р°РїРѕРІ.
+- `interactive_pipeline.py` вЂ” РёРЅС‚РµСЂР°РєС‚РёРІРЅС‹Р№ launcher РґР»СЏ СЂСѓС‡РЅРѕРіРѕ РІС‹Р±РѕСЂР° РїР°СЂР°РјРµС‚СЂРѕРІ.
+- `report_params.py` вЂ” СЂР°СЃС‡РµС‚ РѕС‚С‡РµС‚РЅС‹С… РїРµСЂРёРѕРґРѕРІ Рё `aggregation_mode`.
+- `period_filter.py` вЂ” С„РѕСЂРјРёСЂРѕРІР°РЅРёРµ `ofz_auctions_report_scope.csv`.
 
 ### Stages
 
-- `01_data_audit.py` — аудит исходных файлов.
-- `02_data_cleaning.py` — очистка данных.
-- `03_feature_engineering.py` — расчет признаков и KPI-полей.
-- `04_kpi_map.py` — карта KPI.
-- `05_visualization_strategy.py` — методология визуализаций.
-- `06_build_charts.py` — основные HTML-графики.
-- `07_dashboard_exports.py` — dashboard-ready exports.
-- `08_analytical_tables.py` — обязательные аналитические таблицы.
-- `09_monthly_analytics.py` — monthly layer.
-- `10_build_monthly_charts.py` — помесячные графики.
-- `11_revenue_analytics.py` — аналитика выручки.
-- `12_build_revenue_charts.py` — графики по выручке.
-- `generate_executive_summary.py` — параметризуемое executive summary.
-- `build_semantic_model_v2.py` — semantic model v2.
+- `01_data_audit.py` вЂ” Р°СѓРґРёС‚ РёСЃС…РѕРґРЅС‹С… С„Р°Р№Р»РѕРІ.
+- `02_data_cleaning.py` вЂ” РѕС‡РёСЃС‚РєР° РґР°РЅРЅС‹С….
+- `03_feature_engineering.py` вЂ” СЂР°СЃС‡РµС‚ РїСЂРёР·РЅР°РєРѕРІ Рё KPI-РїРѕР»РµР№.
+- `04_kpi_map.py` вЂ” РєР°СЂС‚Р° KPI.
+- `05_visualization_strategy.py` вЂ” РјРµС‚РѕРґРѕР»РѕРіРёСЏ РІРёР·СѓР°Р»РёР·Р°С†РёР№.
+- `06_build_charts.py` вЂ” РѕСЃРЅРѕРІРЅС‹Рµ HTML-РіСЂР°С„РёРєРё.
+- `07_dashboard_exports.py` вЂ” dashboard-ready exports.
+- `08_analytical_tables.py` вЂ” РѕР±СЏР·Р°С‚РµР»СЊРЅС‹Рµ Р°РЅР°Р»РёС‚РёС‡РµСЃРєРёРµ С‚Р°Р±Р»РёС†С‹.
+- `09_monthly_analytics.py` вЂ” monthly layer.
+- `10_build_monthly_charts.py` вЂ” РїРѕРјРµСЃСЏС‡РЅС‹Рµ РіСЂР°С„РёРєРё.
+- `11_revenue_analytics.py` вЂ” Р°РЅР°Р»РёС‚РёРєР° РІС‹СЂСѓС‡РєРё.
+- `12_build_revenue_charts.py` вЂ” РіСЂР°С„РёРєРё РїРѕ РІС‹СЂСѓС‡РєРµ.
+- `generate_executive_summary.py` вЂ” РїР°СЂР°РјРµС‚СЂРёР·СѓРµРјРѕРµ executive summary.
+- `build_semantic_model_v2.py` вЂ” semantic model v2.
 
 ### QA
 
-- `quality_gate.py` — единый quality gate.
-- `schema_validation.py` — проверка схемы и контрактов данных.
-- `regression_tests.py` — регрессионные тесты периодной логики и edge cases.
-- `smoke_tests.py` — smoke tests pipeline outputs.
-- `html_chart_qa.py` — QA HTML-графиков.
-- `visual_regression.py` — visual regression или fallback HTML/Plotly inspection.
-- `anomaly_tests.py` — проверки аномалий данных.
+- `quality_gate.py` вЂ” РµРґРёРЅС‹Р№ quality gate.
+- `schema_validation.py` вЂ” РїСЂРѕРІРµСЂРєР° СЃС…РµРјС‹ Рё РєРѕРЅС‚СЂР°РєС‚РѕРІ РґР°РЅРЅС‹С….
+- `regression_tests.py` вЂ” СЂРµРіСЂРµСЃСЃРёРѕРЅРЅС‹Рµ С‚РµСЃС‚С‹ РїРµСЂРёРѕРґРЅРѕР№ Р»РѕРіРёРєРё Рё edge cases.
+- `smoke_tests.py` вЂ” smoke tests pipeline outputs.
+- `html_chart_qa.py` вЂ” QA HTML-РіСЂР°С„РёРєРѕРІ.
+- `visual_regression.py` вЂ” visual regression РёР»Рё fallback HTML/Plotly inspection.
+- `anomaly_tests.py` вЂ” РїСЂРѕРІРµСЂРєРё Р°РЅРѕРјР°Р»РёР№ РґР°РЅРЅС‹С….
 
 ### Metadata
 
-- `run_manifest.py` — run manifest.
-- `raw_data_registry.py` — registry исходных файлов без изменения `data/raw/`.
+- `run_manifest.py` вЂ” run manifest.
+- `raw_data_registry.py` вЂ” registry РёСЃС…РѕРґРЅС‹С… С„Р°Р№Р»РѕРІ Р±РµР· РёР·РјРµРЅРµРЅРёСЏ `data/raw/`.
 
 ### Utils
 
-- `config.py` — централизованные пути и routing helper-функции.
-- `utils.py` — общие функции чтения/записи, логирования и нормализации.
-- `palette.py` — цветовые палитры.
-- `scatter_chart_policy.py` — политика подписей scatter-графиков.
-- `compare_outputs.py` — сравнение outputs.
+- `config.py` вЂ” С†РµРЅС‚СЂР°Р»РёР·РѕРІР°РЅРЅС‹Рµ РїСѓС‚Рё Рё routing helper-С„СѓРЅРєС†РёРё.
+- `utils.py` вЂ” РѕР±С‰РёРµ С„СѓРЅРєС†РёРё С‡С‚РµРЅРёСЏ/Р·Р°РїРёСЃРё, Р»РѕРіРёСЂРѕРІР°РЅРёСЏ Рё РЅРѕСЂРјР°Р»РёР·Р°С†РёРё.
+- `palette.py` вЂ” С†РІРµС‚РѕРІС‹Рµ РїР°Р»РёС‚СЂС‹.
+- `scatter_chart_policy.py` вЂ” РїРѕР»РёС‚РёРєР° РїРѕРґРїРёСЃРµР№ scatter-РіСЂР°С„РёРєРѕРІ.
+- `compare_outputs.py` вЂ” СЃСЂР°РІРЅРµРЅРёРµ outputs.
 
 ### Maintenance
 
-- `cleanup_docs.py` — legacy-очистка docs.
-- `reorganize_outputs.py` — реорганизация outputs/exports.
-- `migrate_outputs_structure.py` — миграция структуры outputs.
-- `maintenance/reorganize_docs.py` — реорганизация docs.
-- `maintenance/reorganize_charts.py` — реорганизация HTML-графиков.
-- `maintenance/migrate_legacy_docs_archive.py` — перенос старого `docs/archive/`.
+- `maintenance/cleanup_outputs.py` - production-safe cleanup generated outputs.
+- `maintenance/cleanup_docs.py` - inventory-first docs cleanup workflow.
+- `maintenance/build_release_bundle.py` - external release bundle builder.
+- `maintenance/reorganize_charts.py` - HTML charts reorganization helper.
+- `archive/2026-06-15/` - legacy maintenance scripts kept for audit only; do not use for production runs.
 
-## Основные entry points
+## РћСЃРЅРѕРІРЅС‹Рµ entry points
 
-Полный запуск:
+РџРѕР»РЅС‹Р№ Р·Р°РїСѓСЃРє:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_pipeline.py --all --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-Интерактивный запуск:
+РРЅС‚РµСЂР°РєС‚РёРІРЅС‹Р№ Р·Р°РїСѓСЃРє:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\interactive_pipeline.py
@@ -98,11 +97,11 @@ Run manifest:
 .\.venv\Scripts\python.exe scripts\run_manifest.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative --stages all
 ```
 
-## Правила для markdown-документов
+## РџСЂР°РІРёР»Р° РґР»СЏ markdown-РґРѕРєСѓРјРµРЅС‚РѕРІ
 
-Новые `.md`-документы нельзя сохранять напрямую в корень `docs/`. Единственное исключение: `docs/index.md`.
+РќРѕРІС‹Рµ `.md`-РґРѕРєСѓРјРµРЅС‚С‹ РЅРµР»СЊР·СЏ СЃРѕС…СЂР°РЅСЏС‚СЊ РЅР°РїСЂСЏРјСѓСЋ РІ РєРѕСЂРµРЅСЊ `docs/`. Р•РґРёРЅСЃС‚РІРµРЅРЅРѕРµ РёСЃРєР»СЋС‡РµРЅРёРµ: `docs/index.md`.
 
-Используйте централизованный helper:
+РСЃРїРѕР»СЊР·СѓР№С‚Рµ С†РµРЅС‚СЂР°Р»РёР·РѕРІР°РЅРЅС‹Р№ helper:
 
 ```python
 from scripts import config
@@ -110,7 +109,7 @@ from scripts import config
 target_path = config.get_doc_path("quality_gate_report.md")
 ```
 
-Документы должны попадать в тематические папки:
+Р”РѕРєСѓРјРµРЅС‚С‹ РґРѕР»Р¶РЅС‹ РїРѕРїР°РґР°С‚СЊ РІ С‚РµРјР°С‚РёС‡РµСЃРєРёРµ РїР°РїРєРё:
 
 - `docs/00_project/`;
 - `docs/01_methodology/`;
@@ -121,14 +120,14 @@ target_path = config.get_doc_path("quality_gate_report.md")
 - `docs/06_quality/`;
 - `docs/90_archive/`.
 
-## Правила для HTML-графиков
+## РџСЂР°РІРёР»Р° РґР»СЏ HTML-РіСЂР°С„РёРєРѕРІ
 
-Новые HTML-графики нельзя сохранять напрямую в корень `outputs/charts/`.
+РќРѕРІС‹Рµ HTML-РіСЂР°С„РёРєРё РЅРµР»СЊР·СЏ СЃРѕС…СЂР°РЅСЏС‚СЊ РЅР°РїСЂСЏРјСѓСЋ РІ РєРѕСЂРµРЅСЊ `outputs/charts/`.
 
-Используйте:
+РСЃРїРѕР»СЊР·СѓР№С‚Рµ:
 
 ```python
 html_dir = config.chart_html_dir_for_name(chart_name)
 ```
 
-Индекс графиков поддерживается в `outputs/charts/index.md`.
+РРЅРґРµРєСЃ РіСЂР°С„РёРєРѕРІ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ РІ `outputs/charts/index.md`.

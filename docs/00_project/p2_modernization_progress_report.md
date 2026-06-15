@@ -903,3 +903,53 @@ Screenshot backend browser binaries are not installed in CI during P2.8. Local f
 ### 6. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: `P2.10 Controlled legacy scripts archive apply`.
+
+## P2.10 - Controlled legacy scripts archive apply
+
+Дата: 2026-06-15.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.10 Controlled legacy scripts archive apply`.
+
+### 2. Что изменено
+
+Пять legacy maintenance scripts перенесены в `scripts/archive/2026-06-15/`:
+
+- `cleanup_docs.py`;
+- `migrate_outputs_structure.py`;
+- `reorganize_outputs.py`;
+- `migrate_legacy_docs_archive.py`;
+- `reorganize_docs.py`.
+
+Добавлен `scripts/archive/2026-06-15/README.md`.
+
+Обновлены active docs so old scripts are no longer presented as production commands:
+
+- `README.md`;
+- `scripts/README.md`;
+- `docs/00_project/scripts_archive_decision.md`;
+- `docs/00_project/scripts_inventory_before_cleanup.md`;
+- `docs/00_project/scripts_structure_plan.md`;
+- `docs/00_project/scripts_migration_plan.md`;
+- `docs/00_project/outputs_structure.md`;
+- `docs/00_project/production_readiness_report.md`;
+- `docs/00_project/final_project_summary.md`;
+- `docs/03_pipeline/module_decomposition_plan.md`.
+
+### 3. Что не делалось
+
+- No files were deleted.
+- No production entry points were changed.
+- Generated outputs were not staged.
+- Physical module decomposition remains P2-only.
+
+### 4. Проверки
+
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK.
+- CLI help checks for `ofz-run`, `ofz-quality`, `ofz-clean-outputs`, `ofz-schema`: OK.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+
+### 5. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: `P2.11 Controlled module decomposition`.

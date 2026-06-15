@@ -291,7 +291,7 @@
 
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
-| 2026-06-08 | Deferred physical archive of five legacy script archive candidates. | Reference scan across `README.md`, `docs/**`, `scripts/**`, `pyproject.toml`, `run_pipeline.py`, `quality_gate.py`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`. | References still exist for `scripts/cleanup_docs.py`, `scripts/migrate_outputs_structure.py`, `scripts/reorganize_outputs.py`, `scripts/maintenance/migrate_legacy_docs_archive.py` and `scripts/maintenance/reorganize_docs.py`, so no files were moved. Variant A selected: keep files in place and defer physical archive to P2. | No entry points changed. Module decomposition plan was not changed. Physical archive requires a later reference cleanup and explicit approval. |
+| 2026-06-08 | Deferred physical archive of five legacy script archive candidates. | Reference scan across `README.md`, `docs/**`, `scripts/**`, `pyproject.toml`, `run_pipeline.py`, `quality_gate.py`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`. | References still exist for `scripts/archive/2026-06-15/cleanup_docs.py`, `scripts/archive/2026-06-15/migrate_outputs_structure.py`, `scripts/archive/2026-06-15/reorganize_outputs.py`, `scripts/archive/2026-06-15/migrate_legacy_docs_archive.py` and `scripts/archive/2026-06-15/reorganize_docs.py`, so no files were moved. Variant A selected: keep files in place and defer physical archive to P2. | No entry points changed. Module decomposition plan was not changed. Physical archive requires a later reference cleanup and explicit approval. |
 ## 2026-06-08 - legacy scripts archive decision follow-up
 
 | Date | Change | Check | Result | Limitations |
@@ -385,3 +385,10 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-15 | Applied controlled documentation archive after inventory review. | `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\cleanup_docs.py scripts\quality_gate.py`; `.\.venv\Scripts\python.exe scripts\maintenance\cleanup_docs.py --dry-run`; `.\.venv\Scripts\python.exe scripts\maintenance\cleanup_docs.py --archive`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`. | Archived 39 legacy documentation files to `docs/archive/2026-06-15/`; after-inventory created with 61 `keep_active` documents and 39 archived candidates. `--delete-archived` was not used. | Cleanup manifests under `outputs/reports/cleanup/` are generated artifacts and are not committed. Legacy scripts archive is still deferred to P2.10. |
+
+## 2026-06-15 - P2.10 Controlled legacy scripts archive apply
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-15 | Applied controlled legacy scripts archive. | Reference scan across `README.md`, `docs/**`, `scripts/**`, `pyproject.toml`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; CLI help checks; `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`. | Five legacy maintenance scripts moved to `scripts/archive/2026-06-15/`; no files deleted; no entry points changed. | Archived scripts are audit artifacts only. Current production maintenance uses `ofz-clean-outputs`, `scripts/maintenance/cleanup_outputs.py`, `scripts/maintenance/cleanup_docs.py` and release bundle tooling. |
+
