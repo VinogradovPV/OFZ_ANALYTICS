@@ -1042,3 +1042,47 @@ Visual regression in `auto` mode recorded the known warning that the screenshot 
 ### 5. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: первый реальный перенос одной небольшой chart family или pure-helper группы в созданные modules.
+
+## P2.11.3 - QA contract modules
+
+Дата: 2026-06-15.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен третий малый шаг `P2.11 Controlled module decomposition`: созданы QA contract modules для HTML QA и visual regression.
+
+### 2. Что изменено
+
+Создан пакет `scripts/qa/`:
+
+- `scripts/qa/__init__.py`;
+- `scripts/qa/html_chart_contracts.py`;
+- `scripts/qa/visual_regression_contracts.py`.
+
+Из `scripts/html_chart_qa.py` вынесены contract constants и `QaResult`.
+
+Из `scripts/visual_regression.py` вынесены visual contract constants и `VisualCheck`.
+
+### 3. Что не делалось
+
+- Check functions не переносились.
+- CLI behavior не менялся.
+- Chart data/schema contracts не менялись.
+- Generated outputs were not staged.
+
+### 4. Проверки
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\html_chart_qa.py scripts\visual_regression.py scripts\qa\__init__.py scripts\qa\html_chart_contracts.py scripts\qa\visual_regression_contracts.py`: OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK.
+- `.\.venv\Scripts\python.exe scripts\06_build_charts.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `.\.venv\Scripts\python.exe scripts\html_chart_qa.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `.\.venv\Scripts\python.exe scripts\visual_regression.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+
+### 5. Warnings documented
+
+Visual regression in `auto` mode recorded the known warning that the screenshot backend was unavailable in the current environment and fallback static inspection was used.
+
+### 6. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: продолжить P2.11 small extractions by moving one small QA check group or one chart helper group per commit.

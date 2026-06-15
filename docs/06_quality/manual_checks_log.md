@@ -404,3 +404,9 @@
 |---|---|---|---|---|
 | 2026-06-15 | Added behavior-neutral chart family modules under `scripts/charts/`: `structure`, `scatter`, `monthly`, `revenue`, `boxplot`; added `CHART_FAMILY_MODULES` in `scripts/charts/__init__.py`. | `.\.venv\Scripts\python.exe -m py_compile scripts\charts\__init__.py scripts\charts\structure.py scripts\charts\scatter.py scripts\charts\monthly.py scripts\charts\revenue.py scripts\charts\boxplot.py`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `ofz-quality --fast`. | Passed: py_compile, compileall and quality gate fast. No chart builders were moved in this step, so CLI behavior and output contracts remain unchanged. | This is a skeleton step only. Actual builder extraction remains incremental and must be done one family/helper group per commit. |
 
+## 2026-06-15 - P2.11.3 QA contract modules
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-15 | Added `scripts/qa/html_chart_contracts.py` and `scripts/qa/visual_regression_contracts.py`; moved QA contract constants plus `QaResult`/`VisualCheck` out of the monolithic QA scripts. | `py_compile` for changed QA files; `compileall -q scripts`; targeted `06_build_charts.py`; `html_chart_qa.py`; `visual_regression.py`; `ofz-quality --fast`. | Passed: py_compile, compileall, targeted chart build, HTML QA, visual regression and quality gate fast. CLI behavior and QA outcomes remain unchanged. | Check functions remain in the current scripts. Further QA decomposition should move one small check group per commit. Visual regression used fallback because screenshot backend was unavailable in the current environment. |
+

@@ -22,8 +22,30 @@ from urllib.parse import quote
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from scripts import config, report_params, utils
+    from scripts.qa.visual_regression_contracts import (
+        STACKED_STRUCTURE_FILENAME_TOKENS,
+        VOLUME_FILENAME_TOKENS,
+        VisualCheck,
+        YIELD_DISCOUNT_CLUSTER_WARN_THRESHOLD,
+        YIELD_DISCOUNT_FACET_MAX_LABELS_PER_PANEL,
+        YIELD_DISCOUNT_FACET_MAX_LABELS_TOTAL,
+        YIELD_DISCOUNT_LABEL_BUFFER,
+        YIELD_DISCOUNT_MAIN_MAX_LABELS_TOTAL,
+        YIELD_DISCOUNT_OUTLIERS_MAX_LABELS_TOTAL,
+    )
 else:
     from . import config, report_params, utils
+    from .qa.visual_regression_contracts import (
+        STACKED_STRUCTURE_FILENAME_TOKENS,
+        VOLUME_FILENAME_TOKENS,
+        VisualCheck,
+        YIELD_DISCOUNT_CLUSTER_WARN_THRESHOLD,
+        YIELD_DISCOUNT_FACET_MAX_LABELS_PER_PANEL,
+        YIELD_DISCOUNT_FACET_MAX_LABELS_TOTAL,
+        YIELD_DISCOUNT_LABEL_BUFFER,
+        YIELD_DISCOUNT_MAIN_MAX_LABELS_TOTAL,
+        YIELD_DISCOUNT_OUTLIERS_MAX_LABELS_TOTAL,
+    )
 
 
 VISUAL_REGRESSION_REPORT_DOC = config.get_doc_path("visual_regression_report.md")
@@ -31,40 +53,8 @@ VISUAL_REGRESSION_REPORTS_DIR = config.REPORTS_DIR / "visual_regression"
 VISUAL_REGRESSION_SCREENSHOTS_DIR = VISUAL_REGRESSION_REPORTS_DIR / "screenshots"
 VISUAL_REGRESSION_BASELINE_DIR = VISUAL_REGRESSION_REPORTS_DIR / "baseline"
 VISUAL_REGRESSION_DIFFS_DIR = VISUAL_REGRESSION_REPORTS_DIR / "diffs"
-
-VOLUME_FILENAME_TOKENS = (
-    "placement",
-    "volume",
-    "sankey",
-    "maturity_structure",
-    "format_structure",
-    "monthly_heatmap",
-)
-STACKED_STRUCTURE_FILENAME_TOKENS = (
-    "maturity_structure",
-    "format_structure",
-    "monthly_placement_by_maturity",
-    "monthly_placement_by_format",
-)
 TECHNICAL_TICK_PATTERN = re.compile(r"(?<![A-Za-zА-Яа-я0-9])(?:1|2|5|8)(?:M|B|k)(?![A-Za-zА-Яа-я0-9])")
 CYRILLIC_PATTERN = re.compile(r"[А-Яа-яЁё]")
-YIELD_DISCOUNT_FACET_MAX_LABELS_PER_PANEL = 3
-YIELD_DISCOUNT_FACET_MAX_LABELS_TOTAL = 15
-YIELD_DISCOUNT_MAIN_MAX_LABELS_TOTAL = 25
-YIELD_DISCOUNT_OUTLIERS_MAX_LABELS_TOTAL = 30
-YIELD_DISCOUNT_LABEL_BUFFER = 5
-YIELD_DISCOUNT_CLUSTER_WARN_THRESHOLD = 8
-
-
-@dataclass(frozen=True)
-class VisualCheck:
-    """Результат проверки одного файла или общего условия."""
-
-    file: str
-    check: str
-    status: str
-    message: str
-
 
 @dataclass(frozen=True)
 class ScreenshotArtifact:
