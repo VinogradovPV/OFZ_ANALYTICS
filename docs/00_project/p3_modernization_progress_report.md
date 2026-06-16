@@ -14,6 +14,7 @@ Date: 2026-06-16.
 - `P3.PRE.1` must maintain `docs/00_project/p3_scripts_balance_audit_report.md`.
 - `P3.PRE.2` must maintain `docs/00_project/p3_docs_encoding_audit_report.md` with an entry for every checked document.
 - Token/cost-aware mode accepted: targeted reads/searches, no large rereads without cause, no full quality gate without trigger, docs-only stages do not require compileall/quality, session preflight once per session, skipped checks documented after each stage.
+- Git/GitHub outside-sandbox policy accepted for subsequent work: run Git/`gh` commands from the project root outside sandbox, check staged generated artifacts before commit, and do not perform PR/release/workflow/secret/repo-edit operations without a separate explicit user command.
 
 ### Session preflight results
 
