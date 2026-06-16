@@ -423,3 +423,9 @@
 |---|---|---|---|---|
 | 2026-06-16 | Added BI-ready release package workflow. | `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\build_bi_package.py`; dry-run for month cumulative 2026-05-01 scope; generated artifact staging filter before commit. | OK. Dry-run found required source exports and generated BI dimension previews without writing files. | BI package is an ignored external artifact under `releases/bi/`; build mode is not run unless `--include-outputs --confirm BUILD_BI_PACKAGE` is provided. |
 
+## 2026-06-16 - P2.15 final close-out
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-16 | Final P2 close-out checks. | `pip install -e .`; `pip check`; `compileall`; `ofz-schema`; `ofz-quality --fast`; `ofz-quality --full`; release bundle dry-run. | OK. Fast/full quality gates passed and release bundle dry-run wrote no files. | First `pip install -e .` attempt in sandbox failed on Windows temp permission; outside-sandbox rerun passed. Visual regression used fallback in Codex managed sandbox. Anomaly tests reported domain data-quality warnings. |
+

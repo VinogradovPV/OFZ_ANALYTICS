@@ -1255,3 +1255,41 @@ P2.14 является Level 0 / docs-only этапом:
 ### 5. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: `P2.15 P2 completion report`.
+
+## P2.15 - P2 completion report
+
+Дата: 2026-06-16.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.15 P2 completion report`.
+
+### 2. Что изменено
+
+Добавлен документ:
+
+- `docs/00_project/p2_completion_report.md`.
+
+Обновлены final QA reports:
+
+- `docs/06_quality/quality_gate_report.md`;
+- `docs/06_quality/anomaly_tests_report.md`.
+
+### 3. Финальные проверки
+
+- `.\.venv\Scripts\python.exe -m pip install -e .`: OK after outside-sandbox rerun; initial sandbox attempt failed on Windows temp permission.
+- `.\.venv\Scripts\python.exe -m pip check`: OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK.
+- `.\.venv\Scripts\ofz-schema.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK, 16 checks passed.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `.\.venv\Scripts\ofz-quality.exe --full --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- `.\.venv\Scripts\ofz-build-release-bundle.exe --dry-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+
+### 4. Warnings documented
+
+- Visual regression used fallback in Codex managed sandbox because screenshot backend is intentionally skipped there; run from normal project PowerShell to exercise local Playwright/Chromium.
+- Anomaly tests reported data-quality warnings for known domain cases such as missing yield, demand outliers, zero/missing demand and missing cutoff price.
+
+### 5. Recommendation
+
+P2 close-out recommendation: `stable-release-candidate`.
