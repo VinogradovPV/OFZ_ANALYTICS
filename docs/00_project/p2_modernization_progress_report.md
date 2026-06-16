@@ -1110,3 +1110,65 @@ Visual regression in `auto` mode recorded the known warning that the screenshot 
 ### 6. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: продолжить P2.11 small extractions by moving one small QA check group or one chart helper group per commit.
+
+## P2.12 - Windows setup / Docker plan
+
+Дата: 2026-06-16.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.12 Windows setup / Docker plan`.
+
+### 2. Что изменено
+
+Добавлены:
+
+- `tools/setup/setup_windows.ps1`;
+- `docs/07_operations/windows_setup.md`;
+- `docs/07_operations/docker_plan.md`.
+
+Обновлены:
+
+- `README.md`;
+- `docs/06_quality/manual_checks_log.md`.
+
+### 3. Windows setup workflow
+
+`setup_windows.ps1` поддерживает:
+
+- проверку PowerShell version;
+- создание `.venv`, если она отсутствует;
+- установку `requirements.txt`;
+- опциональную установку `requirements-dev.txt` через `-IncludeDev`;
+- `pip install -e .`;
+- `pip check`;
+- CLI help checks для `ofz-*`;
+- `compileall`;
+- optional fast quality gate только через `-RunFastQuality`.
+
+Скрипт не трогает `outputs/` и не запускает cleanup без отдельной команды.
+
+### 4. Docker plan
+
+Docker зафиксирован как optional path. Windows-first остается основным production setup.
+
+Docker plan описывает:
+
+- UTF-8 locale и русские шрифты;
+- browser dependencies для screenshot visual regression;
+- read-only mount strategy для `data/raw`;
+- mount strategy для generated `outputs`;
+- release bundle path через external `releases/`;
+- риски различий rendering/fonts/file permissions.
+
+### 5. Проверки
+
+Выполненные проверки P2.12:
+
+- `powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup/setup_windows.ps1 -DryRun`: OK.
+- Actual setup command not run on the current machine because `.venv` already exists and a real setup run would mutate the local environment; it is intended for a clean/new machine.
+- generated outputs staging filter before commit.
+
+### 6. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: `P2.13 BI-ready release package` или продолжение `P2.11` small module decomposition только отдельным малым commit.

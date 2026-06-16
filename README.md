@@ -860,6 +860,14 @@ Production-Р·Р°РїСѓСЃРє РѕРїРёСЃР°РЅ РІ:
 
 - `docs/07_operations/production_runbook.md` вЂ” РїРѕС€Р°РіРѕРІС‹Р№ runbook РґР»СЏ clone, `.venv`, CLI, pipeline, cleanup outputs, QA, release bundle Рё Git workflow.
 - `docs/07_operations/release_checklist.md` вЂ” РєРѕРЅС‚СЂРѕР»СЊРЅС‹Р№ checklist РїРµСЂРµРґ production release.
+- `docs/07_operations/windows_setup.md` — reproducible Windows setup workflow for a new machine.
+- `docs/07_operations/docker_plan.md` — optional Docker plan; Windows-first remains the primary supported path.
+
+Windows setup dry-run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup/setup_windows.ps1 -DryRun
+```
 
 РђРєС‚СѓР°Р»СЊРЅС‹Рµ CLI entry points:
 

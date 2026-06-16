@@ -411,3 +411,9 @@
 |---|---|---|---|---|
 | 2026-06-15 | Added `scripts/qa/html_chart_contracts.py` and `scripts/qa/visual_regression_contracts.py`; moved QA contract constants plus `QaResult`/`VisualCheck` out of the monolithic QA scripts. | `py_compile` for changed QA files; `compileall -q scripts`; targeted `06_build_charts.py`; `html_chart_qa.py`; `visual_regression.py`; `ofz-quality --fast`. | Passed: py_compile, compileall, targeted chart build, HTML QA, visual regression and quality gate fast. CLI behavior and QA outcomes remain unchanged. | Check functions remain in the current scripts. Further QA decomposition should move one small check group per commit. Visual regression used fallback because screenshot backend was unavailable in the current environment. |
 
+## 2026-06-16 - P2.12 Windows setup / Docker plan
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-16 | Added reproducible Windows setup workflow and Docker plan. | `powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup/setup_windows.ps1 -DryRun`; generated artifact staging filter before commit. | Dry-run passed. `tools/setup/setup_windows.ps1` supports `.venv` creation, runtime/dev dependency install, editable install, `pip check`, CLI help checks, `compileall`, and optional fast quality gate via `-RunFastQuality`. `docker_plan.md` documents Docker as optional while Windows-first remains primary. | Actual setup was not run on the current already-configured machine because it would mutate `.venv`; run it on a clean/new machine. Setup script does not touch `outputs/`; Dockerfile/.dockerignore are deferred to a future explicit decision. |
+
