@@ -1221,3 +1221,37 @@ Build mode требует `--include-outputs --confirm BUILD_BI_PACKAGE`. Есл
 ### 6. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: `P2.14 Archive deletion policy`.
+
+## P2.14 - Archive deletion policy
+
+Дата: 2026-06-16.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.14 Archive deletion policy`.
+
+### 2. Что изменено
+
+Добавлен документ:
+
+- `docs/00_project/archive_deletion_policy.md`.
+
+### 3. Зафиксированные правила
+
+- Archived docs/scripts не удаляются в production-ready candidate.
+- Физическое удаление разрешено только после stable release.
+- Перед удалением нужны release tag, release bundle, references check и archive manifest.
+- `--delete-archived` запрещен без explicit approval пользователя.
+- Удаление должно выполняться отдельным commit.
+
+### 4. Проверки
+
+P2.14 является Level 0 / docs-only этапом:
+
+- `git status --short --branch`: checked before edits.
+- generated artifacts staging filter before commit.
+- `compileall` and quality gates skipped because Python code was not changed.
+
+### 5. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: `P2.15 P2 completion report`.
