@@ -3,7 +3,7 @@
 Метка: `вторая модернизация`.
 
 - Semantic version: `2.0.0`
-- Generated at: `2026-06-09T11:08:52`
+- Generated at: `2026-06-16T11:32:33`
 - Model dir: `outputs/dashboards/semantic_model_v2`
 
 ## Outputs

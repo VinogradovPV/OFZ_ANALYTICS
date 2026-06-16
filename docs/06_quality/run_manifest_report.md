@@ -4,8 +4,8 @@
 
 ## Параметры запуска
 
-- `run_id`: `20260609_110853_c779f602`
-- `timestamp`: `2026-06-09T11:08:53`
+- `run_id`: `20260616_113234_d6e92621`
+- `timestamp`: `2026-06-16T11:32:34`
 - `report_date`: `2026-05-01`
 - `period_type`: `month`
 - `aggregation_mode`: `cumulative`
@@ -59,17 +59,17 @@
 
 ## Outputs
 
-- Файлов: `399`
-- Размер, байт: `498595333`
+- Файлов: `164`
+- Размер, байт: `249841781`
 
 | Область | Файлов | Размер, байт |
 | --- | ---: | ---: |
 | `outputs/.gitkeep` | 1 | 0 |
-| `outputs/archive` | 2 | 4861513 |
-| `outputs/charts` | 107 | 483410985 |
-| `outputs/dashboards` | 35 | 399730 |
-| `outputs/exports` | 141 | 3170333 |
-| `outputs/reports` | 112 | 6752772 |
+| `outputs/archive` | 4 | 4865416 |
+| `outputs/charts` | 57 | 243724033 |
+| `outputs/dashboards` | 20 | 150977 |
+| `outputs/exports` | 65 | 957504 |
+| `outputs/reports` | 16 | 143851 |
 | `outputs/tmp` | 1 | 0 |
 
 ## Ключевые графики и CSV-основы
@@ -111,19 +111,19 @@
 
 ## Cleanup pre-flight
 
-- `status`: `not_requested`
-- `mode`: `not_interactive`
-- `returncode`: ``
+- `status`: `ok`
+- `mode`: `--delete-all --confirm DELETE_OUTPUTS`
+- `returncode`: `0`
 
 ## Pipeline telemetry
 
 - `status`: `written`
-- `json`: `outputs/reports/telemetry/telemetry_20260609_080836_53742514.json`
-- `markdown`: `outputs/reports/telemetry/telemetry_20260609_080836_53742514.md`
+- `json`: `outputs/reports/telemetry/telemetry_20260616_083221_62c61294.json`
+- `markdown`: `outputs/reports/telemetry/telemetry_20260616_083221_62c61294.md`
 
 ## Файлы manifest
 
-- `json`: `outputs/reports/run_manifest_20260609_110853_c779f602.json`
-- `markdown`: `outputs/reports/run_manifest_20260609_110853_c779f602.md`
+- `json`: `outputs/reports/run_manifest_20260616_113234_d6e92621.json`
+- `markdown`: `outputs/reports/run_manifest_20260616_113234_d6e92621.md`
 - `latest_json`: `data/processed/run_manifest_latest.json`
 - `docs_report`: `docs/06_quality/run_manifest_report.md`
