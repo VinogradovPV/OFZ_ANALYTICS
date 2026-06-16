@@ -39,9 +39,10 @@ Workflow запускается на:
 5. `pip install -e .`.
 6. `python -m pip check`.
 7. `python -m compileall -q scripts`.
-8. `ofz-schema --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`.
-9. `ofz-quality --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`.
-10. Upload QA reports as workflow artifacts.
+8. `ofz-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`.
+9. `ofz-schema --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`.
+10. `ofz-quality --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`.
+11. Upload QA reports as workflow artifacts.
 
 ### quality-full
 
@@ -63,6 +64,8 @@ PYTHONIOENCODING: "utf-8"
 ```
 
 PowerShell steps that run Python or installed CLI entry points also call `chcp 65001` before those commands. CLI entry points that print Cyrillic diagnostics configure stdout/stderr to UTF-8 with replacement for unencodable characters.
+
+Schema validation and quality gates require generated `data/processed` and `outputs` artifacts. CI therefore runs `ofz-run` before schema validation instead of relying on generated files being present in Git.
 
 ## Dependency cache
 

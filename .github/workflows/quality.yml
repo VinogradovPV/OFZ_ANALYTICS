@@ -60,6 +60,12 @@ jobs:
           python -m pip check
           python -m compileall -q scripts
 
+      - name: Build report artifacts
+        shell: pwsh
+        run: |
+          chcp 65001
+          ofz-run --report-date $env:REPORT_DATE --retrospective-years $env:RETROSPECTIVE_YEARS --period-type $env:PERIOD_TYPE --aggregation-mode $env:AGGREGATION_MODE
+
       - name: Schema validation
         shell: pwsh
         run: |
@@ -131,6 +137,12 @@ jobs:
           chcp 65001
           python -m pip check
           python -m compileall -q scripts
+
+      - name: Build report artifacts
+        shell: pwsh
+        run: |
+          chcp 65001
+          ofz-run --report-date $env:REPORT_DATE --retrospective-years $env:RETROSPECTIVE_YEARS --period-type $env:PERIOD_TYPE --aggregation-mode $env:AGGREGATION_MODE
 
       - name: Quality gate full
         shell: pwsh

@@ -115,6 +115,7 @@ Date: 2026-06-16.
 
 - Workflow `.github/workflows/quality.yml` sets `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8`.
 - Workflow PowerShell steps that run Python or installed CLI entry points call `chcp 65001`.
+- Workflow runs `ofz-run` before schema validation and quality gate so CI validates generated artifacts created from source inputs rather than relying on ignored outputs being present in Git.
 - Added UTF-8 stdout/stderr handling with `errors="replace"` for CLI entry points that print Cyrillic diagnostics.
 - Fixed stale dashboard smoke check to search organized dashboard exports recursively under `outputs/dashboards/`.
 - Documented the CI console encoding contract in `docs/07_operations/ci_workflow.md`.
@@ -128,7 +129,8 @@ Date: 2026-06-16.
 | `ofz-schema` with `PYTHONIOENCODING=cp1252` | OK | No `UnicodeEncodeError`; 16 schema checks passed. |
 | `compileall -q scripts` | OK | No compile errors. |
 | `ofz-quality --fast` | OK | Fast gate passed after recursive dashboard smoke check fix. |
-| GitHub Actions `quality-fast` | Pending | To be checked after push. |
+| GitHub Actions run `27620284328` | Failed after encoding fix | UTF-8 output worked; new failure was missing generated `data/processed` and outputs in CI checkout before schema validation. |
+| GitHub Actions `quality-fast` with `ofz-run` pre-step | Pending | To be checked after next push. |
 
 ### Next stage
 
