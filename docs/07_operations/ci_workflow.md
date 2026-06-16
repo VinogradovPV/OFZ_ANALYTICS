@@ -53,6 +53,17 @@ Job зависит от `quality-fast`, чтобы fast/full не выполня
 
 CI использует Python `3.12`, потому что проект поддерживает диапазон `>=3.11,<3.15`, а hosted runner для Python 3.14 может быть недоступен или нестабилен. Локальная production-проверка может выполняться на другой версии из поддержанного диапазона, но перед release нужно пройти `ofz-quality --fast` или `ofz-quality --full`.
 
+## Console encoding
+
+Windows runners can expose a non-UTF-8 stdout/stderr encoding. Schema validation and quality gate messages can contain Cyrillic text, so the workflow sets:
+
+```yaml
+PYTHONUTF8: "1"
+PYTHONIOENCODING: "utf-8"
+```
+
+PowerShell steps that run Python or installed CLI entry points also call `chcp 65001` before those commands. CLI entry points that print Cyrillic diagnostics configure stdout/stderr to UTF-8 with replacement for unencodable characters.
+
 ## Dependency cache
 
 Workflow использует только pip cache через `actions/setup-python`.

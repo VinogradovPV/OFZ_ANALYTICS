@@ -19,6 +19,8 @@ env:
   RETROSPECTIVE_YEARS: "4"
   PERIOD_TYPE: "month"
   AGGREGATION_MODE: "cumulative"
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: "utf-8"
 
 jobs:
   quality-fast:
@@ -43,6 +45,7 @@ jobs:
       - name: Install dependencies
         shell: pwsh
         run: |
+          chcp 65001
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
           if (Test-Path requirements-dev.txt) {
@@ -53,17 +56,20 @@ jobs:
       - name: Check environment
         shell: pwsh
         run: |
+          chcp 65001
           python -m pip check
           python -m compileall -q scripts
 
       - name: Schema validation
         shell: pwsh
         run: |
+          chcp 65001
           ofz-schema --report-date $env:REPORT_DATE --retrospective-years $env:RETROSPECTIVE_YEARS --period-type $env:PERIOD_TYPE --aggregation-mode $env:AGGREGATION_MODE
 
       - name: Quality gate fast
         shell: pwsh
         run: |
+          chcp 65001
           ofz-quality --fast --report-date $env:REPORT_DATE --retrospective-years $env:RETROSPECTIVE_YEARS --period-type $env:PERIOD_TYPE --aggregation-mode $env:AGGREGATION_MODE
 
       - name: Generated artifact guard
@@ -111,6 +117,7 @@ jobs:
       - name: Install dependencies
         shell: pwsh
         run: |
+          chcp 65001
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
           if (Test-Path requirements-dev.txt) {
@@ -121,12 +128,14 @@ jobs:
       - name: Check environment
         shell: pwsh
         run: |
+          chcp 65001
           python -m pip check
           python -m compileall -q scripts
 
       - name: Quality gate full
         shell: pwsh
         run: |
+          chcp 65001
           ofz-quality --full --report-date $env:REPORT_DATE --retrospective-years $env:RETROSPECTIVE_YEARS --period-type $env:PERIOD_TYPE --aggregation-mode $env:AGGREGATION_MODE
 
       - name: Generated artifact guard

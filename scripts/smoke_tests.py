@@ -232,7 +232,7 @@ def validate_monthly_outputs_exist() -> None:
 
 def validate_dashboard_exports_exist() -> None:
     """Проверить наличие dashboard exports."""
-    dashboard_files = list(config.DASHBOARDS_DIR.glob("dashboard_*")) if config.DASHBOARDS_DIR.exists() else []
+    dashboard_files = list(config.DASHBOARDS_DIR.rglob("dashboard_*")) if config.DASHBOARDS_DIR.exists() else []
     assert dashboard_files, "Не найдены dashboard exports в outputs/dashboards/."
 
 

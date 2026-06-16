@@ -98,4 +98,38 @@ Date: 2026-06-16.
 
 ### Next stage
 
-Next stage: `P3.PRE.1 Scripts balance/problem audit`.
+Next stage was superseded by CI blocker remediation: GitHub Actions `quality-fast` failed in schema validation on Windows stdout encoding.
+
+## P3.0-pre - CI UTF-8 output fix for schema validation
+
+Date: 2026-06-16.
+
+### Status
+
+- Local fix completed before `P3.PRE.1` and `P3.PRE.2`; GitHub Actions run status pending until after push.
+- Root cause: Windows runner/Python stdout used a non-UTF-8 encoding while schema validation printed Cyrillic diagnostics, raising `UnicodeEncodeError`.
+- P3 source acquisition was not changed.
+- `data/raw` was not changed.
+
+### Changes
+
+- Workflow `.github/workflows/quality.yml` sets `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8`.
+- Workflow PowerShell steps that run Python or installed CLI entry points call `chcp 65001`.
+- Added UTF-8 stdout/stderr handling with `errors="replace"` for CLI entry points that print Cyrillic diagnostics.
+- Fixed stale dashboard smoke check to search organized dashboard exports recursively under `outputs/dashboards/`.
+- Documented the CI console encoding contract in `docs/07_operations/ci_workflow.md`.
+
+### Checks
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `py_compile` changed CLI files | OK | `schema_validation.py`, `quality_gate.py`, `run_pipeline.py`, `smoke_tests.py`, `console_encoding.py`. |
+| `ofz-schema` normal encoding | OK | 16 schema checks passed. |
+| `ofz-schema` with `PYTHONIOENCODING=cp1252` | OK | No `UnicodeEncodeError`; 16 schema checks passed. |
+| `compileall -q scripts` | OK | No compile errors. |
+| `ofz-quality --fast` | OK | Fast gate passed after recursive dashboard smoke check fix. |
+| GitHub Actions `quality-fast` | Pending | To be checked after push. |
+
+### Next stage
+
+Next stage after successful CI: `P3.PRE.1 Scripts balance/problem audit`.

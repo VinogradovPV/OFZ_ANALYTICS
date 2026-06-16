@@ -18,10 +18,10 @@ from typing import Sequence
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from scripts import config, report_params, run_manifest, utils
+    from scripts import config, console_encoding, report_params, run_manifest, utils
     from scripts.pipeline import telemetry
 else:
-    from . import config, report_params, run_manifest, utils
+    from . import config, console_encoding, report_params, run_manifest, utils
     from .pipeline import telemetry
 
 
@@ -208,6 +208,7 @@ class PipelineArgs:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    console_encoding.configure_utf8_stdio()
     logger = utils.setup_logging(config.PIPELINE_LOG_PATH)
     telemetry_run: telemetry.PipelineTelemetry | None = None
     try:

@@ -21,9 +21,9 @@ from typing import Callable, Sequence
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from scripts import config, report_params, utils
+    from scripts import config, console_encoding, report_params, utils
 else:
-    from . import config, report_params, utils
+    from . import config, console_encoding, report_params, utils
 
 
 QUALITY_GATE_REPORT_DOC = config.get_doc_path("quality_gate_report.md")
@@ -79,6 +79,7 @@ class GateContext:
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Запустить quality gate и записать отчеты."""
+    console_encoding.configure_utf8_stdio()
     logger = utils.setup_logging(config.PIPELINE_LOG_PATH)
     args = parse_args(argv)
     context = build_context(args)

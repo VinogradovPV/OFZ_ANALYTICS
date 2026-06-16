@@ -12,9 +12,9 @@ import pandas as pd
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from scripts import config, report_params
+    from scripts import config, console_encoding, report_params
 else:
-    from . import config, report_params
+    from . import config, console_encoding, report_params
 
 
 ALLOWED_AGGREGATION_MODES = {"cumulative", "point"}
@@ -55,6 +55,7 @@ class ValidationResult:
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Запустить проверки схемы для report scope и monthly layer."""
+    console_encoding.configure_utf8_stdio()
     params = report_params.parse_report_args(argv)
     results: list[ValidationResult] = []
 
