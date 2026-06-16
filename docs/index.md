@@ -1,10 +1,10 @@
-﻿# РљР°СЂС‚Р° РґРѕРєСѓРјРµРЅС‚Р°С†РёРё OFZ_ANALITICS
+# Карта документации OFZ_ANALITICS
 
-Р“Р»Р°РІРЅР°СЏ РЅР°РІРёРіР°С†РёРѕРЅРЅР°СЏ РєР°СЂС‚Р° РґРѕРєСѓРјРµРЅС‚Р°С†РёРё РїСЂРѕРµРєС‚Р° РїРѕСЃР»Рµ СЂРµРѕСЂРіР°РЅРёР·Р°С†РёРё `docs/`.
+Главная навигационная карта документации проекта после реорганизации `docs/`.
 
 ## 1. Project
 
-РџР°РїРєР°: [docs/00_project/](00_project/)
+Папка: [docs/00_project/](00_project/)
 
 - [Analytical architecture](00_project/analytical_architecture.md)
 - [Dashboard architecture](00_project/dashboard_architecture.md)
@@ -15,7 +15,7 @@
 
 ## 2. Methodology
 
-РџР°РїРєР°: [docs/01_methodology/](01_methodology/)
+Папка: [docs/01_methodology/](01_methodology/)
 
 - [KPI map](01_methodology/kpi_map.md)
 - [Period selection report](01_methodology/period_selection_report.md)
@@ -24,7 +24,7 @@
 
 ## 3. Data pipeline
 
-РџР°РїРєР°: [docs/02_data_pipeline/](02_data_pipeline/)
+Папка: [docs/02_data_pipeline/](02_data_pipeline/)
 
 - [Data audit](02_data_pipeline/data_audit.md)
 - [Data cleaning report](02_data_pipeline/data_cleaning_report.md)
@@ -34,7 +34,7 @@
 
 ## 3.1. Data contracts
 
-РџР°РїРєР°: [docs/02_data_contracts/](02_data_contracts/)
+Папка: [docs/02_data_contracts/](02_data_contracts/)
 
 - [Processed data contract](02_data_contracts/processed_data_contract.md)
 - [Analytical tables contract](02_data_contracts/analytical_tables_contract.md)
@@ -44,7 +44,7 @@
 
 ## 4. Analytics
 
-РџР°РїРєР°: [docs/03_analytics/](03_analytics/)
+Папка: [docs/03_analytics/](03_analytics/)
 
 - [Analytical tables limitations](03_analytics/analytical_tables_limitations.md)
 - [Analytical tables report](03_analytics/analytical_tables_report.md)
@@ -56,7 +56,7 @@
 
 ## 5. Visualization
 
-РџР°РїРєР°: [docs/04_visualization/](04_visualization/)
+Папка: [docs/04_visualization/](04_visualization/)
 
 - [Chart build limitations](04_visualization/chart_build_limitations.md)
 - [Monthly visualization strategy](04_visualization/monthly_visualization_strategy.md)
@@ -66,7 +66,7 @@
 
 ## 6. Dashboard
 
-РџР°РїРєР°: [docs/05_dashboard/](05_dashboard/)
+Папка: [docs/05_dashboard/](05_dashboard/)
 
 - [Dashboard exports limitations](05_dashboard/dashboard_exports_limitations.md)
 - [Dashboard exports report](05_dashboard/dashboard_exports_report.md)
@@ -74,7 +74,7 @@
 
 ## 7. Quality and reproducibility
 
-РџР°РїРєР°: [docs/06_quality/](06_quality/)
+Папка: [docs/06_quality/](06_quality/)
 
 - [Anomaly tests report](06_quality/anomaly_tests_report.md)
 - [Manual checks log](06_quality/manual_checks_log.md)

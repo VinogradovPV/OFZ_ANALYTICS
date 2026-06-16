@@ -180,3 +180,49 @@ Date: 2026-06-16.
 ### Next stage
 
 Next stage: `P3.PRE.2 Docs mojibake/encoding audit and UTF-8 normalization`.
+
+## P3.PRE.2 - Docs mojibake/encoding audit and UTF-8 normalization
+
+Date: 2026-06-16.
+
+### Status
+
+- Completed pre-P3 documentation encoding audit before P3.0 source acquisition.
+- P3 source acquisition was not started.
+- Active Markdown documentation was checked and normalized to UTF-8 where obvious mojibake was mechanically recoverable.
+- Archived docs were checked by scope rules but left unchanged when historical.
+- Generated outputs, release artifacts, logs, `data/processed`, raw XLSX inputs and `.docm` files were not changed or staged.
+
+### Changes
+
+- Added `scripts/maintenance/audit_docs_encoding.py`.
+- Created `docs/00_project/p3_docs_encoding_audit_report.md` with one row per checked Markdown document.
+- Normalized mojibake in active documentation, including `README.md`, selected `docs/00_project/*.md`, `docs/03_pipeline/module_decomposition_plan.md`, `docs/06_quality/manual_checks_log.md`, `docs/index.md`, and `prompts/ofz_p3_modernization_step_by_step.md`.
+- Kept the literal mojibake pattern list in `prompts/ofz_p3_modernization_step_by_step.md` as intentional audit instruction text.
+
+### Results
+
+- Markdown documents checked: 128.
+- Documents normalized to UTF-8: 16.
+- Documents normalized with intentional pattern-reference text remaining: 1.
+- Documents with no configured mojibake patterns: 111.
+- `manual_review_required`: 0.
+
+### Checks
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\audit_docs_encoding.py` | OK | Audit helper compiles. |
+| `.\.venv\Scripts\python.exe scripts\maintenance\audit_docs_encoding.py --report` | OK | Generated `docs/00_project/p3_docs_encoding_audit_report.md`. |
+| `git diff --name-only` | OK | Reviewed changed source/docs/helper files. |
+| `git diff --name-only | Select-String "outputs|releases|logs|data/processed"` | OK | No generated outputs/release/log/processed data paths in diff. |
+
+### Skipped checks
+
+- `compileall`: skipped because only docs and a targeted audit helper changed; `py_compile` covered the helper.
+- `ofz-quality --fast`: skipped because P3.PRE.2 is documentation/encoding only and pipeline behavior was not changed.
+- `ofz-quality --full`: skipped because full quality gate is out of scope for the docs encoding audit.
+
+### Next stage
+
+Next stage after P3.PRE.2 commit/push: `P3.0 Source acquisition design`.
