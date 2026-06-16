@@ -135,3 +135,48 @@ Date: 2026-06-16.
 ### Next stage
 
 Next stage after successful CI: `P3.PRE.1 Scripts balance/problem audit`.
+
+## P3.PRE.1 - Scripts balance/problem audit
+
+Date: 2026-06-16.
+
+### Status
+
+- Completed pre-P3 scripts balance/problem audit before `P3.PRE.2` and before P3.0 source acquisition.
+- P3 source acquisition was not started; `scripts/source_acquisition/` does not exist yet.
+- Pipeline behavior was not changed.
+- Generated outputs, release artifacts, logs, `data/processed` and `.docm` files were not staged.
+
+### Changes
+
+- Added `scripts/maintenance/audit_scripts_balance.py` as a static audit helper for P3.PRE.1.
+- Created `docs/00_project/p3_scripts_balance_audit_report.md`.
+- Updated `docs/06_quality/manual_checks_log.md`.
+
+### Findings
+
+- No `shell=True` was found.
+- No active imports/references to `scripts.archive` were found in active Python files.
+- No hardcoded absolute user paths were found in Python scripts.
+- No TODO/FIXME/XXX markers were found in Python scripts.
+- No CLI-like active scripts missing `main()` were found.
+- No potential direct `data/raw` mutation was found.
+- Deferred medium P3.MOD items remain for controlled decomposition of chart/QA monoliths: `scripts/06_build_charts.py`, `scripts/10_build_monthly_charts.py`, `scripts/12_build_revenue_charts.py`, `scripts/html_chart_qa.py`, and `scripts/visual_regression.py`.
+- Subprocess usage exists in several active scripts, but static scan found no `shell=True`; keep argument-list invocation and explicit cwd/check handling.
+
+### Checks
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\audit_scripts_balance.py` | OK | Audit helper compiles. |
+| `.\.venv\Scripts\python.exe scripts\maintenance\audit_scripts_balance.py --report` | OK | Generated `docs/00_project/p3_scripts_balance_audit_report.md`. |
+| `.\.venv\Scripts\python.exe -m compileall -q scripts` | OK | No compile errors. |
+
+### Skipped checks
+
+- `ofz-quality --fast`: skipped because P3.PRE.1 changed only an audit helper and documentation, with no pipeline behavior change.
+- `ofz-quality --full`: skipped because full quality gate is out of scope for the audit helper/report step.
+
+### Next stage
+
+Next stage: `P3.PRE.2 Docs mojibake/encoding audit and UTF-8 normalization`.
