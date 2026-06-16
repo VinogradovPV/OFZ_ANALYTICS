@@ -459,3 +459,9 @@
 |---|---|---|---|---|
 | 2026-06-16 | Added `scripts/**/*.md` to the docs encoding audit scope and normalized `scripts/README.md`. | `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\audit_docs_encoding.py`; `.\.venv\Scripts\python.exe scripts\maintenance\audit_docs_encoding.py --fix-active --report`; Unicode-level pattern verification for `scripts/README.md`. | OK. `scripts/README.md` now has 0 configured mojibake pattern hits. The regenerated audit report checks 130 Markdown documents: 17 normalized to UTF-8, 1 normalized while retaining intentional pattern-reference text, 112 unchanged. | `compileall`, `ofz-quality --fast` and `ofz-quality --full` were skipped because this was documentation/encoding only with no pipeline behavior change. P3.0 source acquisition was not started. |
 
+## 2026-06-16 - P3.0 Minfin source acquisition design
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-16 | Designed controlled Minfin OFZ auction source acquisition workflow using Variant C: hybrid latest + final + version snapshots on hash change. | `git diff --name-only`; staged generated artifacts filter before commit. | OK. Created `docs/02_data_contracts/minfin_source_registry_contract.md`, `docs/07_operations/minfin_source_acquisition.md`, and `docs/00_project/p3_source_data_roadmap.md`. Documented monthly lifecycle, January annual-final lifecycle, storage structure, Git/artifact policy, registry fields, future CLI, integration path, failure behavior, and manual fallback import. | Design-only step. Downloader code, raw storage directories, raw Excel files and pipeline behavior were not changed. Both Minfin URL variants checked during design review returned `503 Service Unavailable`, so failure behavior was documented but no acquisition was attempted. `py_compile`, `compileall`, `ofz-quality --fast` and `ofz-quality --full` were skipped because no Python code changed. |
+

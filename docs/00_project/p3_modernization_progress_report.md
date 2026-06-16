@@ -261,3 +261,54 @@ Date: 2026-06-16.
 ### Next stage
 
 Next stage after this addendum commit/push: `P3.0 Source acquisition design`.
+
+## P3.0 - Source acquisition design
+
+Date: 2026-06-16.
+
+### Status
+
+- Completed design-only P3.0 step after P3.PRE.1 and P3.PRE.2.
+- P3.PRE.1 status: completed.
+- P3.PRE.2 status: completed, including scripts README encoding addendum.
+- No downloader code was written.
+- No raw files, generated outputs, release artifacts, logs, `data/processed`, or `.docm` files were changed.
+
+### Policy
+
+Accepted and documented required source acquisition policy:
+
+```text
+Variant C - hybrid latest + final + version snapshots on hash change
+```
+
+### Changes
+
+- Created `docs/02_data_contracts/minfin_source_registry_contract.md`.
+- Created `docs/07_operations/minfin_source_acquisition.md`.
+- Created `docs/00_project/p3_source_data_roadmap.md`.
+- Documented monthly lifecycle, January annual-final lifecycle, storage structure, Git/artifact policy, registry fields, future CLI, integration path, failure behavior, and manual fallback import.
+
+### Source Review
+
+- Minfin source URL: `https://minfin.gov.ru/ru/perfomance/public_debt/internal/operations/ofz/auction/#tablitsy_po_rezultatam_provedeniya_auktsionov`.
+- Fallback URL without anchor checked by user request: `https://minfin.gov.ru/ru/perfomance/public_debt/internal/operations/ofz/auction`.
+- During P3.0 design review, both source URL variants returned `503 Service Unavailable`; the design documents explicitly treat site unavailability as a normal failure mode that must not mutate local raw storage.
+
+### Checks
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `git diff --name-only` | OK | Reviewed docs-only change set. |
+| staged generated artifacts filter | OK | No generated outputs/release/log/processed data paths should be staged. |
+
+### Skipped checks
+
+- `py_compile`: skipped because no Python code was changed in P3.0.
+- `compileall`: skipped because no Python code was changed in P3.0.
+- `ofz-quality --fast`: skipped because this is a docs-only design step.
+- `ofz-quality --full`: skipped because full quality gate is out of scope for source acquisition design.
+
+### Next stage
+
+Next stage: `P3.1 Source acquisition skeleton` or the next user-approved P3 implementation step.
