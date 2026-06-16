@@ -93,7 +93,25 @@ Install dev dependencies:
 
 If Playwright is not installed, `--mode auto` falls back to static HTML inspection.
 
+## Codex Sandbox And Manual PowerShell Runs
+
+The screenshot backend launches a browser subprocess. In the Codex managed sandbox this subprocess can be blocked by Windows pipe permissions even when Playwright and Chromium are installed correctly. In that case `--mode auto` records a warning and uses fallback inspection.
+
+For production or local QA, run screenshot mode from the project PowerShell session:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\visual_regression.py --mode screenshot --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+Manual smoke validation can be done with:
+
+```powershell
+.\.venv\Scripts\python.exe -m playwright --version
+.\.venv\Scripts\python.exe -c "from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); page=b.new_page(viewport={'width': 1600, 'height': 900}); page.set_content('<html><body><h1>OK</h1></body></html>'); page.screenshot(path='playwright_smoke.png'); b.close(); p.stop(); print('OK')"
+```
+
+`playwright_smoke.png` is a local generated artifact and must not be committed.
+
 ## Quality Gate
 
 `quality_gate.py` keeps invoking `visual_regression.py` without forcing screenshot mode. Because the default is `--mode auto`, the quality gate benefits from screenshots when Playwright is available and remains stable through fallback otherwise.
-

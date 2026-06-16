@@ -8,10 +8,14 @@ hovertemplate, total labels и volume-scale policy.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
+import io
 import importlib
 import json
+import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime
@@ -66,6 +70,15 @@ class ScreenshotArtifact:
     sha256: str
     baseline_status: str
     diff_message: str
+
+
+@dataclass(frozen=True)
+class ScreenshotCaptureResult:
+    """Screenshot capture result with the backend that produced artifacts."""
+
+    backend: str
+    message: str
+    artifacts: list[ScreenshotArtifact]
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -178,7 +191,7 @@ def run_screenshot_backend(
         )
 
     try:
-        artifacts = capture_playwright_screenshots(html_files, run_id)
+        capture_result = capture_screenshots(html_files, run_id)
     except Exception as exc:
         if mode == "screenshot":
             return (
@@ -199,17 +212,63 @@ def run_screenshot_backend(
         )
 
     checks = [
-        VisualCheck("-", "screenshot_backend", "ok", f"Playwright screenshots created: {len(artifacts)}."),
+        VisualCheck("-", "screenshot_backend", "ok", capture_result.message),
         VisualCheck("-", "screenshot_diff_report", "ok", "Screenshot manifest and baseline diff status written."),
     ]
     return (
         {
             "mode": "screenshot_playwright",
-            "message": "visual_regression_mode=screenshot_playwright; fallback HTML/Plotly inspection also executed.",
+            "screenshot_backend": capture_result.backend,
+            "message": f"visual_regression_mode=screenshot_playwright; {capture_result.message} Fallback HTML/Plotly inspection also executed.",
         },
         checks,
-        artifacts,
+        capture_result.artifacts,
     )
+
+
+def capture_screenshots(html_files: Sequence[Path], run_id: str) -> ScreenshotCaptureResult:
+    """Capture screenshots with Playwright; use Chromium CLI fallback only when explicitly enabled."""
+    if is_subprocess_restricted_sandbox():
+        raise RuntimeError(
+            "browser screenshot backend skipped in Codex managed sandbox; "
+            "run the same command from project PowerShell to use Playwright"
+        )
+    try:
+        with contextlib.redirect_stderr(io.StringIO()):
+            artifacts = capture_playwright_screenshots(html_files, run_id)
+        return ScreenshotCaptureResult(
+            backend="playwright",
+            message=f"Playwright screenshots created: {len(artifacts)}.",
+            artifacts=artifacts,
+        )
+    except Exception as playwright_error:
+        if os.environ.get("OFZ_VISUAL_REGRESSION_CHROMIUM_CLI_FALLBACK") != "1":
+            raise RuntimeError(
+                "Playwright failed. Chromium CLI fallback is disabled by default; set "
+                "OFZ_VISUAL_REGRESSION_CHROMIUM_CLI_FALLBACK=1 to enable it. "
+                f"Playwright error: {playwright_error}"
+            ) from playwright_error
+        try:
+            artifacts = capture_chromium_cli_screenshots(html_files, run_id)
+        except Exception as chromium_error:
+            raise RuntimeError(
+                f"Playwright failed: {playwright_error}; Chromium CLI fallback failed: {chromium_error}"
+            ) from chromium_error
+        return ScreenshotCaptureResult(
+            backend="chromium_cli",
+            message=(
+                f"Chromium CLI screenshots created: {len(artifacts)}. "
+                f"Playwright backend was unavailable: {playwright_error}"
+            ),
+            artifacts=artifacts,
+        )
+
+
+def is_subprocess_restricted_sandbox() -> bool:
+    """Detect Codex managed sandbox where browser subprocess pipes are blocked."""
+    if os.environ.get("OFZ_VISUAL_REGRESSION_ALLOW_SANDBOX_BROWSER") == "1":
+        return False
+    return os.environ.get("CODEX_SANDBOX_NETWORK_DISABLED") == "1"
 
 
 def capture_playwright_screenshots(html_files: Sequence[Path], run_id: str) -> list[ScreenshotArtifact]:
@@ -226,12 +285,21 @@ def capture_playwright_screenshots(html_files: Sequence[Path], run_id: str) -> l
     artifacts: list[ScreenshotArtifact] = []
 
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
+        browser = playwright.chromium.launch(
+            headless=True,
+            args=[
+                "--disable-gpu",
+                "--disable-dev-shm-usage",
+                "--disable-background-networking",
+                "--no-first-run",
+                "--no-default-browser-check",
+            ],
+        )
         try:
             page = browser.new_page(viewport={"width": 1920, "height": 1080}, device_scale_factor=1)
             for html_path in html_files:
                 screenshot_path = run_dir / f"{html_path.stem}.png"
-                page.goto(path_to_file_url(html_path), wait_until="networkidle", timeout=45_000)
+                page.goto(path_to_file_url(html_path), wait_until="domcontentloaded", timeout=45_000)
                 page.add_style_tag(
                     content="""
                     .modebar, .modebar-container { display: none !important; }
@@ -252,6 +320,111 @@ def capture_playwright_screenshots(html_files: Sequence[Path], run_id: str) -> l
         finally:
             browser.close()
     return artifacts
+
+
+def capture_chromium_cli_screenshots(html_files: Sequence[Path], run_id: str) -> list[ScreenshotArtifact]:
+    """Capture screenshots through a locally installed Chromium/Chrome executable."""
+    browser_path = find_chromium_executable()
+    if browser_path is None:
+        raise RuntimeError(
+            "Chromium executable not found. Set OFZ_CHROMIUM_PATH or install Playwright Chromium/Chrome."
+        )
+
+    run_dir = VISUAL_REGRESSION_SCREENSHOTS_DIR / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    prepared_dir = VISUAL_REGRESSION_REPORTS_DIR / "runtime_html" / run_id
+    prepared_dir.mkdir(parents=True, exist_ok=True)
+    profile_root = VISUAL_REGRESSION_REPORTS_DIR / "chrome_profiles" / run_id
+    profile_root.mkdir(parents=True, exist_ok=True)
+    artifacts: list[ScreenshotArtifact] = []
+
+    for html_path in html_files:
+        prepared_html = prepare_html_for_chromium_cli(html_path, prepared_dir)
+        screenshot_path = run_dir / f"{html_path.stem}.png"
+        profile_dir = profile_root / html_path.stem
+        profile_dir.mkdir(parents=True, exist_ok=True)
+        command = [
+            str(browser_path),
+            "--headless=new",
+            "--disable-gpu",
+            "--disable-background-networking",
+            "--disable-breakpad",
+            "--disable-crash-reporter",
+            "--disable-default-apps",
+            "--disable-extensions",
+            "--disable-features=Crashpad",
+            "--disable-sync",
+            "--hide-scrollbars",
+            "--mute-audio",
+            "--no-sandbox",
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--run-all-compositor-stages-before-draw",
+            "--virtual-time-budget=5000",
+            "--window-size=1920,1080",
+            f"--user-data-dir={profile_dir}",
+            f"--screenshot={screenshot_path}",
+            path_to_file_url(prepared_html),
+        ]
+        completed = subprocess.run(command, capture_output=True, text=True, timeout=90, check=False)
+        if completed.returncode != 0:
+            stderr = (completed.stderr or completed.stdout or "").strip()
+            raise RuntimeError(f"{browser_path.name} exited with {completed.returncode}: {stderr}")
+        if not screenshot_path.exists() or screenshot_path.stat().st_size == 0:
+            raise RuntimeError(f"{browser_path.name} did not create screenshot: {screenshot_path}")
+        artifacts.append(build_screenshot_artifact(html_path, screenshot_path))
+    return artifacts
+
+
+def find_chromium_executable() -> Path | None:
+    """Find Chromium/Chrome executable installed by Playwright or system browser packages."""
+    env_path = os.environ.get("OFZ_CHROMIUM_PATH")
+    if env_path:
+        candidate = Path(env_path)
+        if candidate.exists():
+            return candidate
+
+    candidates: list[Path] = []
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        ms_playwright = Path(local_app_data) / "ms-playwright"
+        candidates.extend(sorted(ms_playwright.glob("chromium-*/chrome-win/chrome.exe"), reverse=True))
+        candidates.extend(sorted(ms_playwright.glob("chromium-*/*/chrome.exe"), reverse=True))
+
+    for env_name, relative in (
+        ("PROGRAMFILES", "Google/Chrome/Application/chrome.exe"),
+        ("PROGRAMFILES(X86)", "Google/Chrome/Application/chrome.exe"),
+        ("PROGRAMFILES", "Microsoft/Edge/Application/msedge.exe"),
+        ("PROGRAMFILES(X86)", "Microsoft/Edge/Application/msedge.exe"),
+    ):
+        base = os.environ.get(env_name)
+        if base:
+            candidates.append(Path(base) / relative)
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def prepare_html_for_chromium_cli(html_path: Path, prepared_dir: Path) -> Path:
+    """Create a generated HTML copy with stable screenshot CSS for direct Chromium CLI."""
+    html = read_text(html_path)
+    style = """
+<style id="ofz-visual-regression-stability">
+.modebar, .modebar-container { display: none !important; }
+* { cursor: default !important; caret-color: transparent !important; }
+</style>
+"""
+    lowered = html.lower()
+    if "</head>" in lowered:
+        index = lowered.find("</head>")
+        prepared = html[:index] + style + html[index:]
+    else:
+        prepared = style + html
+    prepared_path = prepared_dir / html_path.name
+    prepared_path.write_text(prepared, encoding="utf-8")
+    return prepared_path
 
 
 def build_screenshot_artifact(html_path: Path, screenshot_path: Path) -> ScreenshotArtifact:
@@ -300,6 +473,7 @@ def write_screenshot_manifest(
     manifest = {
         "run_id": run_id,
         "visual_regression_mode": backend_status["mode"],
+        "screenshot_backend": backend_status.get("screenshot_backend", backend_status["mode"]),
         "message": backend_status["message"],
         "report_date": args.report_date,
         "period_type": args.period_type,
@@ -315,6 +489,7 @@ def write_screenshot_manifest(
         "# Screenshot visual regression diff report",
         "",
         f"- visual_regression_mode: `{backend_status['mode']}`",
+        f"- screenshot_backend: `{backend_status.get('screenshot_backend', backend_status['mode'])}`",
         f"- run_id: `{run_id}`",
         f"- screenshots: `{len(artifacts)}`",
         "",
@@ -1156,6 +1331,7 @@ def render_report(
         "## Режим",
         "",
         f"- Screenshot/backend mode: `{backend_status['mode']}`",
+        f"- Screenshot backend: `{backend_status.get('screenshot_backend', backend_status['mode'])}`",
         f"- Комментарий: {backend_status['message']}",
         f"- HTML-файлов в проверке: `{len(html_files)}`",
         f"- `report_date`: `{args.report_date}`",

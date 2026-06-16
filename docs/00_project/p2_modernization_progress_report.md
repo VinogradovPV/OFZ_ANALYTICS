@@ -797,6 +797,30 @@ Level 3 initially. Level 5 only after backend stabilization and explicit full-ga
 - Screenshot PNG/manifest/diff outputs are generated artifacts and must not be committed.
 - Missing baseline screenshots are recorded as `missing_baseline`, not as a failure during backend stabilization.
 
+### 7.1. Screenshot backend follow-up after manual Playwright installation
+
+Дата: 2026-06-16.
+
+Пользователь вручную подтвердил локальную установку Playwright/Chromium в проектной PowerShell-сессии:
+
+- `.\.venv\Scripts\python.exe -m playwright --version`: OK, Playwright `1.60.0`;
+- smoke script with `sync_playwright`, headless Chromium and `page.screenshot(path='playwright_smoke.png')`: OK.
+
+Код `scripts/visual_regression.py` обновлен:
+
+- Playwright launch uses stable headless flags and `domcontentloaded` instead of `networkidle` for standalone Plotly HTML;
+- reports now include `screenshot_backend`;
+- Codex managed sandbox is detected and `--mode auto` uses fallback with a documented warning instead of emitting noisy subprocess tracebacks;
+- optional direct Chromium CLI fallback exists only behind `OFZ_VISUAL_REGRESSION_CHROMIUM_CLI_FALLBACK=1`.
+
+Проверки в Codex sandbox:
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\visual_regression.py scripts\qa\visual_regression_contracts.py`: OK;
+- `.\.venv\Scripts\python.exe scripts\visual_regression.py --mode fallback --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK;
+- `.\.venv\Scripts\python.exe scripts\visual_regression.py --mode auto --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK, fallback warning expected in Codex sandbox.
+
+Direct `--mode screenshot` must be validated from the project PowerShell session, where the user already confirmed Playwright smoke execution. `playwright_smoke.png` is a generated local artifact and must not be committed.
+
 ### 8. Следующий рекомендуемый P2-этап
 
 После завершения P2.7 и стабилизации проверок: `P2.8 CI / GitHub Actions`.

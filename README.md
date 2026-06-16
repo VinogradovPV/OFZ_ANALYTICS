@@ -422,6 +422,8 @@ Playwright screenshot backend is a dev/QA dependency. Install it when screenshot
 .\.venv\Scripts\python.exe -m playwright install chromium
 ```
 
+In the Codex managed sandbox browser subprocesses can be blocked by Windows pipe permissions. If `--mode auto` records a sandbox warning, run `--mode screenshot` from the project PowerShell session. A local smoke file such as `playwright_smoke.png` is a generated artifact and must not be committed.
+
 Anomaly tests:
 
 ```powershell
