@@ -20,6 +20,7 @@ INCLUDE_ROOTS = (
     PROJECT_ROOT / "CHANGELOG.md",
     PROJECT_ROOT / "docs",
     PROJECT_ROOT / "prompts",
+    PROJECT_ROOT / "scripts",
     PROJECT_ROOT / "tools",
 )
 
@@ -45,6 +46,23 @@ PATTERN_REFERENCE_DOCS = {
     "prompts/ofz_p3_modernization_step_by_step.md",
 }
 
+MOJIBAKE_PATTERNS = (
+    "\u0420\u201d",
+    "\u0420\u00b0",
+    "\u0420\u045f",
+    "\u0420\u040e",
+    "\u0420\u00b5",
+    "\u0420\u0405",
+    "\u0421\u0453",
+    "\u0421\u201a",
+    "\u0421\u040a",
+    "\u0432\u0402",
+    "\u0432\u201e",
+    "\u00e2\u20ac",
+    "\u00d0",
+    "\u00d1",
+)
+
 NORMALIZED_DURING_P3_PRE2 = {
     "README.md",
     "docs/00_project/artifact_policy.md",
@@ -63,6 +81,7 @@ NORMALIZED_DURING_P3_PRE2 = {
     "docs/06_quality/manual_checks_log.md",
     "docs/index.md",
     "prompts/ofz_p3_modernization_step_by_step.md",
+    "scripts/README.md",
 }
 
 
@@ -280,7 +299,11 @@ def is_excluded(path: Path) -> bool:
 
 def is_archived(path: Path) -> bool:
     rel_parts = path.relative_to(PROJECT_ROOT).parts
-    return rel_parts[:2] == ("docs", "archive") or rel_parts[:2] == ("docs", "90_archive")
+    return (
+        rel_parts[:2] == ("docs", "archive")
+        or rel_parts[:2] == ("docs", "90_archive")
+        or rel_parts[:2] == ("scripts", "archive")
+    )
 
 
 def render_report(audits: list[DocAudit]) -> str:
@@ -291,9 +314,9 @@ def render_report(audits: list[DocAudit]) -> str:
         "",
         "## Scope",
         "",
-        "- Checked `README.md`, `CHANGELOG.md`, `docs/**/*.md`, `prompts/**/*.md`, `tools/**/*.md`.",
+        "- Checked `README.md`, `CHANGELOG.md`, `docs/**/*.md`, `prompts/**/*.md`, `scripts/**/*.md`, `tools/**/*.md`.",
         "- Excluded `outputs/`, `releases/`, `.venv/`, `.git/`, binary files and raw XLSX inputs.",
-        "- Archived docs under `docs/archive/**/*.md` and `docs/90_archive/**/*.md` were checked but not modified.",
+        "- Archived docs under `docs/archive/**/*.md`, `docs/90_archive/**/*.md` and `scripts/archive/**/*.md` were checked but not modified.",
         f"- Markdown documents checked: {len(audits)}.",
         "",
         "## Summary",

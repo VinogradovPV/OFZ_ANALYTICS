@@ -226,3 +226,38 @@ Date: 2026-06-16.
 ### Next stage
 
 Next stage after P3.PRE.2 commit/push: `P3.0 Source acquisition design`.
+
+## P3.PRE.2 addendum - scripts README encoding normalization
+
+Date: 2026-06-16.
+
+### Status
+
+- Completed follow-up fix for mojibake found by manual review in `scripts/README.md`.
+- Root cause: initial P3.PRE.2 scope covered `README.md`, `CHANGELOG.md`, `docs/**/*.md`, `prompts/**/*.md`, and `tools/**/*.md`; `scripts/**/*.md` was not included.
+- P3 source acquisition was not started.
+
+### Changes
+
+- Extended `scripts/maintenance/audit_docs_encoding.py` scope to include `scripts/**/*.md`.
+- Normalized active `scripts/README.md` to UTF-8 without BOM.
+- `scripts/archive/2026-06-15/README.md` was checked and left unchanged because no configured mojibake patterns were found.
+- Regenerated `docs/00_project/p3_docs_encoding_audit_report.md`.
+
+### Checks
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\audit_docs_encoding.py` | OK | Audit helper compiles. |
+| `.\.venv\Scripts\python.exe scripts\maintenance\audit_docs_encoding.py --fix-active --report` | OK | Normalized `scripts/README.md` and regenerated report. |
+| Unicode-level verification | OK | `scripts/README.md` has 0 configured mojibake pattern hits. |
+
+### Skipped checks
+
+- `compileall`: skipped because only docs and a targeted audit helper changed; `py_compile` covered the helper.
+- `ofz-quality --fast`: skipped because this was documentation/encoding only and pipeline behavior was not changed.
+- `ofz-quality --full`: skipped because full quality gate is out of scope for the docs encoding follow-up.
+
+### Next stage
+
+Next stage after this addendum commit/push: `P3.0 Source acquisition design`.

@@ -4,16 +4,16 @@ Date: 2026-06-16.
 
 ## Scope
 
-- Checked `README.md`, `CHANGELOG.md`, `docs/**/*.md`, `prompts/**/*.md`, `tools/**/*.md`.
+- Checked `README.md`, `CHANGELOG.md`, `docs/**/*.md`, `prompts/**/*.md`, `scripts/**/*.md`, `tools/**/*.md`.
 - Excluded `outputs/`, `releases/`, `.venv/`, `.git/`, binary files and raw XLSX inputs.
-- Archived docs under `docs/archive/**/*.md` and `docs/90_archive/**/*.md` were checked but not modified.
-- Markdown documents checked: 128.
+- Archived docs under `docs/archive/**/*.md`, `docs/90_archive/**/*.md` and `scripts/archive/**/*.md` were checked but not modified.
+- Markdown documents checked: 130.
 
 ## Summary
 
-- fixed_utf8: 16
+- fixed_utf8: 17
 - fixed_utf8_pattern_reference: 1
-- no_change: 111
+- no_change: 112
 
 ## Documents
 
@@ -144,6 +144,8 @@ Date: 2026-06-16.
 | `prompts/ofz_p3_modernization_step_by_step.md` | utf-8 | checked | no | fixed_utf8_pattern_reference | Corrupted prose was normalized during P3.PRE.2; remaining pattern hits are the literal audit pattern list. |
 | `prompts/ofz_p3_modernization_system_prompt.md` | utf-8 | checked | no | no_change | No configured mojibake patterns found. |
 | `README.md` | utf-8 | fixed | no | fixed_utf8 | Normalized during P3.PRE.2; no configured mojibake patterns remain. |
+| `scripts/archive/2026-06-15/README.md` | utf-8 | checked | no | no_change | No configured mojibake patterns found. |
+| `scripts/README.md` | utf-8 | fixed | no | fixed_utf8 | Normalized during P3.PRE.2; no configured mojibake patterns remain. |
 | `tools/windows_launcher/README.md` | utf-8 | checked | no | no_change | No configured mojibake patterns found. |
 | `tools/word_launcher/README.md` | utf-8 | checked | no | no_change | No configured mojibake patterns found. |
 | `tools/word_launcher/word_docm_build_instructions.md` | utf-8 | checked | no | no_change | No configured mojibake patterns found. |

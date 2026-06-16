@@ -453,3 +453,9 @@
 |---|---|---|---|---|
 | 2026-06-16 | Audited Markdown documentation for mojibake/encoding problems and normalized active docs to UTF-8. | `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\audit_docs_encoding.py`; `.\.venv\Scripts\python.exe scripts\maintenance\audit_docs_encoding.py --report`; `git diff --name-only`; `git diff --name-only \| Select-String "outputs\|releases\|logs\|data/processed"`. | OK. Audit report created at `docs/00_project/p3_docs_encoding_audit_report.md` with one row per checked document. Checked 128 Markdown documents: 16 normalized to UTF-8, 1 normalized while retaining intentional mojibake pattern-reference text, 111 unchanged, 0 manual-review items. README legacy mojibake was normalized. | `compileall`, `ofz-quality --fast` and `ofz-quality --full` were skipped because this stage was documentation/encoding only with no pipeline behavior change. Archived docs were checked but not rewritten as historical records unless active scope required normalization. P3.0 source acquisition was not started. |
 
+## 2026-06-16 - P3.PRE.2 scripts README encoding addendum
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-16 | Added `scripts/**/*.md` to the docs encoding audit scope and normalized `scripts/README.md`. | `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\audit_docs_encoding.py`; `.\.venv\Scripts\python.exe scripts\maintenance\audit_docs_encoding.py --fix-active --report`; Unicode-level pattern verification for `scripts/README.md`. | OK. `scripts/README.md` now has 0 configured mojibake pattern hits. The regenerated audit report checks 130 Markdown documents: 17 normalized to UTF-8, 1 normalized while retaining intentional pattern-reference text, 112 unchanged. | `compileall`, `ofz-quality --fast` and `ofz-quality --full` were skipped because this was documentation/encoding only with no pipeline behavior change. P3.0 source acquisition was not started. |
+
