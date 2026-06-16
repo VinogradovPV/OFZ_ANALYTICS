@@ -9,6 +9,6 @@ def configure_utf8_stdio() -> None:
     """Prefer UTF-8 console output and replace unencodable characters."""
     for stream in (sys.stdout, sys.stderr):
         try:
-            stream.reconfigure(encoding="utf-8", errors="replace")
+            stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore
         except Exception:
             pass
