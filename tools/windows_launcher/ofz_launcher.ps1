@@ -25,13 +25,14 @@ param(
     [string]$ConfirmDelete = "",
     [string]$ConfirmBundle = "",
     [switch]$Gui,
-    [switch]$AutoCloseGuiForCheck
+    [switch]$AutoCloseGuiForCheck,
+    [switch]$PreviewOnly
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$LauncherTimestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+$LauncherTimestamp = "{0}_{1}" -f (Get-Date -Format "yyyyMMdd_HHmmss_fffffff"), ([guid]::NewGuid().ToString("N").Substring(0, 8))
 $LauncherLogDir = Join-Path $ProjectRoot "outputs\reports\launcher"
 $LauncherLogPath = Join-Path $LauncherLogDir "launcher_run_$LauncherTimestamp.log"
 
@@ -55,23 +56,50 @@ function Write-LauncherLog {
 function Assert-ProjectEnvironment {
     param([string]$Root)
 
-    if (-not (Test-Path $Root -PathType Container)) {
-        throw "Project root does not exist: $Root"
+    $checks = Get-ProjectEnvironmentChecks $Root
+    $failed = @($checks | Where-Object { -not $_.Ok })
+    if ($failed.Count -gt 0) {
+        $missing = ($failed | ForEach-Object { $_.Name }) -join ", "
+        throw "Project environment validation failed: $missing"
     }
+}
 
-    foreach ($relativePath in @("pyproject.toml", ".venv\Scripts", "data\raw")) {
-        $fullPath = Join-Path $Root $relativePath
-        if (-not (Test-Path $fullPath)) {
-            throw "Required project path is missing: $relativePath"
+function Get-ProjectEnvironmentChecks {
+    param([string]$Root)
+
+    $items = @(
+        @{ Name = "project root"; Path = $Root; Type = "Container" },
+        @{ Name = "pyproject.toml"; Path = (Join-Path $Root "pyproject.toml"); Type = "Leaf" },
+        @{ Name = ".venv\Scripts"; Path = (Join-Path $Root ".venv\Scripts"); Type = "Container" },
+        @{ Name = "data\raw"; Path = (Join-Path $Root "data\raw"); Type = "Container" },
+        @{ Name = "ofz-run.exe"; Path = (Join-Path $Root ".venv\Scripts\ofz-run.exe"); Type = "Leaf" },
+        @{ Name = "ofz-schema.exe"; Path = (Join-Path $Root ".venv\Scripts\ofz-schema.exe"); Type = "Leaf" },
+        @{ Name = "ofz-quality.exe"; Path = (Join-Path $Root ".venv\Scripts\ofz-quality.exe"); Type = "Leaf" },
+        @{ Name = "ofz-clean-outputs.exe"; Path = (Join-Path $Root ".venv\Scripts\ofz-clean-outputs.exe"); Type = "Leaf" },
+        @{ Name = "ofz-build-release-bundle.exe"; Path = (Join-Path $Root ".venv\Scripts\ofz-build-release-bundle.exe"); Type = "Leaf" }
+    )
+
+    return @($items | ForEach-Object {
+        $exists = if ($_.Type -eq "Leaf") {
+            Test-Path $_.Path -PathType Leaf
         }
-    }
+        else {
+            Test-Path $_.Path -PathType Container
+        }
+        [PSCustomObject]@{
+            Name = [string]$_.Name
+            Path = [string]$_.Path
+            Ok = [bool]$exists
+        }
+    })
+}
 
-    Push-Location $Root
-    try {
-        git status --short | Out-Null
-    }
-    finally {
-        Pop-Location
+function Write-EnvironmentCheckReport {
+    param([object[]]$Checks)
+
+    foreach ($check in $Checks) {
+        $status = if ($check.Ok) { "OK" } else { "FAIL" }
+        Write-LauncherLog ("{0}: {1} ({2})" -f $status, $check.Name, $check.Path)
     }
 }
 
@@ -154,8 +182,8 @@ function Get-LauncherCommand {
     param([string]$SelectedAction)
 
     switch ($SelectedAction) {
-        "validate-environment" { return @{ Cli = ""; Args = @(); Preview = "validate-environment (no CLI process)" } }
-        "run-pipeline" { return @{ Cli = "ofz-run.exe"; Args = @("--all") + (Get-CommonArgs) } }
+        "validate-environment" { return @{ Cli = ""; Args = @(); Preview = "validate-environment uses local file checks; no pipeline process started." } }
+        "run-pipeline" { return @{ Cli = "ofz-run.exe"; Args = (Get-CommonArgs) } }
         "schema" { return @{ Cli = "ofz-schema.exe"; Args = (Get-CommonArgs) } }
         "quality-fast" { return @{ Cli = "ofz-quality.exe"; Args = @("--fast") + (Get-CommonArgs) } }
         "quality-full" { return @{ Cli = "ofz-quality.exe"; Args = @("--full") + (Get-CommonArgs) } }
@@ -174,10 +202,11 @@ function Format-CommandPreview {
     param([string]$SelectedAction)
 
     $command = Get-LauncherCommand $SelectedAction
-    if ($command.Preview) {
-        return [string]$command.Preview
+    if ($command.ContainsKey("Preview") -and $command["Preview"]) {
+        return [string]$command["Preview"]
     }
-    return ("{0} {1}" -f $command.Cli, (($command.Args | ForEach-Object { if ($_ -match "\s") { '"' + $_ + '"' } else { $_ } }) -join " "))
+    $cliDisplay = ".\.venv\Scripts\{0}" -f $command["Cli"]
+    return ("{0} {1}" -f $cliDisplay, (($command["Args"] | ForEach-Object { if ($_ -match "\s") { '"' + $_ + '"' } else { $_ } }) -join " "))
 }
 
 function Invoke-WhitelistedCli {
@@ -222,7 +251,25 @@ function Invoke-WhitelistedCli {
     }
 
     Write-LauncherLog ("Exit code: {0}" -f $exitCode)
+    if ($exitCode -ne 0) {
+        $lastMessage = Get-LastMeaningfulProcessLine $stderr $stdout
+        Write-LauncherLog ("CLI failed. Exit code: {0}. Full log: {1}. Last message: {2}" -f $exitCode, $script:LauncherLogPath, $lastMessage)
+    }
     return $exitCode
+}
+
+function Get-LastMeaningfulProcessLine {
+    param([string]$Stderr, [string]$Stdout)
+
+    foreach ($content in @($Stderr, $Stdout)) {
+        if (-not [string]::IsNullOrWhiteSpace($content)) {
+            $lines = @($content -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+            if ($lines.Count -gt 0) {
+                return [string]$lines[-1]
+            }
+        }
+    }
+    return "No stderr/stdout details captured."
 }
 
 function Invoke-LauncherAction {
@@ -236,6 +283,10 @@ function Invoke-LauncherAction {
     Assert-BundleConfirmation $SelectedAction $script:ConfirmBundle
 
     if ($SelectedAction -eq "validate-environment") {
+        $checks = Get-ProjectEnvironmentChecks $script:ProjectRoot
+        Write-EnvironmentCheckReport $checks
+        Assert-ProjectEnvironment $script:ProjectRoot
+        Write-LauncherLog "validate-environment uses local file checks; no pipeline process started."
         Write-LauncherLog "Validate environment OK."
         return 0
     }
@@ -538,6 +589,9 @@ function Show-LauncherGui {
             $selectedAction = [string]$actionBox.SelectedItem
             $exitCode = Invoke-LauncherAction $selectedAction
             $status = "Action: $selectedAction`r`nExit code: $exitCode`r`nLog: $script:LauncherLogPath"
+            if ($exitCode -ne 0) {
+                $status += "`r`nAction failed. See the full launcher log above for stdout/stderr details."
+            }
             if ($schemaCheck.Checked -and $selectedAction -ne "schema") {
                 $status += "`r`nSchema validation selected but not auto-chained; choose Action=schema to run it."
             }
@@ -607,6 +661,17 @@ function Show-LauncherGui {
 Set-LauncherContext $ProjectRoot
 
 try {
+    if ($PreviewOnly) {
+        Assert-ReportDate $script:ReportDate
+        Assert-RetrospectiveYears $script:RetrospectiveYears
+        Assert-DeleteConfirmation $script:Action $script:ConfirmDelete
+        Assert-BundleConfirmation $script:Action $script:ConfirmBundle
+        $preview = Format-CommandPreview $script:Action
+        Write-LauncherLog ("PreviewOnly: {0}" -f $preview)
+        Write-Host $preview
+        exit 0
+    }
+
     if ($Gui) {
         Show-LauncherGui
         exit 0

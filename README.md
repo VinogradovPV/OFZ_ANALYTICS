@@ -155,6 +155,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_l
 
 The default launcher action is a safe smoke check. The GUI mode calls only approved CLI entry points, validates report parameters, writes logs to `outputs/reports/launcher/`, blocks delete cleanup without `DELETE_OUTPUTS`, and blocks release bundle creation without `BUILD_RELEASE_BUNDLE`. The GUI includes project root, report date, retrospective years, period type, aggregation mode, action, cleanup mode, release/cleanup confirmations, command preview and output/status fields.
 
+Русскоязычная UX-инструкция по полям, сценариям, Preview, run-pipeline и логам: [`tools/windows_launcher/README.md`](tools/windows_launcher/README.md).
+
 UI launchers do not replace the CLI or quality gate. The supported production interface remains the CLI (`ofz-run`, `ofz-quality`, `ofz-schema`, `ofz-clean-outputs`, `ofz-build-release-bundle`). The PowerShell launcher is the recommended Windows UI MVP for operators who need a guided local launcher.
 
 Word VBA launcher source:

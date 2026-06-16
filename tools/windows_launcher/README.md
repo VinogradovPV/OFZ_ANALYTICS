@@ -1,96 +1,148 @@
-# Windows UI launcher MVP
+# Windows GUI launcher для OFZ Analytics
 
-PowerShell launcher is a thin UI wrapper around the approved OFZ Analytics CLI entry points. It does not accept arbitrary shell commands and does not call internal Python functions directly.
+`ofz_launcher.ps1` - это безопасная PowerShell-оболочка над утвержденными CLI-командами проекта OFZ Analytics. Launcher не принимает произвольные shell-команды, не запускает внутренние Python-функции напрямую и не меняет `data/raw`.
 
-## Run smoke check
+## Как открыть GUI
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1
-```
-
-The default action is `smoke`. It validates the project environment, checks that invalid dates are blocked, verifies confirmation gates, runs cleanup dry-run, starts release bundle dry-run, and writes a launcher log.
-
-## Open GUI
+Из корня проекта:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Gui
 ```
 
-The GUI stays open until the user closes it. For automated smoke checks only, use:
+Автозакрытие только для smoke-проверок:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Gui -AutoCloseGuiForCheck
 ```
 
-The GUI exposes only whitelisted actions:
+Обычный smoke без GUI:
 
-- validate-environment;
-- run-pipeline;
-- schema;
-- quality-fast;
-- quality-full;
-- cleanup-dry-run;
-- cleanup-archive-all;
-- cleanup-delete-all;
-- release-dry-run;
-- release-build;
-- open-outputs;
-- open-releases.
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1
+```
 
-The GUI includes fields for:
+## Поля GUI
 
-- project root;
-- report date;
-- retrospective years;
-- period type;
-- aggregation mode;
-- action;
-- cleanup mode;
-- schema / quality / release options;
-- `DELETE_OUTPUTS` and `BUILD_RELEASE_BUNDLE` confirmations;
-- command preview;
-- output/status area;
-- launcher log path.
+| Поле | Что означает |
+|---|---|
+| Project root | Корень проекта `OFZ_ANALYTICS`; все CLI-команды запускаются из него. |
+| Report date | Отчетная дата в формате `YYYY-MM-DD`; должна быть первым днем месяца. |
+| Retrospective years | Количество лет ретроспективы, допустимый диапазон `1..10`. |
+| Period type | Тип периода: `month`, `quarter` или `year`. |
+| Aggregation | Режим агрегации: `cumulative` или `point`. |
+| Action | Одна выбранная whitelisted-команда launcher. |
+| Cleanup mode | Быстрый выбор cleanup-действия: keep, dry-run, archive-all или delete-all-with-archive. |
+| Checkboxes | Подсказки для schema/quality/release/open actions; команды не объединяются автоматически. |
+| Confirm DELETE_OUTPUTS | Обязательный токен для `cleanup-delete-all`. |
+| Confirm BUILD_RELEASE_BUNDLE | Обязательный токен для `release-build`. |
+| Command preview | Точная CLI-команда или пояснение для локального validate-действия. |
+| Output/status | Краткий результат, exit code и путь к полному launcher log. |
 
-## CLI actions
+## Типовые сценарии
+
+### A. Проверить окружение
+
+В GUI выберите `Action = validate-environment` и нажмите `Validate` или `Run selected`.
+
+CLI-вариант:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action validate-environment
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action run-pipeline
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action schema
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action quality-fast
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action cleanup-dry-run
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action release-dry-run
 ```
 
-Destructive cleanup requires an explicit confirmation token:
+Проверяются локальные пути и entry points: project root, `pyproject.toml`, `.venv\Scripts`, `data\raw`, `ofz-run.exe`, `ofz-schema.exe`, `ofz-quality.exe`, `ofz-clean-outputs.exe`, `ofz-build-release-bundle.exe`. Pipeline при этом не запускается.
+
+### B. Запустить pipeline
+
+Выберите `Action = run-pipeline`.
+
+Команда строится как production default CLI:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action cleanup-delete-all -ConfirmDelete DELETE_OUTPUTS
+.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-Release bundle creation requires an explicit confirmation token:
+Launcher не передает ручной список stages для обычного `run-pipeline`.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action release-build -ConfirmBundle BUILD_RELEASE_BUNDLE
+### C. Запустить schema validation
+
+Выберите `Action = schema`.
+
+### D. Запустить quality-fast
+
+Выберите `Action = quality-fast`. `quality-full` является ручным действием и запускается только при явном выборе `Action = quality-full`.
+
+### E. Сделать cleanup dry-run
+
+Выберите `Action = cleanup-dry-run` или `Cleanup mode = dry-run`. Токен `DELETE_OUTPUTS` не нужен.
+
+### F. Сделать release bundle dry-run
+
+Выберите `Action = release-dry-run`. Токен `BUILD_RELEASE_BUNDLE` не нужен.
+
+### G. Создать release bundle
+
+Выберите `Action = release-build`, заполните `Confirm BUILD_RELEASE_BUNDLE` значением:
+
+```text
+BUILD_RELEASE_BUNDLE
 ```
 
-## Logs
+Без этого токена создание release bundle блокируется.
 
-Launcher logs are written to:
+## Таблица actions
+
+| Action | Что запускает | Нужен токен |
+|---|---|---|
+| `validate-environment` | Локальные проверки окружения, без CLI process. | Нет |
+| `run-pipeline` | `ofz-run.exe` с report parameters. | Нет |
+| `schema` | `ofz-schema.exe` с report parameters. | Нет |
+| `quality-fast` | `ofz-quality.exe --fast` с report parameters. | Нет |
+| `quality-full` | `ofz-quality.exe --full` с report parameters. | Нет, но запуск ручной |
+| `cleanup-dry-run` | `ofz-clean-outputs.exe --dry-run`. | Нет |
+| `cleanup-archive-all` | `ofz-clean-outputs.exe --archive-all`. | Нет |
+| `cleanup-delete-all` | `ofz-clean-outputs.exe --archive-all --delete-all --confirm DELETE_OUTPUTS`. | `DELETE_OUTPUTS` |
+| `release-dry-run` | `ofz-build-release-bundle.exe --dry-run` с report parameters. | Нет |
+| `release-build` | `ofz-build-release-bundle.exe --include-outputs --confirm BUILD_RELEASE_BUNDLE` с report parameters. | `BUILD_RELEASE_BUNDLE` |
+| `open-outputs` | Открывает папку `outputs`. | Нет |
+| `open-releases` | Открывает папку `releases`, если она существует. | Нет |
+
+## Что нельзя делать
+
+- Нельзя коммитить generated launcher logs из `outputs/reports/launcher/`.
+- Нельзя коммитить `releases/`.
+- Нельзя использовать launcher для произвольных shell-команд.
+- Нельзя обходить токены `DELETE_OUTPUTS` и `BUILD_RELEASE_BUNDLE`.
+- Нельзя запускать `quality-fast` и `quality-full` параллельно.
+- Нельзя менять `data/raw` через launcher.
+
+## Где лежат логи
+
+Launcher пишет логи в:
 
 ```text
 outputs/reports/launcher/launcher_run_<timestamp>.log
 ```
 
-Generated logs and outputs are not committed to Git.
+Также рядом могут создаваться `stdout_<timestamp>.txt` и `stderr_<timestamp>.txt`. Это generated artifacts; они не входят в Git.
 
-## Safety contract
+## Если упал run-pipeline
 
-- Calls only approved CLI entry points.
-- Validates `report_date`, `retrospective_years`, `period_type`, `aggregation_mode`, and action.
-- Blocks delete cleanup without `DELETE_OUTPUTS`.
-- Blocks release bundle creation without `BUILD_RELEASE_BUNDLE`.
-- Does not modify `data/raw`.
-- Does not create GitHub releases.
-- Does not stage or commit generated outputs.
+1. Посмотрите `Exit code` в Output/status.
+2. Откройте файл из строки `Log: ...`.
+3. Проверьте последние строки `STDERR` и `STDOUT`.
+4. Убедитесь, что `Command preview` не содержит `--stages` для обычного `run-pipeline`.
+5. Проверьте окружение через `validate-environment`.
+
+## Если упал Preview
+
+1. Нажмите `Preview` еще раз после выбора action.
+2. Проверьте, что Project root указывает на корень проекта.
+3. Запустите CLI preview без GUI:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Action run-pipeline -PreviewOnly
+```
+
+Если Preview показывает ошибку свойства или control, это bug launcher source и его нужно исправлять до P3.

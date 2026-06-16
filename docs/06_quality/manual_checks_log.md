@@ -429,3 +429,9 @@
 |---|---|---|---|---|
 | 2026-06-16 | Final P2 close-out checks. | `pip install -e .`; `pip check`; `compileall`; `ofz-schema`; `ofz-quality --fast`; `ofz-quality --full`; release bundle dry-run. | OK. Fast/full quality gates passed and release bundle dry-run wrote no files. | First `pip install -e .` attempt in sandbox failed on Windows temp permission; outside-sandbox rerun passed. Visual regression used fallback in Codex managed sandbox. Anomaly tests reported domain data-quality warnings. |
 
+## 2026-06-16 - P3.PRE.0 Windows GUI launcher UX and runtime fix
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-16 | Fixed Windows launcher preview/runtime behavior and updated Russian UX documentation. | PowerShell parse check; launcher smoke; GUI auto-close smoke; `-Action validate-environment`; `-Action release-dry-run`; safe-fail checks for `release-build` without `BUILD_RELEASE_BUNDLE` and `cleanup-delete-all` without `DELETE_OUTPUTS`; `-Action run-pipeline -PreviewOnly`. | OK. Preview no longer reads a missing `.Preview` property under `Set-StrictMode`; validate-environment reports explicit OK/FAIL local file checks without starting a pipeline process; `run-pipeline` preview uses `.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` and does not include `--stages`; release dry-run works without `BUILD_RELEASE_BUNDLE`; destructive release/delete actions are blocked without tokens; launcher logs now use unique names. | Real `run-pipeline` was not executed through the launcher because preview-only verified command construction and full execution may generate outputs. `compileall`, `ofz-quality --fast` and `ofz-quality --full` were skipped because Python pipeline code did not change. Generated launcher logs and cleanup dry-run manifests remain generated artifacts and must not be committed. |
+
