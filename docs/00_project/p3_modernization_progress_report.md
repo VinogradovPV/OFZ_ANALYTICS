@@ -106,7 +106,7 @@ Date: 2026-06-16.
 
 ### Status
 
-- Local fix completed before `P3.PRE.1` and `P3.PRE.2`; GitHub Actions run status pending until after push.
+- Completed before `P3.PRE.1` and `P3.PRE.2`; GitHub Actions `quality-fast` passed after the workflow update.
 - Root cause: Windows runner/Python stdout used a non-UTF-8 encoding while schema validation printed Cyrillic diagnostics, raising `UnicodeEncodeError`.
 - P3 source acquisition was not changed.
 - `data/raw` was not changed.
@@ -130,7 +130,7 @@ Date: 2026-06-16.
 | `compileall -q scripts` | OK | No compile errors. |
 | `ofz-quality --fast` | OK | Fast gate passed after recursive dashboard smoke check fix. |
 | GitHub Actions run `27620284328` | Failed after encoding fix | UTF-8 output worked; new failure was missing generated `data/processed` and outputs in CI checkout before schema validation. |
-| GitHub Actions `quality-fast` with `ofz-run` pre-step | Pending | To be checked after next push. |
+| GitHub Actions run `27623278589` | OK | Workflow with `ofz-run` pre-step completed successfully. |
 
 ### Next stage
 
