@@ -1172,3 +1172,52 @@ Docker plan описывает:
 ### 6. Следующий рекомендуемый P2-этап
 
 Следующий рекомендуемый этап: `P2.13 BI-ready release package` или продолжение `P2.11` small module decomposition только отдельным малым commit.
+
+## P2.13 - BI-ready release package
+
+Дата: 2026-06-16.
+
+### 1. Какой P2-этап выполнен
+
+Выполнен `P2.13 BI-ready release package`.
+
+### 2. Что изменено
+
+Добавлены:
+
+- `scripts/maintenance/build_bi_package.py`;
+- `docs/07_operations/bi_release_package.md`;
+- `docs/02_data_contracts/bi_exports_contract.md`.
+
+Обновлены:
+
+- `README.md`;
+- `docs/06_quality/manual_checks_log.md`.
+
+### 3. Поведение BI package
+
+BI package собирается как external artifact в:
+
+```text
+releases/bi/ofz_analytics_bi_<report_date>_<period_type>_<aggregation_mode>_r<N>_<timestamp>/
+```
+
+Build mode требует `--include-outputs --confirm BUILD_BI_PACKAGE`. Если required datasets отсутствуют, build mode завершается с non-zero exit code и не заменяет отсутствующие данные пустыми файлами.
+
+### 4. Состав
+
+Скрипт включает dashboard exports, semantic model v2, analytical CSV, monthly metrics, revenue analytics CSV, chart data CSV, data/KPI dictionaries и generated BI dimensions: period, OFZ type и placement format.
+
+### 5. Проверки
+
+Выполненные проверки P2.13:
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\build_bi_package.py`: OK.
+- `.\.venv\Scripts\python.exe scripts\maintenance\build_bi_package.py --dry-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`: OK.
+- dry-run found 13 dashboard exports, 4 semantic model files, 9 analytical CSV files, 1 monthly metrics CSV, 5 revenue analytics CSV files, 60 chart data CSV files, 3 data dictionary files and 2 KPI dictionary files.
+- generated helper dimensions: 20 period rows, 2 OFZ type rows, 2 placement format rows.
+- generated outputs and `releases/` staging filter before commit.
+
+### 6. Следующий рекомендуемый P2-этап
+
+Следующий рекомендуемый этап: `P2.14 Archive deletion policy`.

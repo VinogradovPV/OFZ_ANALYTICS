@@ -417,3 +417,9 @@
 |---|---|---|---|---|
 | 2026-06-16 | Added reproducible Windows setup workflow and Docker plan. | `powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup/setup_windows.ps1 -DryRun`; generated artifact staging filter before commit. | Dry-run passed. `tools/setup/setup_windows.ps1` supports `.venv` creation, runtime/dev dependency install, editable install, `pip check`, CLI help checks, `compileall`, and optional fast quality gate via `-RunFastQuality`. `docker_plan.md` documents Docker as optional while Windows-first remains primary. | Actual setup was not run on the current already-configured machine because it would mutate `.venv`; run it on a clean/new machine. Setup script does not touch `outputs/`; Dockerfile/.dockerignore are deferred to a future explicit decision. |
 
+## 2026-06-16 - P2.13 BI-ready release package
+
+| Date | Change | Check | Result | Limitations |
+|---|---|---|---|---|
+| 2026-06-16 | Added BI-ready release package workflow. | `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\build_bi_package.py`; dry-run for month cumulative 2026-05-01 scope; generated artifact staging filter before commit. | OK. Dry-run found required source exports and generated BI dimension previews without writing files. | BI package is an ignored external artifact under `releases/bi/`; build mode is not run unless `--include-outputs --confirm BUILD_BI_PACKAGE` is provided. |
+

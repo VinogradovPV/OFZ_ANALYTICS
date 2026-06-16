@@ -122,6 +122,20 @@ Release bundle creation:
 .\.venv\Scripts\ofz-build-release-bundle.exe --include-outputs --confirm BUILD_RELEASE_BUNDLE --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
+BI release package dry-run:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\maintenance\build_bi_package.py --dry-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+BI release package creation:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\maintenance\build_bi_package.py --include-outputs --confirm BUILD_BI_PACKAGE --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+BI package is an external artifact under ignored `releases/bi/`. It is documented in [`docs/07_operations/bi_release_package.md`](docs/07_operations/bi_release_package.md) and governed by [`docs/02_data_contracts/bi_exports_contract.md`](docs/02_data_contracts/bi_exports_contract.md).
+
 The bundle is written to `releases/ofz_analytics_<report_date>_<period_type>_<aggregation_mode>_retrospective_<N>_<timestamp>/`, which is excluded from Git. The bundle includes generated HTML charts, chart data, dashboard exports, run manifests, QA reports and release manifests.
 
 Pipeline telemetry:
