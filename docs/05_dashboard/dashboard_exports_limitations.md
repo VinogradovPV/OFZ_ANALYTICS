@@ -1,4 +1,4 @@
-# Dashboard exports limitations
+# Ограничения dashboard exports
 
 Дата формирования: `2026-06-16 11:32:33`.
 

@@ -1,21 +1,21 @@
-# P3.PRE.2 docs encoding audit report
+# P3.PRE.2 - отчет аудита кодировки документации
 
 Date: 2026-06-16.
 
-## Scope
+## Область проверки
 
 - Checked `README.md`, `CHANGELOG.md`, `docs/**/*.md`, `prompts/**/*.md`, `scripts/**/*.md`, `tools/**/*.md`.
 - Excluded `outputs/`, `releases/`, `.venv/`, `.git/`, binary files and raw XLSX inputs.
 - Archived docs under `docs/archive/**/*.md`, `docs/90_archive/**/*.md` and `scripts/archive/**/*.md` were checked but not modified.
 - Markdown documents checked: 130.
 
-## Summary
+## Сводка
 
 - fixed_utf8: 17
 - fixed_utf8_pattern_reference: 1
 - no_change: 112
 
-## Documents
+## Документы
 
 | path | encoding_detected | status | mojibake_detected | action | notes |
 |---|---|---|---|---|---|
@@ -150,12 +150,12 @@ Date: 2026-06-16.
 | `tools/word_launcher/README.md` | utf-8 | checked | no | no_change | No configured mojibake patterns found. |
 | `tools/word_launcher/word_docm_build_instructions.md` | utf-8 | checked | no | no_change | No configured mojibake patterns found. |
 
-## Verification
+## Верификация
 
 - `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\audit_docs_encoding.py`: OK.
 - `.\.venv\Scripts\python.exe scripts\maintenance\audit_docs_encoding.py --report`: OK; generated this report.
 
-## Skipped Checks
+## Пропущенные проверки
 
 - `ofz-quality --fast`: skipped because P3.PRE.2 is documentation/encoding only and pipeline behavior was not changed.
 - `ofz-quality --full`: skipped because full quality gate is out of scope for the docs encoding audit.

@@ -1,4 +1,4 @@
-# Dashboard Exports Contract
+# Контракт dashboard exports
 
 Дата актуализации: 2026-06-08.
 
@@ -37,7 +37,7 @@ Generated dashboard exports не коммитятся в Git.
 | `data_quality_flag` | string | yes | Quality flag. |
 | `data_quality_display` | string | yes | Русское описание качества. |
 
-## Units
+## Единицы измерения
 
 Dashboard exports могут хранить одновременно raw и display поля:
 
@@ -49,7 +49,7 @@ Dashboard exports могут хранить одновременно raw и disp
 
 Если dashboard export содержит `_volume_bln`, рядом должен быть unit field или запись в data dictionary/semantic model.
 
-## Display Fields
+## Display-поля
 
 Dashboard layer должен предпочитать явные display fields:
 

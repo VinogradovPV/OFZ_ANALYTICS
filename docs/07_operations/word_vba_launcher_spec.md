@@ -1,4 +1,4 @@
-# Word VBA Launcher Specification
+# Спецификация Word VBA launcher
 
 Дата: 2026-06-11.
 
@@ -30,7 +30,7 @@ Word VBA launcher нужен как офисный thin UI-wrapper для пол
 
 > VBA вызывает только разрешенные CLI entry points и не принимает произвольные shell-команды.
 
-## Supported CLI
+## Поддерживаемый CLI
 
 VBA launcher может вызывать только:
 
@@ -72,7 +72,7 @@ VBA launcher обязан проверять:
 - `aggregation_mode` входит в `cumulative`, `point`;
 - `action` входит в whitelist.
 
-## Actions
+## Действия
 
 Разрешенные actions:
 
@@ -103,7 +103,7 @@ VBA не должен выполнять удаление напрямую. Он
 ofz-clean-outputs.exe --archive-all --delete-all --confirm DELETE_OUTPUTS
 ```
 
-### Release Bundle Build
+### Сборка релизного пакета
 
 `release-build` должен быть заблокирован, если не передан token:
 
@@ -117,7 +117,7 @@ VBA может вызвать build только так:
 ofz-build-release-bundle.exe --include-outputs --confirm BUILD_RELEASE_BUNDLE ...
 ```
 
-## Logging
+## Логирование
 
 Launcher пишет log в:
 
@@ -136,7 +136,7 @@ Log должен фиксировать:
 
 Logs являются generated artifacts и не коммитятся.
 
-## Macro Security
+## Безопасность макросов
 
 Перед использованием `.docm`:
 
@@ -146,7 +146,7 @@ Logs являются generated artifacts и не коммитятся.
 - не добавлять arbitrary command textbox;
 - не создавать GitHub Release из Word macro.
 
-## Manual Import Check
+## Проверка manual import
 
 Если Microsoft Word доступен:
 
@@ -158,14 +158,14 @@ Logs являются generated artifacts и не коммитятся.
 6. Проверить, что bad date блокируется через `OfzSmokeTest`.
 7. Сохранить `.docm` вне Git или как external release artifact.
 
-## Relationship With Other Launchers
+## Связь с другими launchers
 
 - PowerShell launcher остается recommended first UI implementation.
 - Word VBA launcher source нужен для будущего `.docm` release artifact.
 - Оба launcher вызывают один и тот же CLI-контракт.
 - UI launcher contract: `docs/07_operations/ui_launcher_contract.md`.
 - Release bundle behavior: `docs/07_operations/release_bundle_plan.md`.
-## P2.6.2 Word DOCM Assembly Contract
+## P2.6.2 - контракт сборки Word DOCM
 
 Дата: 2026-06-11.
 
@@ -183,7 +183,7 @@ Release artifact:
 
 `.docm` не коммитится в Git и собирается вручную или через Word automation на рабочей станции, где доступен Microsoft Word.
 
-### Required VBA entry points
+### Обязательные VBA entry points
 
 `OfzLauncher.bas` экспортирует:
 
@@ -209,7 +209,7 @@ Release artifact:
 - `OFZ_RunCommand`;
 - `OFZ_LogPath`.
 
-### UserForm controls
+### Элементы UserForm
 
 Form name: `frmOfzLauncher`.
 
@@ -239,6 +239,6 @@ Required controls:
 - `btnOpenReleases`;
 - `btnClose`.
 
-### Assembly status
+### Статус сборки
 
 Автоматическая сборка `.docm` не имитируется, если Word automation недоступна. В этом случае статус: `docm assembly deferred/manual`, а ручная сборка выполняется по `tools/word_launcher/word_docm_build_instructions.md`.

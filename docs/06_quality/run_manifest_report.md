@@ -57,7 +57,7 @@
 | `yield_vs_discount_outliers_csv_exists` | `ok` |
 | `yield_vs_discount_outliers_html_exists` | `ok` |
 
-## Outputs
+## Выходные файлы
 
 - Файлов: `164`
 - Размер, байт: `249841781`
@@ -100,11 +100,11 @@
 - Ключевых scripts: `22`
 - Raw files: `8`
 
-## Warnings
+## Предупреждения
 
 - Нет.
 
-## Limitations
+## Ограничения
 
 - Manifest формируется после успешного `--all` и фиксирует существующие outputs на момент записи.
 - Статусы внешних QA-проверок отражают наличие артефактов; отдельные runtime QA-скрипты запускаются через quality gate или вручную.

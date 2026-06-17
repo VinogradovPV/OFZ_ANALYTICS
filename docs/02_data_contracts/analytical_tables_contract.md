@@ -1,4 +1,4 @@
-# Analytical Tables Contract
+# Контракт аналитических таблиц
 
 Дата актуализации: 2026-06-08.
 
@@ -48,7 +48,7 @@ Generated analytical outputs не коммитятся в Git; они перес
 
 Для срезов обязательны соответствующие dimension fields: `ofz_type`, `maturity_bucket_label`, `format`, `month`/`month_order`.
 
-## Nullable Policy
+## Политика nullable-полей
 
 - Revenue fields nullable, если source-поле выручки отсутствует или неполно.
 - Ratio fields nullable при нулевом/отсутствующем знаменателе.

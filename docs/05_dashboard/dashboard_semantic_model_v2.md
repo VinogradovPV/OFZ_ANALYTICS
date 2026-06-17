@@ -1,4 +1,4 @@
-# Dashboard semantic model v2
+# Semantic model v2 для dashboard
 
 Метка: `вторая модернизация`.
 
@@ -6,7 +6,7 @@
 - Generated at: `2026-06-16T11:32:33`
 - Model dir: `outputs/dashboards/semantic_model_v2`
 
-## Outputs
+## Выходные файлы
 
 - `outputs/dashboards/semantic_model_v2/field_dictionary.csv`
 - `outputs/dashboards/semantic_model_v2/kpi_dictionary.csv`

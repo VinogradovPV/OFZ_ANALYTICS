@@ -1,8 +1,8 @@
-# P2 completion report
+# Отчет о завершении P2
 
 Дата: 2026-06-16.
 
-## 1. Executive summary
+## 1. Краткая сводка
 
 P2 modernization завершена как `stable-release-candidate`.
 
@@ -21,7 +21,7 @@ P2 modernization завершена как `stable-release-candidate`.
 
 Final close-out checks passed: editable install, `pip check`, `compileall`, schema validation, `ofz-quality --fast`, `ofz-quality --full`, release bundle dry-run.
 
-## 2. Completed P2 stages
+## 2. Завершенные этапы P2
 
 Completed stages:
 
@@ -44,7 +44,7 @@ Completed stages:
 - `P2.14 Archive deletion policy`;
 - `P2.15 P2 completion report`.
 
-## 3. Deferred P2 stages and reasons
+## 3. Отложенные этапы P2 и причины
 
 Deferred items:
 
@@ -54,7 +54,7 @@ Deferred items:
 - Archive deletion: deferred until after stable release, release tag, release bundle, references check and explicit approval.
 - Real GitHub release creation/upload: deferred because `gh release create/upload` requires separate explicit command.
 
-## 4. Release bundle status
+## 4. Статус релизного пакета
 
 Release bundle automation is implemented in `scripts/maintenance/build_release_bundle.py`.
 
@@ -79,7 +79,7 @@ Dry-run found:
 
 No bundle was written during final close-out. Real bundle creation remains an explicit release operation using `--include-outputs --confirm BUILD_RELEASE_BUNDLE`.
 
-## 5. Telemetry status
+## 5. Статус telemetry
 
 Pipeline telemetry is implemented in `scripts/pipeline/telemetry.py`.
 
@@ -97,7 +97,7 @@ Telemetry records:
 
 Telemetry outputs are generated artifacts under `outputs/reports/telemetry/` and are not committed.
 
-## 6. UI launcher status
+## 6. Статус UI launcher
 
 ### PowerShell GUI
 
@@ -107,7 +107,7 @@ Status: source ready.
 
 It is CLI-only, parameterized, validates report parameters, blocks destructive cleanup without `DELETE_OUTPUTS`, blocks release build without `BUILD_RELEASE_BUNDLE`, and writes logs to `outputs/reports/launcher/`.
 
-### Word VBA source
+### Исходники Word VBA
 
 Word VBA launcher source is implemented under `tools/word_launcher/`.
 
@@ -115,13 +115,13 @@ Status: source/spec ready.
 
 Committed source includes `.bas` and `.frm` source files plus manual assembly instructions.
 
-### Word docm artifact
+### Артефакт Word docm
 
 `.docm` is not committed.
 
 Status: release artifact only. It may be assembled manually or during a controlled release process and stored outside Git under `releases/`.
 
-## 7. Screenshot visual regression status
+## 7. Статус screenshot visual regression
 
 `scripts/visual_regression.py` supports:
 
@@ -135,7 +135,7 @@ Known warning:
 
 - screenshot backend unavailable in Codex managed sandbox; run from project PowerShell to use local Playwright/Chromium.
 
-## 8. CI status
+## 8. Статус CI
 
 GitHub Actions workflow exists:
 
@@ -150,7 +150,7 @@ Workflow status:
 
 CI documentation exists in `docs/07_operations/ci_workflow.md`.
 
-## 9. Docs/scripts archive status
+## 9. Статус архива docs/scripts
 
 Docs archive:
 
@@ -169,7 +169,7 @@ Archive deletion:
 - governed by `docs/00_project/archive_deletion_policy.md`;
 - physical deletion is forbidden until after stable release and explicit approval.
 
-## 10. Module decomposition status
+## 10. Статус декомпозиции модулей
 
 P2.11 completed safe decomposition only:
 
@@ -181,7 +181,7 @@ No output filename changes, CLI changes, chart contract changes or schema contra
 
 Further decomposition remains incremental and should continue one module/check family per commit.
 
-## 11. Windows setup / Docker status
+## 11. Статус Windows setup / Docker
 
 Windows setup:
 
@@ -195,7 +195,7 @@ Docker:
 - Dockerfile creation is deferred to a future explicit decision;
 - Windows-first remains the primary supported setup.
 
-## 12. BI package status
+## 12. Статус BI-пакета
 
 BI package workflow is implemented in `scripts/maintenance/build_bi_package.py`.
 
@@ -214,7 +214,7 @@ BI build mode writes ignored external artifacts under `releases/bi/` and require
 
 No generated BI package was committed.
 
-## 13. GitHub CLI / release readiness status
+## 13. Статус GitHub CLI / release readiness
 
 Repository:
 
@@ -225,7 +225,7 @@ Repository:
 
 GitHub release creation/upload was not performed. It requires a separate explicit command.
 
-## 14. Remaining risks
+## 14. Оставшиеся риски
 
 Remaining risks:
 
@@ -236,7 +236,7 @@ Remaining risks:
 - Docker is a plan, not a supported primary runtime yet.
 - Word `.docm` should be assembled/tested manually before operator use.
 
-## 15. Recommendation
+## 15. Рекомендация
 
 Recommendation: `stable-release-candidate`.
 
@@ -256,7 +256,7 @@ Before declaring stable release:
 4. Tag the release.
 5. Keep archived docs/scripts until after stable release acceptance.
 
-## Final checks
+## Финальные проверки
 
 | Check | Result | Notes |
 |---|---|---|

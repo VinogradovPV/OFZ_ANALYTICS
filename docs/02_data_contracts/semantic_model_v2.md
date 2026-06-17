@@ -1,4 +1,4 @@
-# Semantic Model V2 Contract
+# Контракт semantic model v2
 
 Дата актуализации: 2026-06-08.
 
@@ -34,7 +34,7 @@ Generated semantic model CSV/JSON не коммитятся в Git; докуме
 | `applicable_period_types` | string | no | `month`, `quarter`, `year`, `all`. |
 | `applicable_aggregation_modes` | string | no | `cumulative`, `point`, `all`. |
 
-## Measures Contract
+## Контракт measures
 
 `measures.csv` расширяет KPI dictionary и должен содержать:
 
@@ -43,7 +43,7 @@ Generated semantic model CSV/JSON не коммитятся в Git; докуме
 - `recommended_visuals`;
 - все поля из KPI dictionary, если применимо.
 
-## Units and Display Names
+## Единицы измерения и display names
 
 | Semantic field | Display | Unit |
 |---|---|---|
@@ -54,7 +54,7 @@ Generated semantic model CSV/JSON не коммитятся в Git; докуме
 | `discount_to_nominal` | Дисконт к номиналу | п.п. |
 | `revenue_to_nominal_ratio` | Выручка / номинал | % |
 
-## Quality Fields
+## Поля качества
 
 Semantic model должен включать или описывать:
 

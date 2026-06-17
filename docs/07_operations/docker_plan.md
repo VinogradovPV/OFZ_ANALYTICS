@@ -1,4 +1,4 @@
-# Docker plan
+# План Docker
 
 Дата: 2026-06-16.
 
@@ -29,7 +29,7 @@ Docker для OFZ_ANALYTICS является optional-направлением. 
 - не содержать generated outputs внутри image layer;
 - писать generated artifacts только в mounted volume.
 
-## Locale and Russian fonts
+## Locale и русские шрифты
 
 Контейнер должен поддерживать:
 
@@ -40,7 +40,7 @@ Docker для OFZ_ANALYTICS является optional-направлением. 
 
 Для Linux-based image потребуется пакет шрифтов с кириллицей, например семейство DejaVu/Noto. Конкретный набор должен быть проверен screenshot backend.
 
-## Browser dependencies
+## Browser-зависимости
 
 Для screenshot visual regression в Docker потребуется:
 
@@ -52,7 +52,7 @@ Docker для OFZ_ANALYTICS является optional-направлением. 
 
 Если browser dependencies не установлены, `visual_regression.py --mode auto` должен переходить в fallback static HTML / Plotly JSON inspection.
 
-## Raw data mount strategy
+## Стратегия mount для raw data
 
 `data/raw` является source dataset проекта и tracked in Git. Для Docker есть два допустимых варианта:
 
@@ -65,7 +65,7 @@ Docker для OFZ_ANALYTICS является optional-направлением. 
 
 Pipeline и cleanup scripts не должны менять `data/raw`.
 
-## Generated outputs mount strategy
+## Стратегия mount для generated outputs
 
 Generated outputs не коммитятся в Git. В Docker они должны писаться в mounted volume:
 
@@ -80,7 +80,7 @@ ofz-clean-outputs --dry-run
 ofz-clean-outputs --archive-all --delete-all --confirm DELETE_OUTPUTS
 ```
 
-## Release bundle output path
+## Путь релизного пакета
 
 Release bundle должен писаться во внешний mounted path:
 
@@ -90,7 +90,7 @@ Release bundle должен писаться во внешний mounted path:
 
 `releases/` остается external artifact storage и не коммитится.
 
-## Candidate Docker commands
+## Кандидатные Docker-команды
 
 После отдельного решения Dockerfile может поддержать:
 
@@ -104,14 +104,14 @@ docker run --rm `
   ofz-quality --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-## Risks
+## Риски
 
 - Windows Excel/source filename behavior may differ from Linux container behavior.
 - Browser screenshots may differ by fonts and rendering backend.
 - File permissions on mounted outputs need explicit validation.
 - Large generated HTML artifacts should remain outside image layers.
 
-## Recommendation
+## Рекомендация
 
 Keep Windows setup as the primary supported path for production-ready v1/P2. Docker should be implemented later as a separate P2/P3 step after:
 

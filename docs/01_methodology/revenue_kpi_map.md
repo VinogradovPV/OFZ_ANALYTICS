@@ -1,4 +1,4 @@
-# Revenue KPI map
+# Карта KPI выручки
 
 Документ фиксирует показатели revenue analytics второй модернизации проекта OFZ_ANALITICS.
 

@@ -14,7 +14,7 @@ Workflow запускает production-oriented проверки без комм
 
 Generated outputs, release bundles и screenshots остаются внешними/generated artifacts и не должны попадать в Git.
 
-## Triggers
+## Триггеры
 
 Workflow запускается на:
 
@@ -50,11 +50,11 @@ Workflow запускается на:
 
 Job зависит от `quality-fast`, чтобы fast/full не выполнялись параллельно в одном CI workflow. Full gate нужен для release validation, но не для каждого push.
 
-## Python version
+## Версия Python
 
 CI использует Python `3.12`, потому что проект поддерживает диапазон `>=3.11,<3.15`, а hosted runner для Python 3.14 может быть недоступен или нестабилен. Локальная production-проверка может выполняться на другой версии из поддержанного диапазона, но перед release нужно пройти `ofz-quality --fast` или `ofz-quality --full`.
 
-## Console encoding
+## Кодировка консоли
 
 Windows runners can expose a non-UTF-8 stdout/stderr encoding. Schema validation and quality gate messages can contain Cyrillic text, so the workflow sets:
 
@@ -67,7 +67,7 @@ PowerShell steps that run Python or installed CLI entry points also call `chcp 6
 
 Schema validation and quality gates require generated `data/processed` and `outputs` artifacts. CI therefore runs `ofz-run` before schema validation instead of relying on generated files being present in Git.
 
-## Dependency cache
+## Кэш зависимостей
 
 Workflow использует только pip cache через `actions/setup-python`.
 
@@ -79,7 +79,7 @@ Workflow использует только pip cache через `actions/setup-p
 - generated chart data;
 - dashboard exports.
 
-## Workflow artifacts
+## Артефакты workflow
 
 CI загружает QA reports как GitHub Actions artifacts:
 
@@ -92,11 +92,11 @@ CI загружает QA reports как GitHub Actions artifacts:
 
 Эти artifacts не являются Git-tracked source. Они используются как external audit trail для конкретного CI run.
 
-## Visual regression mode
+## Режим visual regression
 
 `ofz-quality --fast` использует текущий production contract. Если screenshot backend недоступен на runner, visual regression может перейти в fallback/static inspection mode и явно записать это в report. Browser binaries для Playwright не устанавливаются в P2.8, чтобы не утяжелять baseline CI. Полная стабилизация screenshot backend в CI может быть добавлена отдельным этапом.
 
-## Generated outputs policy
+## Политика generated outputs
 
 CI не должен коммитить generated outputs. Workflow содержит informational guard:
 
@@ -107,7 +107,7 @@ git ls-files outputs releases data/processed logs
 
 Если в будущем появится workflow, который создает release bundle, он должен публиковать bundle как workflow artifact или GitHub Release asset только после отдельного release-process approval.
 
-## GitHub CLI inspection
+## Проверка через GitHub CLI
 
 Разрешенные команды просмотра:
 
@@ -131,7 +131,7 @@ gh workflow run quality.yml
 - `gh secret set`;
 - `gh variable set`.
 
-## Local parity checks
+## Локальные parity-проверки
 
 Перед коммитом workflow локально выполняются:
 

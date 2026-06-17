@@ -1,4 +1,4 @@
-# Visual regression report
+# Отчет visual regression
 
 Метка: `вторая модернизация`.
 
@@ -1079,7 +1079,7 @@
 | `yield_by_type_month_cumulative_2026-05-01_retrospective_4.html` | `format_terms_scatter_contract` | `ok` | Не format_terms_scatter. |
 | `yield_by_type_month_cumulative_2026-05-01_retrospective_4.html` | `format_terms_delta_by_format_contract` | `ok` | Не format_terms_delta_by_format. |
 
-## Screenshots
+## Скриншоты
 
 Папка для скриншотов: `outputs/reports/visual_regression/screenshots`.
 Если screenshot backend недоступен, папка создается, но изображения не формируются.
@@ -1090,7 +1090,7 @@
 - Проверка наложения подписей без screenshot backend является эвристической.
 - Полноценное сравнение контрольных зон будет доступно после подключения screenshot backend.
 
-## Screenshot artifacts
+## Screenshot-артефакты
 
 - Screenshot artifacts count: `0`
 - Screenshot manifest directory: `outputs/reports/visual_regression`

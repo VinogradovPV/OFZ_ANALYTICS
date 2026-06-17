@@ -1,4 +1,4 @@
-# Docs Cleanup Apply Decision
+# Решение по cleanup документации
 
 Дата: 2026-06-08.
 
@@ -18,7 +18,7 @@ Dry-run `scripts/maintenance/cleanup_docs.py --dry-run` после consolidation
 - merge diagnostics уже частично перенесены в active contracts/visualization docs, но ссылки на них еще остаются в документации и журнале проверок;
 - новый dry-run после Этапа 11 выявил дополнительные active docs, которые требовали обновления классификатора `cleanup_docs.py`.
 
-## Проверка merge candidates
+## Проверка кандидатов на merge
 
 Полезные правила из visualization diagnostics перенесены в:
 

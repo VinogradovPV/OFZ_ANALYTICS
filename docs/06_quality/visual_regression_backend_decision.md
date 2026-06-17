@@ -1,8 +1,8 @@
-# Visual Regression Backend Decision
+# Решение по backend для visual regression
 
 Date: 2026-06-11.
 
-## Decision
+## Решение
 
 The project uses a two-layer visual regression strategy:
 
@@ -16,7 +16,7 @@ Recommended production mode after backend stabilization:
 .\.venv\Scripts\python.exe scripts\visual_regression.py --mode auto --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-## Alternatives Reviewed
+## Рассмотренные альтернативы
 
 | Backend | Assessment | Decision |
 |---|---|---|
@@ -25,7 +25,7 @@ Recommended production mode after backend stabilization:
 | Selenium/browser-based | Similar browser coverage, but heavier driver management and less convenient local automation than Playwright. | Not selected. |
 | Existing Plotly JSON fallback | Fast, stable and useful for contracts, axis labels, legends and trace metadata, but cannot prove actual rendered layout. | Kept as reserve and contract-inspection layer. |
 
-## Screenshot Backend Contract
+## Контракт screenshot backend
 
 `scripts/visual_regression.py` supports:
 
@@ -50,7 +50,7 @@ Screenshot backend behavior:
 - writes screenshot manifest JSON and diff report under `outputs/reports/visual_regression/`;
 - treats screenshots, manifests and diff reports as generated outputs.
 
-## Baseline And Diff Policy
+## Политика baseline и diff
 
 If a matching baseline screenshot exists in:
 
@@ -69,7 +69,7 @@ If no baseline exists, the status is:
 
 Missing baseline is not a failure during P2.7 stabilization. It is a documented warning/initialization state.
 
-## Generated Artifacts
+## Сгенерированные артефакты
 
 Do not commit:
 
@@ -80,7 +80,7 @@ Do not commit:
 
 Release bundles may include visual regression reports and screenshots as external artifacts.
 
-## Dependency Policy
+## Политика зависимостей
 
 Playwright is a dev/QA dependency, not a runtime pipeline dependency.
 
@@ -93,7 +93,7 @@ Install dev dependencies:
 
 If Playwright is not installed, `--mode auto` falls back to static HTML inspection.
 
-## Codex Sandbox And Manual PowerShell Runs
+## Codex sandbox и ручные PowerShell-запуски
 
 The screenshot backend launches a browser subprocess. In the Codex managed sandbox this subprocess can be blocked by Windows pipe permissions even when Playwright and Chromium are installed correctly. In that case `--mode auto` records a warning and uses fallback inspection.
 

@@ -2,7 +2,7 @@
 
 Главная навигационная карта документации проекта после реорганизации `docs/`.
 
-## 1. Project
+## 1. Проект
 
 Папка: [docs/00_project/](00_project/)
 
@@ -13,7 +13,7 @@
 - [Project inventory](00_project/project_inventory.md)
 - [Self-review](00_project/self_review.md)
 
-## 2. Methodology
+## 2. Методология
 
 Папка: [docs/01_methodology/](01_methodology/)
 
@@ -72,7 +72,7 @@
 - [Dashboard exports report](05_dashboard/dashboard_exports_report.md)
 - [Dashboard semantic model v2](05_dashboard/dashboard_semantic_model_v2.md)
 
-## 7. Quality and reproducibility
+## 7. Качество и воспроизводимость
 
 Папка: [docs/06_quality/](06_quality/)
 
@@ -82,6 +82,6 @@
 - [Run manifest report](06_quality/run_manifest_report.md)
 - [Visual regression report](06_quality/visual_regression_report.md)
 
-## 8. Archive
+## 8. Архив
 
 Архивные и промежуточные документы не являются active production contract. После controlled archive apply они хранятся в `docs/archive/YYYY-MM-DD/` и не перечисляются в основной карте документации поштучно.

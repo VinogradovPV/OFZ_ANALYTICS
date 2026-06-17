@@ -1,4 +1,4 @@
-# P2 starting checkpoint
+# Стартовый checkpoint P2
 
 Дата: 2026-06-09.
 
@@ -40,7 +40,7 @@ P2 начинается только после подтверждения basel
 | `quality_gate --fast` | OK |
 | `quality_gate --full` | OK |
 
-## Git pre-check
+## Предварительная проверка Git
 
 Выполнено:
 
@@ -83,7 +83,7 @@ ofz-schema = "scripts.schema_validation:main"
 
 Результат: OK.
 
-## Quality baseline
+## Базовая линия качества
 
 Выполнено последовательно:
 

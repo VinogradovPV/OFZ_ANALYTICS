@@ -1,4 +1,4 @@
-# Release bundle plan
+# План релизного пакета
 
 Дата актуализации: 2026-06-09.
 
@@ -72,7 +72,7 @@ Manifest фиксирует:
 - visual regression mode;
 - warning summary.
 
-## Missing outputs policy
+## Политика missing outputs
 
 Если required outputs отсутствуют:
 
@@ -94,7 +94,7 @@ Optional categories:
 - `data_quality_summary`;
 - `telemetry_summary`.
 
-## Safety policy
+## Политика безопасности
 
 Реальное создание bundle требует оба флага:
 

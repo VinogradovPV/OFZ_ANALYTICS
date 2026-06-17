@@ -1,4 +1,30 @@
-# P3 modernization progress report
+# Отчет о прогрессе модернизации P3
+
+## 2026-06-17 - Повторная русификация и UTF-8 аудит документации
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Выполнен повторный проход по активной документации проекта без архивов `docs/archive/` и `docs/90_archive/`.
+- Заголовки и служебные формулировки в активных Markdown-документах частично русифицированы; технические идентификаторы, имена CLI, режимы, пути, поля данных и stage-названия сохранены как стабильные термины.
+- Проверена кодировка активных `.md`: все проверенные файлы читаются как UTF-8 без BOM.
+- Проверены признаки mojibake и поврежденных последовательностей вопросительных знаков: активная документация не содержит найденных попаданий по контрольным паттернам.
+- Архивные документы не изменялись.
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| UTF-8 audit через Python | OK | Активные `README.md` и `docs/**/*.md` без архивов читаются как UTF-8 без BOM. |
+| `rg -n "\?{2,}" README.md docs --glob "*.md" --glob "!docs/90_archive/**" --glob "!docs/archive/**"` | OK | Поврежденные последовательности вопросительных знаков не найдены. |
+| Mojibake pattern scan через Python | OK | Контрольные паттерны `Р...`, `С...`, `вЂ` в активной документации не найдены. |
+| `git diff --name-only` | OK | Проверен набор измененных файлов; prompt-файлы v5/v6 остаются отдельным ранее существовавшим состоянием рабочей копии. |
+
+### Пропущенные проверки
+
+- `compileall`, `ofz-quality --fast` и `ofz-quality --full` не запускались, потому что менялась только документация.
+- GitHub Actions runs не проверялись по явной инструкции пользователя.
 
 ## P3.REL.1 - Stable release procedure update
 
@@ -330,7 +356,7 @@
 
 Date: 2026-06-16.
 
-### Status
+### Статус
 
 - P3 prompt/instructions accepted from `prompts/ofz_p3_modernization_system_prompt.md` and `prompts/ofz_p3_modernization_step_by_step.md`.
 - P2 status confirmed from `docs/00_project/p2_completion_report.md`: `stable-release-candidate`.
@@ -342,7 +368,7 @@ Date: 2026-06-16.
 - Token/cost-aware mode accepted: targeted reads/searches, no large rereads without cause, no full quality gate without trigger, docs-only stages do not require compileall/quality, session preflight once per session, skipped checks documented after each stage.
 - Git/GitHub outside-sandbox policy accepted for subsequent work: run Git/`gh` commands from the project root outside sandbox, check staged generated artifacts before commit, and do not perform PR/release/workflow/secret/repo-edit operations without a separate explicit user command.
 
-### Session preflight results
+### Результаты session preflight
 
 Repository state:
 
@@ -370,13 +396,13 @@ CLI entry points:
 | `.\.venv\Scripts\ofz-schema.exe --help` | OK | Help rendered. |
 | `.\.venv\Scripts\ofz-build-release-bundle.exe --help` | OK | Help rendered. |
 
-### Skipped checks
+### Пропущенные проверки
 
 - `compileall`: skipped because this step changed only documentation.
 - `ofz-quality --fast`: skipped because this step changed only documentation and no quality gate was requested.
 - `ofz-quality --full`: skipped because this step changed only documentation and full quality is explicitly out of scope for the P3 rules acceptance step.
 
-### Next stage
+### Следующий этап
 
 Next stage was superseded by the pre-P3 blocker fix requested by the user: `P3.PRE.0 Windows GUI launcher UX and runtime fix`.
 
@@ -384,14 +410,14 @@ Next stage was superseded by the pre-P3 blocker fix requested by the user: `P3.P
 
 Date: 2026-06-16.
 
-### Status
+### Статус
 
 - Completed pre-P3 bugfix stage before `P3.PRE.1` and `P3.PRE.2`.
 - P3 source acquisition was not changed.
 - `data/raw` was not changed.
 - Generated launcher logs, cleanup manifests and release artifacts are not source artifacts and must not be committed.
 
-### Changes
+### Изменения
 
 - Fixed `tools/windows_launcher/ofz_launcher.ps1` command preview under `Set-StrictMode` by checking the hashtable key before reading `Preview`.
 - Changed `run-pipeline` action to build the production default CLI command without a manual stages list: `.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative`.
@@ -402,7 +428,7 @@ Date: 2026-06-16.
 - Replaced `tools/windows_launcher/README.md` with a Russian UX guide and added a short link from `README.md`.
 - Updated `docs/06_quality/manual_checks_log.md`.
 
-### Checks
+### Проверки
 
 | Check | Result | Notes |
 | --- | --- | --- |
@@ -415,14 +441,14 @@ Date: 2026-06-16.
 | `-Action cleanup-delete-all` without token | Expected fail | Blocked without `DELETE_OUTPUTS`. |
 | `-Action run-pipeline -PreviewOnly` | OK | Preview command contains `ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` and does not contain `--stages`. |
 
-### Skipped checks
+### Пропущенные проверки
 
 - Real `run-pipeline` through launcher: skipped because preview-only verified command construction and a real run can generate outputs.
 - `compileall`: skipped because Python pipeline code did not change.
 - `ofz-quality --fast`: skipped because Python pipeline code did not change and this is a PowerShell/docs bugfix.
 - `ofz-quality --full`: skipped because Python pipeline code did not change and full quality was not triggered.
 
-### Next stage
+### Следующий этап
 
 Next stage was superseded by CI blocker remediation: GitHub Actions `quality-fast` failed in schema validation on Windows stdout encoding.
 
@@ -430,14 +456,14 @@ Next stage was superseded by CI blocker remediation: GitHub Actions `quality-fas
 
 Date: 2026-06-16.
 
-### Status
+### Статус
 
 - Completed before `P3.PRE.1` and `P3.PRE.2`; GitHub Actions `quality-fast` passed after the workflow update.
 - Root cause: Windows runner/Python stdout used a non-UTF-8 encoding while schema validation printed Cyrillic diagnostics, raising `UnicodeEncodeError`.
 - P3 source acquisition was not changed.
 - `data/raw` was not changed.
 
-### Changes
+### Изменения
 
 - Workflow `.github/workflows/quality.yml` sets `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8`.
 - Workflow PowerShell steps that run Python or installed CLI entry points call `chcp 65001`.
@@ -446,7 +472,7 @@ Date: 2026-06-16.
 - Fixed stale dashboard smoke check to search organized dashboard exports recursively under `outputs/dashboards/`.
 - Documented the CI console encoding contract in `docs/07_operations/ci_workflow.md`.
 
-### Checks
+### Проверки
 
 | Check | Result | Notes |
 | --- | --- | --- |
@@ -458,7 +484,7 @@ Date: 2026-06-16.
 | GitHub Actions run `27620284328` | Failed after encoding fix | UTF-8 output worked; new failure was missing generated `data/processed` and outputs in CI checkout before schema validation. |
 | GitHub Actions run `27623278589` | OK | Workflow with `ofz-run` pre-step completed successfully. |
 
-### Next stage
+### Следующий этап
 
 Next stage after successful CI: `P3.PRE.1 Scripts balance/problem audit`.
 
@@ -466,20 +492,20 @@ Next stage after successful CI: `P3.PRE.1 Scripts balance/problem audit`.
 
 Date: 2026-06-16.
 
-### Status
+### Статус
 
 - Completed pre-P3 scripts balance/problem audit before `P3.PRE.2` and before P3.0 source acquisition.
 - P3 source acquisition was not started; `scripts/source_acquisition/` does not exist yet.
 - Pipeline behavior was not changed.
 - Generated outputs, release artifacts, logs, `data/processed` and `.docm` files were not staged.
 
-### Changes
+### Изменения
 
 - Added `scripts/maintenance/audit_scripts_balance.py` as a static audit helper for P3.PRE.1.
 - Created `docs/00_project/p3_scripts_balance_audit_report.md`.
 - Updated `docs/06_quality/manual_checks_log.md`.
 
-### Findings
+### Наблюдения
 
 - No `shell=True` was found.
 - No active imports/references to `scripts.archive` were found in active Python files.
@@ -490,7 +516,7 @@ Date: 2026-06-16.
 - Deferred medium P3.MOD items remain for controlled decomposition of chart/QA monoliths: `scripts/06_build_charts.py`, `scripts/10_build_monthly_charts.py`, `scripts/12_build_revenue_charts.py`, `scripts/html_chart_qa.py`, and `scripts/visual_regression.py`.
 - Subprocess usage exists in several active scripts, but static scan found no `shell=True`; keep argument-list invocation and explicit cwd/check handling.
 
-### Checks
+### Проверки
 
 | Check | Result | Notes |
 | --- | --- | --- |
@@ -498,12 +524,12 @@ Date: 2026-06-16.
 | `.\.venv\Scripts\python.exe scripts\maintenance\audit_scripts_balance.py --report` | OK | Generated `docs/00_project/p3_scripts_balance_audit_report.md`. |
 | `.\.venv\Scripts\python.exe -m compileall -q scripts` | OK | No compile errors. |
 
-### Skipped checks
+### Пропущенные проверки
 
 - `ofz-quality --fast`: skipped because P3.PRE.1 changed only an audit helper and documentation, with no pipeline behavior change.
 - `ofz-quality --full`: skipped because full quality gate is out of scope for the audit helper/report step.
 
-### Next stage
+### Следующий этап
 
 Next stage: `P3.PRE.2 Docs mojibake/encoding audit and UTF-8 normalization`.
 
@@ -511,7 +537,7 @@ Next stage: `P3.PRE.2 Docs mojibake/encoding audit and UTF-8 normalization`.
 
 Date: 2026-06-16.
 
-### Status
+### Статус
 
 - Completed pre-P3 documentation encoding audit before P3.0 source acquisition.
 - P3 source acquisition was not started.
@@ -519,14 +545,14 @@ Date: 2026-06-16.
 - Archived docs were checked by scope rules but left unchanged when historical.
 - Generated outputs, release artifacts, logs, `data/processed`, raw XLSX inputs and `.docm` files were not changed or staged.
 
-### Changes
+### Изменения
 
 - Added `scripts/maintenance/audit_docs_encoding.py`.
 - Created `docs/00_project/p3_docs_encoding_audit_report.md` with one row per checked Markdown document.
 - Normalized mojibake in active documentation, including `README.md`, selected `docs/00_project/*.md`, `docs/03_pipeline/module_decomposition_plan.md`, `docs/06_quality/manual_checks_log.md`, `docs/index.md`, and `prompts/ofz_p3_modernization_step_by_step.md`.
 - Kept the literal mojibake pattern list in `prompts/ofz_p3_modernization_step_by_step.md` as intentional audit instruction text.
 
-### Results
+### Результаты
 
 - Markdown documents checked: 128.
 - Documents normalized to UTF-8: 16.
@@ -534,7 +560,7 @@ Date: 2026-06-16.
 - Documents with no configured mojibake patterns: 111.
 - `manual_review_required`: 0.
 
-### Checks
+### Проверки
 
 | Check | Result | Notes |
 | --- | --- | --- |
@@ -543,13 +569,13 @@ Date: 2026-06-16.
 | `git diff --name-only` | OK | Reviewed changed source/docs/helper files. |
 | `git diff --name-only | Select-String "outputs|releases|logs|data/processed"` | OK | No generated outputs/release/log/processed data paths in diff. |
 
-### Skipped checks
+### Пропущенные проверки
 
 - `compileall`: skipped because only docs and a targeted audit helper changed; `py_compile` covered the helper.
 - `ofz-quality --fast`: skipped because P3.PRE.2 is documentation/encoding only and pipeline behavior was not changed.
 - `ofz-quality --full`: skipped because full quality gate is out of scope for the docs encoding audit.
 
-### Next stage
+### Следующий этап
 
 Next stage after P3.PRE.2 commit/push: `P3.0 Source acquisition design`.
 
@@ -557,20 +583,20 @@ Next stage after P3.PRE.2 commit/push: `P3.0 Source acquisition design`.
 
 Date: 2026-06-16.
 
-### Status
+### Статус
 
 - Completed follow-up fix for mojibake found by manual review in `scripts/README.md`.
 - Root cause: initial P3.PRE.2 scope covered `README.md`, `CHANGELOG.md`, `docs/**/*.md`, `prompts/**/*.md`, and `tools/**/*.md`; `scripts/**/*.md` was not included.
 - P3 source acquisition was not started.
 
-### Changes
+### Изменения
 
 - Extended `scripts/maintenance/audit_docs_encoding.py` scope to include `scripts/**/*.md`.
 - Normalized active `scripts/README.md` to UTF-8 without BOM.
 - `scripts/archive/2026-06-15/README.md` was checked and left unchanged because no configured mojibake patterns were found.
 - Regenerated `docs/00_project/p3_docs_encoding_audit_report.md`.
 
-### Checks
+### Проверки
 
 | Check | Result | Notes |
 | --- | --- | --- |
@@ -578,13 +604,13 @@ Date: 2026-06-16.
 | `.\.venv\Scripts\python.exe scripts\maintenance\audit_docs_encoding.py --fix-active --report` | OK | Normalized `scripts/README.md` and regenerated report. |
 | Unicode-level verification | OK | `scripts/README.md` has 0 configured mojibake pattern hits. |
 
-### Skipped checks
+### Пропущенные проверки
 
 - `compileall`: skipped because only docs and a targeted audit helper changed; `py_compile` covered the helper.
 - `ofz-quality --fast`: skipped because this was documentation/encoding only and pipeline behavior was not changed.
 - `ofz-quality --full`: skipped because full quality gate is out of scope for the docs encoding follow-up.
 
-### Next stage
+### Следующий этап
 
 Next stage after this addendum commit/push: `P3.0 Source acquisition design`.
 
@@ -592,7 +618,7 @@ Next stage after this addendum commit/push: `P3.0 Source acquisition design`.
 
 Date: 2026-06-16.
 
-### Status
+### Статус
 
 - Completed design-only P3.0 step after P3.PRE.1 and P3.PRE.2.
 - P3.PRE.1 status: completed.
@@ -608,7 +634,7 @@ Accepted and documented required source acquisition policy:
 Variant C - hybrid latest + final + version snapshots on hash change
 ```
 
-### Changes
+### Изменения
 
 - Created `docs/02_data_contracts/minfin_source_registry_contract.md`.
 - Created `docs/07_operations/minfin_source_acquisition.md`.
@@ -621,21 +647,21 @@ Variant C - hybrid latest + final + version snapshots on hash change
 - Fallback URL without anchor checked by user request: `https://minfin.gov.ru/ru/perfomance/public_debt/internal/operations/ofz/auction`.
 - During P3.0 design review, both source URL variants returned `503 Service Unavailable`; the design documents explicitly treat site unavailability as a normal failure mode that must not mutate local raw storage.
 
-### Checks
+### Проверки
 
 | Check | Result | Notes |
 | --- | --- | --- |
 | `git diff --name-only` | OK | Reviewed docs-only change set. |
 | staged generated artifacts filter | OK | No generated outputs/release/log/processed data paths should be staged. |
 
-### Skipped checks
+### Пропущенные проверки
 
 - `py_compile`: skipped because no Python code was changed in P3.0.
 - `compileall`: skipped because no Python code was changed in P3.0.
 - `ofz-quality --fast`: skipped because this is a docs-only design step.
 - `ofz-quality --full`: skipped because full quality gate is out of scope for source acquisition design.
 
-### Next stage
+### Следующий этап
 
 Next stage: `P3.1 Source acquisition skeleton` or the next user-approved P3 implementation step.
 
@@ -643,7 +669,7 @@ Next stage: `P3.1 Source acquisition skeleton` or the next user-approved P3 impl
 
 Date: 2026-06-17.
 
-### Status
+### Статус
 
 - P3 prompt/instruction v5 accepted from `prompts/ofz_p3_modernization_system_prompt_v5.md` and `prompts/ofz_p3_modernization_step_by_step_v5.md`.
 - Current status confirmed: P2 modernization is `stable-release-candidate`; P3.PRE.0, P3.0-pre CI UTF-8 fix, P3.PRE.1, P3.PRE.2 and P3.0 Source acquisition design are completed.
@@ -663,7 +689,7 @@ Date: 2026-06-17.
 - No raw data, processed data, generated outputs, release artifacts, logs or source acquisition storage directories changed.
 - Token/cost-aware mode preserved: targeted reads, no broad quality gate, no production network/download action.
 
-### Checks
+### Проверки
 
 | Check | Result | Notes |
 | --- | --- | --- |
@@ -673,7 +699,7 @@ Date: 2026-06-17.
 | `git log --oneline -5` | OK outside sandbox | Recent history checked from project root outside sandbox. |
 | session preflight | OK outside sandbox | Confirmed branch, remote, `gh` version/auth, and GitHub repo view. |
 
-### Skipped checks
+### Пропущенные проверки
 
 - `compileall`: skipped because this is an instruction acceptance/docs-only stage with no Python code changes.
 - `ofz-quality --fast`: skipped because no pipeline behavior changed.

@@ -55,7 +55,7 @@ releases/bi/ofz_analytics_bi_<report_date>_<period_type>_<aggregation_mode>_r<N>
 - `bi_manifest.json`;
 - `bi_manifest.md`.
 
-## Safety rules
+## Правила безопасности
 
 - Скрипт не создает пустые CSV вместо отсутствующих required datasets.
 - В build mode отсутствие required datasets завершает команду с non-zero exit code.

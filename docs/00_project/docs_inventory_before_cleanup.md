@@ -1,17 +1,17 @@
-# Docs inventory before cleanup
+# Инвентаризация документации до cleanup
 
 - generated_at: `2026-06-15T09:55:57`
 - mode: `archive`
 - documents: `100`
 
-## Summary
+## Сводка
 
 | Status | Count |
 |---|---:|
 | `archive_candidate` | 39 |
 | `keep_active` | 61 |
 
-## Inventory
+## Инвентаризация
 
 | Path | Title | Назначение | Актуальность | Production run | Status | Reason |
 |---|---|---|---|---|---|---|

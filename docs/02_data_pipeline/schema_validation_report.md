@@ -1,4 +1,4 @@
-# Schema validation report
+# Отчет schema validation
 
 Документ описывает проверки, которые выполняет `scripts/schema_validation.py`.
 

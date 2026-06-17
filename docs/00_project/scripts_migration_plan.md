@@ -1,4 +1,4 @@
-# Scripts Migration Plan
+# План миграции scripts
 
 Документ описывает возможную будущую физическую реорганизацию `scripts/`. На текущем этапе перенос основных Python-скриптов не выполняется. Проект сохраняет действующие команды запуска из корня через `.\.venv\Scripts\python.exe`.
 
@@ -87,7 +87,7 @@ scripts/
 - обновить README и `scripts/README.md`;
 - не изменять `data/raw/`.
 
-## Wrapper Compatibility
+## Совместимость wrapper-скриптов
 
 После переноса старые пути должны оставаться рабочими через тонкие wrappers. Пример wrapper для `scripts/run_pipeline.py`:
 

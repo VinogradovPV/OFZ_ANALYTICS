@@ -1,12 +1,30 @@
 # Аудит исходных данных
 
-Дата формирования: 2026-06-16 11:32:22
+Дата формирования: 2026-06-17 14:19:00
 
 ## Краткий вывод
 
 Проверено raw-файлов: 8. Проверено таблиц и листов: 8. Ошибок чтения: 0.
 
 Аудит не изменяет исходные данные и используется как входная диагностика для следующих этапов pipeline.
+
+## Решение? registry validation
+
+| Параметр | Значение |
+|---|---|
+| `source_registry_mode` | `warn` |
+| `source_registry_status` | `ok` |
+| `controlled_source_used` | `False` |
+| `legacy_raw_fallback_used` | `True` |
+| `registry_warnings_count` | `1` |
+| `registry_errors_count` | `0` |
+| `registry_exists` | `False` |
+| `records_count` | `0` |
+| `active_records_count` | `0` |
+
+### Предупреждения registry
+
+- source registry file is missing: C:\Users\Rockaudit\LLM_CHAT\ofz_analytics\data\raw\minfin\ofz_auction_results\registry\minfin_ofz_auction_sources.csv
 
 ## Найденные raw-файлы
 

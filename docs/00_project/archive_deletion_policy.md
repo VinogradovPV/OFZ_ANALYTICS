@@ -1,4 +1,4 @@
-# Archive deletion policy
+# Политика удаления архивов
 
 Дата актуализации: 2026-06-16.
 
@@ -31,7 +31,7 @@
 7. Удаление выполняется отдельным commit.
 8. `--delete-archived` запрещен без explicit approval пользователя.
 
-## Required preconditions
+## Обязательные предварительные условия
 
 Перед физическим удалением archived docs/scripts должны быть выполнены все условия:
 
@@ -65,7 +65,7 @@ Archive mode не является удалением:
 
 Физическое удаление archive candidates допускается только отдельной будущей командой и только после explicit approval. Нельзя запускать `--delete-archived` как часть обычного cleanup или release run.
 
-## Commit policy
+## Политика commit
 
 Удаление archived docs/scripts должно идти отдельным commit:
 
@@ -86,7 +86,7 @@ git push
 - generated outputs cleanup;
 - module decomposition.
 
-## Audit trail
+## Аудиторский след
 
 После удаления нужно обновить:
 
@@ -105,7 +105,7 @@ Deletion manifest должен фиксировать:
 - references check result;
 - explicit approval reference.
 
-## Current status
+## Текущий статус
 
 На 2026-06-16 физическое удаление archived docs/scripts запрещено.
 

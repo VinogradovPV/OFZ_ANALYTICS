@@ -1,4 +1,4 @@
-# Scripts inventory before cleanup
+# Инвентаризация scripts до cleanup
 
 - generated_at: `2026-06-08`
 - cleanup mode: `audit only`
@@ -7,7 +7,7 @@
 
 Этот документ фиксирует P1-аудит `scripts/` перед возможной будущей структурной очисткой. На этом этапе Python-файлы физически не переносятся: текущие CLI-команды, imports, `run_pipeline.py`, editable entry points и ручные production-инструкции должны оставаться стабильными.
 
-## Summary
+## Сводка
 
 | Категория | Количество |
 |---|---:|
@@ -18,7 +18,7 @@
 | `delete_candidate` | 0 |
 | `unknown` для ручной проверки | 0 |
 
-## No-touch active scripts
+## Активные скрипты без изменений
 
 Эти файлы не переносить и не архивировать на production-cleanup этапе без отдельного migration plan и compatibility wrappers.
 
@@ -55,7 +55,7 @@
 - `scripts/scatter_chart_policy.py`
 - `scripts/__init__.py`
 
-## Refactor candidates
+## Кандидаты на рефакторинг
 
 Эти файлы активны или полезны, но их стоит рассмотреть для будущей модульной декомпозиции. Сейчас не переносить.
 
@@ -65,7 +65,7 @@
 - `scripts/10_build_monthly_charts.py` - крупный monthly chart builder; кандидат на разделение bar/line/heatmap/facet logic.
 - `scripts/07_dashboard_exports.py` - крупный dashboard exporter; кандидат на выделение semantic/export helpers.
 
-## Archive candidates
+## Кандидаты в архив
 
 Эти файлы относятся к legacy/reorganization maintenance и не должны вызываться production pipeline. Архивирование допустимо только отдельным этапом после проверки ссылок в README/docs.
 
@@ -75,11 +75,11 @@
 - `scripts/archive/2026-06-15/migrate_legacy_docs_archive.py` - одноразовый перенос старого docs/archive.
 - `scripts/archive/2026-06-15/reorganize_docs.py` - reorganization utility предыдущего этапа; может оставаться как historical maintenance до финального archive decision.
 
-## Unknown scripts for manual review
+## Неясные скрипты для ручной проверки
 
 Нет. Все Python-файлы классифицированы как active, refactor candidate или archive candidate.
 
-## Inventory
+## Инвентаризация
 
 | Path | Size bytes | Назначение | Тип | Run pipeline | Quality gate | Imported by scripts | main() | argparse | Status | Reason |
 |---|---:|---|---|---|---|---|---|---|---|---|
@@ -126,7 +126,7 @@
 | `scripts/utils.py` | 12306 | Общие utilities: markdown, logging, formatting, filesystem helpers. | library | no | import | yes | no | no | `keep_active` | Базовая shared library; no-touch. |
 | `scripts/visual_regression.py` | 58785 | Visual regression / fallback Plotly JSON inspection. | quality | no | runtime | yes | yes | yes | `refactor_candidate` | Активный QA script, вызывается quality gate; кандидат на разбиение backend/check modules. |
 
-## Notes
+## Примечания
 
 - `run_pipeline.py` вызывает stage scripts через `STAGE_SPECS`; физический перенос active scripts сейчас запрещен.
 - `quality_gate.py` использует `KEY_SCRIPTS` для py_compile и запускает runtime QA scripts (`schema_validation.py`, `regression_tests.py`, `smoke_tests.py`, `html_chart_qa.py`, `visual_regression.py`, `anomaly_tests.py` при наличии).

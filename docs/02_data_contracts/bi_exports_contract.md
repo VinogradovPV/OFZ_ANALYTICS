@@ -1,10 +1,10 @@
-# BI exports contract
+# Контракт BI-экспортов
 
 Дата: 2026-06-16.
 
 BI package является external generated artifact. Он собирается из уже созданных pipeline outputs и не коммитится в Git.
 
-## Package path
+## Путь пакета
 
 ```text
 releases/bi/ofz_analytics_bi_<report_date>_<period_type>_<aggregation_mode>_r<N>_<timestamp>/
@@ -12,7 +12,7 @@ releases/bi/ofz_analytics_bi_<report_date>_<period_type>_<aggregation_mode>_r<N>
 
 `releases/` игнорируется Git.
 
-## Required contents
+## Обязательный состав
 
 | Component | Source | Package path | Required |
 |---|---|---|---|
@@ -36,7 +36,7 @@ releases/bi/ofz_analytics_bi_<report_date>_<period_type>_<aggregation_mode>_r<N>
 _<period_type>_<aggregation_mode>_<report_date>_retrospective_<N>
 ```
 
-## Safety policy
+## Политика безопасности
 
 - Missing required datasets must not be silently replaced with empty files.
 - Dry-run reports missing items but writes nothing.
@@ -46,7 +46,7 @@ _<period_type>_<aggregation_mode>_<report_date>_retrospective_<N>
   - `--confirm BUILD_BI_PACKAGE`.
 - Generated BI package contents under `releases/bi/` must not be committed.
 
-## Units
+## Единицы измерения
 
 BI consumers must keep project unit conventions:
 
@@ -56,7 +56,7 @@ BI consumers must keep project unit conventions:
 - discount fields: percentage points.
 - ratio fields: decimal ratio or percent according to source dictionary/display field.
 
-## Nullable policy
+## Политика nullable-полей
 
 Nulls are allowed when the source data does not support a metric:
 
@@ -67,7 +67,7 @@ Nulls are allowed when the source data does not support a metric:
 
 Nulls must be preserved. BI consumers should not replace missing values with zero unless the measure contract explicitly defines zero as a real value.
 
-## Quality fields
+## Поля качества
 
 BI package consumers should retain:
 
@@ -77,7 +77,7 @@ BI package consumers should retain:
 - `is_incomplete_period`;
 - `incomplete_period_reason`.
 
-## Manifest requirements
+## Требования к manifest
 
 `bi_manifest.json` records:
 
@@ -93,7 +93,7 @@ BI package consumers should retain:
 - SHA256 checksums;
 - missing required items.
 
-## Relationship to other contracts
+## Связь с другими контрактами
 
 BI package uses and does not replace:
 

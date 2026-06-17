@@ -1,25 +1,25 @@
-# P3.PRE.1 scripts balance/problem audit report
+# P3.PRE.1 - отчет аудита баланса и проблем скриптов
 
 Date: 2026-06-16.
 
-## Scope
+## Область проверки
 
 - Checked `scripts/`, `scripts/archive/`, `scripts/charts/`, `scripts/qa/`, `scripts/maintenance/`, `scripts/pipeline/`.
 - `scripts/source_acquisition/` does not exist yet; P3.0 source acquisition was not started.
 - Python files scanned: 58 total, 53 active, 5 archived.
 
-## Method
+## Метод
 
 - Static scan for stale archive references, TODO/FIXME/XXX, hardcoded absolute paths, `shell=True`, subprocess usage, potential `data/raw` mutation, missing `main()`, and wrapper/module balance.
 - No pipeline behavior was changed.
 - No source acquisition files were created.
 
-## Summary
+## Сводка
 
 - medium: 5
 - info: 8
 
-## Issues
+## Проблемы
 
 | issue_id | file | severity | category | description | recommended_action | fixed_now | notes |
 |---|---|---|---|---|---|---|---|
@@ -37,7 +37,7 @@ Date: 2026-06-16.
 | P3PRE1-012 | `scripts/smoke_tests.py` | info | subprocess_review | Uses `subprocess` without detected `shell=True`. | Keep argument-list invocation and explicit cwd/check handling; review if command surface expands. | n/a | No unsafe shell=True found by static scan. |
 | P3PRE1-013 | `scripts/visual_regression.py` | info | subprocess_review | Uses `subprocess` without detected `shell=True`. | Keep argument-list invocation and explicit cwd/check handling; review if command surface expands. | n/a | No unsafe shell=True found by static scan. |
 
-## Checks Performed
+## Выполненные проверки
 
 - `shell=True`: none found.
 - Active imports/references to `scripts.archive`: none found in active Python files.
@@ -48,19 +48,19 @@ Date: 2026-06-16.
 - Archived scripts are retained under `scripts/archive/2026-06-15/` for audit only.
 - Subprocess usage exists in active scripts, but static scan found no `shell=True`; keep command lists and explicit cwd/check handling.
 
-## Recommended P3.MOD Items
+## Рекомендованные элементы P3.MOD
 
 1. Continue controlled chart decomposition after P3.PRE audits: extract one chart family/check group per commit from `06_build_charts.py`, `10_build_monthly_charts.py`, `12_build_revenue_charts.py`, `html_chart_qa.py`, and `visual_regression.py`.
 2. Keep archived scripts as audit-only until post-stable archive deletion policy allows deletion.
 3. Re-run this audit after P3 source acquisition scripts are added.
 
-## Verification
+## Верификация
 
 - `.\.venv\Scripts\python.exe -m py_compile scripts\maintenance\audit_scripts_balance.py`: OK.
 - `.\.venv\Scripts\python.exe scripts\maintenance\audit_scripts_balance.py --report`: OK; generated this report.
 - `.\.venv\Scripts\python.exe -m compileall -q scripts`: OK.
 
-## Skipped Checks
+## Пропущенные проверки
 
 - `ofz-quality --fast`: skipped because P3.PRE.1 changed only an audit helper and documentation, with no pipeline behavior change.
 - `ofz-quality --full`: skipped because full quality gate is out of scope for the audit helper/report step.

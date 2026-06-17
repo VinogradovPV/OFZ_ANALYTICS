@@ -1,4 +1,4 @@
-# Processed Data Contract
+# Контракт processed data
 
 Дата актуализации: 2026-06-08.
 

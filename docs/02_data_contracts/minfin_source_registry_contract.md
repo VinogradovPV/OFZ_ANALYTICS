@@ -1,6 +1,6 @@
-# Minfin source registry contract
+# Контракт source registry Минфина
 
-## P3.6 Data Audit Integration Contract
+## P3.6 - контракт интеграции data audit
 
 Дата: 2026-06-17.
 
@@ -65,7 +65,7 @@ P3.6 не меняет cleaning behavior и не переключает Excel in
 
 P3.0 является design-only этапом: downloader code, CLI entry point и изменения pipeline на этом шаге не создаются.
 
-## Source
+## Источник
 
 Основной источник:
 
@@ -91,7 +91,7 @@ https://minfin.gov.ru/ru/perfomance/public_debt/internal/operations/ofz/auction
 INTERNET_Auction_Results_rus_<year>_....xlsx
 ```
 
-## Acquisition Policy
+## Политика acquisition
 
 Обязательная политика P3:
 
@@ -106,7 +106,7 @@ Variant C - hybrid latest + final + version snapshots on hash change
 - `versions/` хранит version snapshots только когда новый hash отличается от уже известного.
 - `registry/` хранит machine-readable audit trail acquisition-решений.
 
-## Storage Structure
+## Структура хранения
 
 ```text
 data/raw/minfin/ofz_auction_results/
@@ -134,7 +134,7 @@ data/raw/minfin/ofz_auction_results/registry/
   minfin_ofz_auction_sources_latest.json
 ```
 
-## Git And Artifact Policy
+## Политика Git и артефактов
 
 Tracked by default:
 
@@ -148,7 +148,7 @@ External or ignored by default:
 
 If `versions/` snapshots must be committed later, that requires a separate artifact policy decision before staging.
 
-## Registry Fields
+## Поля registry
 
 | Field | Required | Type | Description |
 |---|---:|---|---|
@@ -171,7 +171,7 @@ If `versions/` snapshots must be committed later, that requires a separate artif
 | `change_detected` | yes | boolean | True when downloaded/imported content differs from prior active hash. |
 | `notes` | no | string | Human-readable notes, failures, manual import reason, or review decision. |
 
-## Registry Invariants
+## Инварианты registry
 
 - Exactly one `latest` row per active year should have `is_active_for_pipeline=true`, unless the year is intentionally excluded.
 - A `final` row for a year supersedes `latest` for production runs after annual-final approval.
@@ -180,7 +180,7 @@ If `versions/` snapshots must be committed later, that requires a separate artif
 - `versions/` rows must be reproducible from `sha256`, `source_url`, `downloaded_at`, and `file_size_bytes`.
 - Manual imports must use `publication_period=manual-import` until reviewed and promoted.
 
-## Integration Contract
+## Контракт интеграции
 
 Future flow:
 
@@ -194,7 +194,7 @@ source acquisition
 
 The existing raw data registry should continue to treat `data/raw/` as source input and must not mutate raw files. The future acquisition step is the only controlled writer for `data/raw/minfin/ofz_auction_results/`.
 
-## Failure Contract
+## Контракт отказов
 
 If the Minfin site is unavailable, the future acquisition tool must:
 
@@ -207,7 +207,7 @@ If the Minfin site is unavailable, the future acquisition tool must:
 
 If only HTTP metadata is missing but file bytes download successfully, the acquisition may continue with blank `http_etag` / `http_last_modified` and a note.
 
-## P3.2 Registry Writer Contract
+## P3.2 - контракт registry writer
 
 Дата обновления: 2026-06-17.
 
@@ -279,7 +279,7 @@ Validation rules implemented in P3.2:
 - `discovery_method=html` requires HTML provenance fields such as `section_id`, `page_param`, `document_title`, and `absolute_file_url`;
 - `manual-import` should include human-readable `notes`.
 
-## P3.2 Registry Writer Contract Update
+## P3.2 - обновление контракта registry writer
 
 Дата обновления: 2026-06-17.
 

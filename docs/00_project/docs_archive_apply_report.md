@@ -1,4 +1,4 @@
-# Docs Archive Apply Report
+# Отчет о применении архивации docs
 
 Дата: 2026-06-15.
 

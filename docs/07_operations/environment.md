@@ -1,8 +1,8 @@
-# Environment Setup
+# Настройка окружения
 
 Дата актуализации: 2026-06-05.
 
-## Supported Python
+## Поддерживаемый Python
 
 Package metadata supports Python `>=3.11,<3.15`.
 
@@ -35,7 +35,7 @@ Production baseline проверен на Python `3.14.5` в локальном 
 - не смешивать зависимости из системного Python и `.venv`;
 - все команды запускать из корня проекта через `.\.venv\Scripts\python.exe`.
 
-## Create `.venv`
+## Создание `.venv`
 
 ```powershell
 py -3.14 -m venv .venv
@@ -43,7 +43,7 @@ py -3.14 -m venv .venv
 
 Если launcher `py` недоступен, используйте установленный Python 3.14, но не фиксируйте абсолютный путь к Python в документации проекта.
 
-## Activate `.venv`
+## Активация `.venv`
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
@@ -55,7 +55,7 @@ py -3.14 -m venv .venv
 .\.venv\Scripts\python.exe
 ```
 
-## Runtime Dependencies
+## Runtime-зависимости
 
 Установка runtime-зависимостей:
 
@@ -75,7 +75,7 @@ Runtime dependencies:
 
 `matplotlib` не входит в runtime baseline, потому что текущие production scripts не импортируют его напрямую.
 
-## Dev / QA Dependencies
+## Dev / QA зависимости
 
 Установка dev/QA окружения:
 
@@ -89,7 +89,7 @@ Runtime dependencies:
 - linters/formatters не зафиксированы в production baseline;
 - screenshot backend для visual regression пока не включен, используется fallback HTML / Plotly JSON inspection.
 
-## Dependency Check
+## Проверка зависимостей
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip check
@@ -101,7 +101,7 @@ Runtime dependencies:
 No broken requirements found.
 ```
 
-## Editable Install And CLI Entry Points
+## Editable install и CLI entry points
 
 Project metadata is defined in `pyproject.toml`. Existing script-based commands remain the compatibility contract:
 
@@ -149,7 +149,7 @@ Deletion is impossible without the exact confirm token. The command only touches
 
 Ruff, Black, pytest and mypy are not enabled in this release because they are not part of the current production QA contract. The active QA stack is script-based: schema validation, regression tests, smoke tests, HTML chart QA, visual regression fallback and quality gate.
 
-## Minimal Smoke Run
+## Минимальный smoke-run
 
 Минимальная проверка после установки окружения:
 
@@ -164,7 +164,7 @@ Ruff, Black, pytest and mypy are not enabled in this release because they are no
 .\.venv\Scripts\python.exe scripts\quality_gate.py --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-## Lockfile Policy
+## Политика lockfile
 
 Lockfile deferred to next release.
 

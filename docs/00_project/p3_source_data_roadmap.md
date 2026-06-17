@@ -1,4 +1,4 @@
-# P3 source data roadmap
+# P3 roadmap source data
 
 Дата актуализации: 2026-06-16.
 
@@ -11,7 +11,7 @@ P3.0 Source acquisition design is allowed because:
 
 This step creates design documentation only. Downloader code is intentionally deferred.
 
-## Objective
+## Цель
 
 Design controlled acquisition of Minfin OFZ auction Excel source files before data audit.
 
@@ -21,7 +21,7 @@ Required policy:
 Variant C - hybrid latest + final + version snapshots on hash change
 ```
 
-## Deliverables
+## Результаты
 
 Created in P3.0:
 
@@ -29,7 +29,7 @@ Created in P3.0:
 - `docs/07_operations/minfin_source_acquisition.md`
 - `docs/00_project/p3_source_data_roadmap.md`
 
-## Source
+## Источник
 
 Source page:
 
@@ -55,7 +55,7 @@ Expected files:
 INTERNET_Auction_Results_rus_<year>_....xlsx
 ```
 
-## Target Storage
+## Целевое хранилище
 
 ```text
 data/raw/minfin/ofz_auction_results/
@@ -173,7 +173,7 @@ Integration should be incremental:
 4. Data audit consumes controlled active files after compatibility checks pass.
 5. Cleaning remains behavior-stable until source selection is fully validated.
 
-## Failure Handling Principles
+## Принципы обработки ошибок
 
 If Minfin site is unavailable:
 
@@ -194,7 +194,7 @@ If page markup changes:
 - do not guess link selection;
 - require parser update or manual import.
 
-## Open Decisions For Later P3 Steps
+## Открытые решения для следующих P3-этапов
 
 - Exact registry file format: CSV only, JSON latest, or both.
 - Whether `versions/` remains fully external or selected snapshots become tracked release/audit artifacts.

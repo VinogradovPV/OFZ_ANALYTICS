@@ -1,4 +1,4 @@
-# Revenue analytics: выручка от реализации ОФЗ
+# Аналитика выручки от реализации ОФЗ
 
 Дата формирования: `2026-06-16 11:32:30`.
 
@@ -15,7 +15,7 @@
 - Колонка выручки: `proceeds_mln_rub`
 - Строк в расчетном scope: `163`
 
-## Outputs
+## Выходные файлы
 
 - XLSX workbook: `outputs/reports/analytical_tables/revenue_summary_month_cumulative_2026-05-01_retrospective_4.xlsx`
 - CSV: `outputs/exports/analytical_csv/revenue_summary_month_cumulative_2026-05-01_retrospective_4.csv`

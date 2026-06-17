@@ -1,4 +1,4 @@
-# Production Cleanup Baseline
+# Базовая линия production cleanup
 
 Дата фиксации: `2026-06-04`.
 

@@ -1,4 +1,4 @@
-# Production artifact policy
+# Политика production-артефактов
 
 Дата: 2026-06-04.
 
@@ -64,7 +64,7 @@
 - `run_manifest_latest.json` является рабочим указателем и может пересоздаваться.
 - При будущей реорганизации допустимо выделить физическую папку `outputs/reports/run_manifests/`, но только через отдельный dry-run/apply maintenance-блок.
 
-## Release bundle
+## Релизный пакет
 
 Минимальный production release bundle должен включать:
 
@@ -99,11 +99,11 @@ outputs/tmp/
 outputs/cache/
 ```
 
-## Production cleanup addendum
+## Дополнение по production-очистке
 
 Этот раздел уточняет правила полной очистки `outputs/` перед production-перегенерацией.
 
-### Working, release, archive and audit outputs
+### Рабочие, релизные, архивные и аудиторские outputs
 
 | Состояние | Что это | Git policy | Cleanup policy |
 |---|---|---|---|
@@ -112,7 +112,7 @@ outputs/cache/
 | Archive outputs | Перенесенные старые или рабочие результаты в `outputs/archive/`. | Обычно не хранить в git. | Удаление только после отдельного dry-run/archive/delete протокола. |
 | Audit artifacts | Run manifest, quality gate, schema validation, visual regression, executive summary и data quality summary. | Релизные версии хранить как audit trail. | Релизные audit artifacts не удалять; disposable latest-файлы можно пересоздавать. |
 
-### Clean outputs before production run
+### Очистка outputs перед production-запуском
 
 Перед production-перегенерацией outputs допускается полностью очищать generated artifacts, но только по явному протоколу.
 
@@ -151,7 +151,7 @@ outputs/cache/
 
 Предупреждение: полная очистка outputs удаляет все generated artifacts, кроме сохраненного archive. Запускать только после dry-run и проверки archive policy.
 
-### Archive bundle before cleanup
+### Архивный пакет перед очисткой
 
 Перед полной очисткой outputs, если результаты могут понадобиться для аудита, нужно создать release/work archive bundle.
 
@@ -168,7 +168,7 @@ outputs/cache/
 
 Archive bundle должен быть связан с параметрами запуска: `report_date`, `period_type`, `aggregation_mode`, `retrospective_years`, `run_id`.
 
-### Run manifest retention
+### Хранение run manifest
 
 Run manifest является audit trail.
 
@@ -189,7 +189,7 @@ Run manifest является audit trail.
 
 Важно: не добавлять `outputs/charts/**/*.html` и `outputs/exports/**/*.csv` в `.gitignore`, пока artifact policy и release process явно не решат, что эти артефакты не коммитятся.
 
-## Cleanup gates
+## Контрольные точки очистки
 
 Перед очисткой артефактов обязательно:
 
@@ -363,7 +363,7 @@ Generated outputs are recreated by the pipeline. When a specific reporting run m
 
 This section supersedes earlier draft notes that said HTML/CSV outputs should not be ignored until the release process is decided. The release process decision has now been made for the production-ready baseline.
 
-### Source artifacts
+### Source-артефакты
 
 Source artifacts are tracked in Git:
 
@@ -382,7 +382,7 @@ Source artifacts are tracked in Git:
 
 `data/raw` is committed as the project source dataset because the files are small, required for reproducibility and approved for repository storage. Pipeline scripts must not modify `data/raw` in place.
 
-### Generated artifacts
+### Сгенерированные артефакты
 
 Generated artifacts are not tracked in ordinary Git history:
 
@@ -398,7 +398,7 @@ Generated artifacts are not tracked in ordinary Git history:
 
 Generated artifacts are recreated by the pipeline, archived locally when needed, or packaged as external release artifacts.
 
-### Git tracking policy
+### Политика Git-tracking
 
 The Git repository stores source/config/docs/scripts/contracts/prompts and the small source dataset in `data/raw`.
 
@@ -415,7 +415,7 @@ If generated outputs are staged, remove them from the index without deleting loc
 git rm --cached -r outputs/charts outputs/exports outputs/reports outputs/dashboards outputs/archive outputs/tmp data/processed
 ```
 
-### Outputs skeleton exception
+### Исключение для skeleton outputs
 
 The empty/structural `outputs/` skeleton may be tracked:
 
@@ -425,7 +425,7 @@ The empty/structural `outputs/` skeleton may be tracked:
 
 This exception exists only for navigation and folder discoverability. It does not allow committing generated HTML, CSV, XLSX, JSON or report artifacts from `outputs/`.
 
-### Release bundle policy
+### Политика релизного пакета
 
 If a reporting run must be preserved, create an external release bundle instead of committing outputs individually.
 
@@ -445,7 +445,7 @@ Minimum release bundle contents:
 
 The release bundle must record `report_date`, `period_type`, `aggregation_mode`, `retrospective_years`, `run_id`, commit hash and raw file hashes.
 
-### Clean outputs before production run
+### Очистка outputs перед production-запуском
 
 Before production regeneration, working outputs may be cleaned only through a maintenance script with an explicit safety flow.
 
@@ -470,7 +470,7 @@ Rules:
 
 Warning: full outputs cleanup deletes generated artifacts except the preserved archive. Run it only after dry-run and archive-policy review.
 
-### Run manifest policy
+### Политика run manifest
 
 Run manifest is the audit trail of a production run.
 
@@ -495,22 +495,22 @@ Allowed storage:
 
 The implemented cleanup command also preserves existing `outputs/archive/` during `--delete-all`. Removing old archives requires a separate, explicit archive-retention step and is not part of this command.
 
-### Commit prohibition
+### Запрет на commit
 
 Generated outputs are prohibited from ordinary commits. The only allowed tracked files under `outputs/` are skeleton/navigation files described above.
-## P2.1 release bundle automation note
+## P2.1 - примечание по автоматизации релизного пакета
 
 Дата: 2026-06-09.
 
 External release bundles are created under `releases/` by `ofz-build-release-bundle` / `scripts/maintenance/build_release_bundle.py`. The `releases/` directory is ignored by Git. A real bundle requires `--include-outputs --confirm BUILD_RELEASE_BUNDLE`; dry-run reports planned contents and missing categories without writing files.
 
-## P2.6 UI launcher artifact policy
+## P2.6 - политика артефактов UI launcher
 
 Дата: 2026-06-11.
 
 CLI remains the main supported production interface. UI launchers are controlled wrappers around approved CLI entry points and do not replace `ofz-quality`, `ofz-schema`, release checklist or manual release approval.
 
-### Source artifacts
+### Source-артефакты
 
 The following UI launcher files are source artifacts and may be tracked in Git:
 
@@ -521,7 +521,7 @@ The following UI launcher files are source artifacts and may be tracked in Git:
 
 PowerShell GUI launcher is the recommended Windows UI MVP. Word VBA launcher is optional.
 
-### Generated and release artifacts
+### Сгенерированные и релизные артефакты
 
 The following files are not ordinary source artifacts:
 
@@ -540,7 +540,7 @@ Policy:
 - UI launchers must not accept arbitrary shell command input;
 - UI launchers may start quality checks only by explicit user selection and must not run fast/full quality gates in parallel.
 
-## P2.6.2 Word DOCM Assembly Policy
+## P2.6.2 - политика сборки Word DOCM
 
 Дата: 2026-06-11.
 

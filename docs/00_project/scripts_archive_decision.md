@@ -1,8 +1,8 @@
-# Scripts Archive Decision
+# Решение по архивированию scripts
 
 Date: 2026-06-15.
 
-## Decision
+## Решение
 
 P2.10 Controlled legacy scripts archive apply completed.
 
@@ -10,7 +10,7 @@ Status: `archived_to_scripts_archive_2026-06-15`.
 
 Five legacy maintenance scripts were moved to `scripts/archive/2026-06-15/`. No files were deleted.
 
-## Reference Scan Scope
+## Область сканирования ссылок
 
 References were checked in:
 
@@ -26,7 +26,7 @@ References were checked in:
 
 No production entry point, quality gate, package entry point or current maintenance workflow calls the archived scripts.
 
-## Candidate Table
+## Таблица кандидатов
 
 | Script path | Current status | Active production references | Referenced by | Production risk | Recommendation | Reason |
 |---|---|---|---|---|---|---|
@@ -36,7 +36,7 @@ No production entry point, quality gate, package entry point or current maintena
 | `scripts/archive/2026-06-15/migrate_legacy_docs_archive.py` | archived one-time legacy docs archive migration utility | no | archive README; historical inventory docs | low | `archived` | Completed migration helper. |
 | `scripts/archive/2026-06-15/reorganize_docs.py` | archived previous docs reorganization utility | no | archive README; historical inventory docs | low | `archived` | Superseded by inventory-first cleanup workflow. |
 
-## Current Result
+## Текущий результат
 
 - Physical archive was applied.
 - Five files were moved to `scripts/archive/2026-06-15/`.
@@ -45,7 +45,7 @@ No production entry point, quality gate, package entry point or current maintena
 - Module decomposition remains P2-only.
 - Generated outputs were not staged.
 
-## Future Rule
+## Будущее правило
 
 Archived scripts are audit artifacts. They must not be used for new production runs.
 

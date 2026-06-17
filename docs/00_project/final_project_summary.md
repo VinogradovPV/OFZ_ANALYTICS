@@ -29,7 +29,7 @@
 
 Графики объема размещения приведены к единому докладному стандарту: показатель трактуется как объем размещения ОФЗ по номиналу, на визуализациях отображается в млрд рублей, а исходные значения в млн рублей сохраняются в таблицах-основах графиков.
 
-## Созданные scripts
+## Созданные скрипты
 
 - `scripts/01_data_audit.py`
 - `scripts/02_data_cleaning.py`
@@ -49,7 +49,7 @@
 - `scripts/utils.py`
 - `scripts/__init__.py`
 
-## Созданные docs
+## Созданные документы
 
 Активные документы в корне `docs/`:
 
@@ -74,7 +74,7 @@
 
 Промежуточные repro/status/sync/validation-документы перенесены в `docs/archive/` и не удалялись безвозвратно.
 
-## Datasets
+## Наборы данных
 
 Исходные файлы в `data/raw/`:
 
@@ -95,7 +95,7 @@
 - `ofz_auctions_features_repro.csv`
 - `ofz_auctions_report_scope.csv`
 
-## Charts
+## Графики
 
 Созданные HTML-графики в `outputs/charts/`:
 
@@ -116,7 +116,7 @@
 - `sankey_period_format_maturity_type_quarter_2026-04-01_retrospective_2.html`
 - `sankey_target_period_quarter_2026-04-01_retrospective_2.html`
 
-## Exports
+## Экспорты
 
 Созданные аналитические CSV и chart-support exports:
 
@@ -264,7 +264,7 @@
 .\.venv\Scripts\ofz-clean-outputs.exe --dry-run
 ```
 
-## Outputs smoke checks
+## Smoke-проверки outputs
 
 `scripts/smoke_tests.py` и `scripts/schema_validation.py` присутствуют и должны использоваться как регулярные проверки после регенерации outputs.
 
