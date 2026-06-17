@@ -332,3 +332,23 @@ def select_candidate(
             ),
         )
     raise ValueError(f"Unsupported mode: {mode}")
+
+
+def extract_candidate_links(html: str, year: int, base_url: str = BASE_URL) -> list[SourceDocumentRecord]:
+    records = parse_minfin_auction_table_documents(html, base_url=base_url, page_number=1)
+    return filter_candidates(records, year)
+
+
+def filter_minfin_excel_links(
+    links: list[SourceDocumentRecord],
+    year: int,
+) -> list[SourceDocumentRecord]:
+    return filter_candidates(links, year)
+
+
+def select_best_candidate(
+    candidates: list[SourceDocumentRecord],
+    year: int,
+    mode: str = "monthly",
+) -> SourceDocumentRecord | None:
+    return select_candidate(candidates, year, mode)

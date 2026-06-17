@@ -530,3 +530,50 @@ Date: 2026-06-17.
 ### Следующий этап
 
 Следующий этап: `P3.3 Monthly acquisition implementation`.
+## P3.3 - Monthly acquisition implementation
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Завершена реализация P3.3 Monthly acquisition implementation.
+- Добавлен HTTP client на `urllib`: `fetch_page` и `download_file`.
+- Реализован controlled monthly workflow: fetch base page, parse section 66, read `page_66` pagination, fetch subsequent pages, select monthly candidate by max `as_of_date`, temp download, validation, SHA-256/file size, hash compare, promote latest/version, registry update and source acquisition report.
+- Реальный download требует `--download --confirm DOWNLOAD_MINFIN_SOURCE`.
+- `--download` без confirm блокируется до network/raw mutation и возвращает non-zero exit.
+- Offline smoke покрывает changed hash, unchanged hash, registry update, latest/version promotion, report write и simulated network failure without raw mutation.
+- Реальный download не запускался.
+
+### Изменения
+
+- `scripts/source_acquisition/minfin_fetch.py`
+- `scripts/source_acquisition/http_client.py`
+- `scripts/source_acquisition/minfin_html_parser.py`
+- `scripts/source_acquisition/minfin_patterns.py`
+- `scripts/source_acquisition/path_planning.py`
+- `scripts/source_acquisition/source_registry.py`
+- `scripts/qa/minfin_monthly_acquisition_smoke.py`
+- `docs/07_operations/minfin_source_acquisition.md`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/00_project/p3_modernization_progress_report.md`
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| `py_compile minfin_fetch.py http_client.py source_registry.py` | OK | Monthly acquisition modules compile. |
+| `py_compile minfin_monthly_acquisition_smoke.py` | OK | Smoke compiles. |
+| `minfin_monthly_acquisition_smoke.py` | OK | Offline smoke checks monthly workflow with dummy XLSX bytes and no live network. |
+| `compileall -q scripts` | OK | Все scripts компилируются. |
+| `ofz-fetch-minfin --year 2026 --mode monthly --dry-run --no-network` | OK | Non-mutating dry-run plan returned. |
+| `ofz-fetch-minfin --year 2026 --mode monthly --download` | OK expected block | Command blocked without `DOWNLOAD_MINFIN_SOURCE` before mutation. |
+
+### Пропущенные проверки
+
+- Real download with `--confirm DOWNLOAD_MINFIN_SOURCE`: пропущен, потому что пользователь не давал отдельного разрешения на реальное скачивание.
+- `ofz-quality --fast`: пропущен, потому что P3.3 isolated source acquisition workflow не меняет pipeline behavior.
+- `ofz-quality --full`: пропущен, потому что full quality gate не входит в scope monthly acquisition implementation stage.
+
+### Следующий этап
+
+Следующий этап: `P3.4 Annual finalization`.

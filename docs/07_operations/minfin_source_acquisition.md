@@ -240,3 +240,42 @@ Parser contract:
 - annual-final selection does not require file suffix `YYYY1231`.
 
 P3.1 deliberately blocks `--download` and `--save-html-snapshot`. Live network discovery is not implemented in this stage; `--no-network` dry-run returns a non-mutating plan with warning when no local `--html-file` is supplied.
+
+## P3.3 Monthly Acquisition Implementation
+
+Дата обновления: 2026-06-17.
+
+P3.3 реализует controlled monthly acquisition workflow для текущего года. Реальный download разрешен только при явном подтверждении:
+
+```powershell
+.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode monthly --download --confirm DOWNLOAD_MINFIN_SOURCE
+```
+
+Без confirm команда должна завершаться с ошибкой до network/raw mutation:
+
+```powershell
+.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode monthly --download
+```
+
+Monthly workflow:
+
+1. Fetch base page.
+2. Parse target section 66.
+3. Read `page_66` pagination count.
+4. Fetch `page_66=2..N`.
+5. Extract XLSX candidates only from section 66.
+6. Select monthly candidate by max `as_of_date`.
+7. Download selected `absolute_file_url` to temp path under ignored `outputs/tmp/source_acquisition/`.
+8. Validate `.xlsx` extension and filename year.
+9. Compute SHA-256 and file size.
+10. Compare with current active `latest` hash from registry.
+11. If unchanged, append an `observation` registry row and create no version snapshot.
+12. If changed, write `versions/<year>/` snapshot, update `latest/`, and append active `latest` registry row.
+13. Write CSV/JSON registry.
+14. Write source acquisition report under ignored `outputs/reports/source_acquisition/`.
+
+Failure behavior:
+
+- Page fetch or network failure must not mutate raw storage.
+- Failed file download must not leave partial downloaded files.
+- `versions/` and `outputs/reports/source_acquisition/` remain generated/external artifacts and must not be staged by default.

@@ -22,11 +22,11 @@ IGNORED_SECTION_IDS = {65, 38, 39}
 DEFAULT_MAX_PAGES = 20
 DEFAULT_TIMEOUT_SECONDS = 30
 DEFAULT_RETRIES = 2
-DEFAULT_USER_AGENT = "OFZ_ANALYTICS source acquisition dry-run"
+DEFAULT_USER_AGENT = "OFZ_ANALYTICS source acquisition"
+DOWNLOAD_CONFIRM_TOKEN = "DOWNLOAD_MINFIN_SOURCE"
 
 FILE_NAME_RE = re.compile(
     r"^INTERNET_Auction_Results_rus_(?P<year>\d{4})_(?P<suffix>[^/\\]+)\.xlsx$",
     re.IGNORECASE,
 )
-AS_OF_DATE_RE = re.compile(r"\bна\s+(?P<date>\d{2}\.\d{2}\.\d{4})\b", re.IGNORECASE)
-
+AS_OF_DATE_RE = re.compile(r"\b(?:на|РЅР°)\s+(?P<date>\d{2}\.\d{2}\.\d{4})\b", re.IGNORECASE)
