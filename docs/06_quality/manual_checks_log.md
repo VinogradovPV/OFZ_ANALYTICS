@@ -485,6 +485,12 @@
 | Date | Change | Check | Result | Limitations |
 |---|---|---|---|---|
 | 2026-06-17 | Реализован controlled monthly acquisition workflow для `ofz-fetch-minfin`: HTTP fetch/download helpers, section 66 pagination, monthly candidate selection, temp download, validation, hash compare, latest/version promotion, registry update and source acquisition report. | `.\.venv\Scripts\python.exe -m py_compile scripts\source_acquisition\minfin_fetch.py scripts\source_acquisition\http_client.py scripts\source_acquisition\source_registry.py`; `.\.venv\Scripts\python.exe -m py_compile scripts\qa\minfin_monthly_acquisition_smoke.py`; `.\.venv\Scripts\python.exe scripts\qa\minfin_monthly_acquisition_smoke.py`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode monthly --dry-run --no-network`; `.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode monthly --download`. | OK. Offline smoke покрывает changed/unchanged hash, latest/version promotion, registry update, report write и simulated network failure without raw mutation. `--download` без `DOWNLOAD_MINFIN_SOURCE` безопасно блокируется до network/raw mutation. | Реальный download не запускался, потому что для него нужно отдельное разрешение пользователя. `versions/` и `outputs/reports/source_acquisition/` являются generated/external outputs и не должны коммититься. `ofz-quality --fast/full` пропущены, потому что pipeline behavior не менялся. |
+## 2026-06-17 - P3.7 Parser QA fixtures/tests
+
+| Дата | Изменение | Проверка | Результат | Ограничения |
+|---|---|---|---|---|
+| 2026-06-17 | Добавлены offline QA fixtures/tests для Minfin parser, pagination, selection, hash, annual-final, manual-import и failure modes. | `.\.venv\Scripts\python.exe -m py_compile scripts\qa\minfin_source_acquisition_tests.py`; `.\.venv\Scripts\python.exe scripts\qa\minfin_source_acquisition_tests.py`; `.\.venv\Scripts\python.exe -m compileall -q scripts`. | OK: wrong sections ignored, pagination tested, annual-final non-YYYY1231 tested, simulated 503 не мутирует raw, dry-run не пишет raw/output paths. | Live site не используется; тесты работают только на fixtures/temp roots. GitHub Actions runs не проверяются по инструкции пользователя. |
+
 ## 2026-06-17 - P3.6 Registry integration with data audit
 
 | Дата | Изменение | Проверка | Результат | Ограничения |

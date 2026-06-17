@@ -1,5 +1,58 @@
 # P3 modernization progress report
 
+## P3.7 - Parser QA fixtures/tests
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Завершен этап `P3.7 Parser QA fixtures/tests`.
+- Добавлены offline fixtures для parser pagination page2, wrong sections, hash changed/unchanged cases.
+- Добавлен QA runner `scripts/qa/minfin_source_acquisition_tests.py`.
+- Тесты не обращаются к live site и не меняют настоящий `data/raw`.
+- Покрыты:
+  - выбор только section 66;
+  - игнорирование sections 65/38/39;
+  - parsing `page_66` и `data-page-count`;
+  - resolution relative XLSX URL через `https://minfin.gov.ru`;
+  - selection current-year monthly candidate;
+  - selection annual-final candidate;
+  - annual-final без требования `YYYY1231`;
+  - игнорирование non-xlsx, wrong year и malformed links;
+  - simulated 503 failure без raw mutation;
+  - hash changed/unchanged;
+  - annual-final changed hash requires confirm;
+  - manual-file year mismatch rejected;
+  - dry-run не создает raw/output paths.
+
+### Изменения
+
+- `scripts/qa/minfin_source_acquisition_tests.py`
+- `tests/fixtures/minfin_auction_page_66_page2_sample.html`
+- `tests/fixtures/minfin_wrong_sections_sample.html`
+- `tests/fixtures/minfin_hash_changed_case.json`
+- `tests/fixtures/minfin_hash_unchanged_case.json`
+- `tests/fixtures/minfin_auction_candidates_expected.json`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/00_project/p3_modernization_progress_report.md`
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| `py_compile scripts/qa/minfin_source_acquisition_tests.py` | OK | QA runner компилируется. |
+| `scripts/qa/minfin_source_acquisition_tests.py` | OK | Offline parser/workflow/failure-mode tests прошли. |
+| `compileall -q scripts` | OK | Все scripts компилируются. |
+
+### Пропущенные проверки
+
+- Live Minfin site не проверялся: этап intentionally offline.
+- GitHub Actions runs не проверялись по явной инструкции пользователя.
+
+### Следующий этап
+
+Следующий этап: `P3.8 Final source acquisition documentation and handoff`.
+
 ## P3.6 - Интеграция source registry в data audit
 
 Дата: 2026-06-17.

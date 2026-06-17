@@ -1,0 +1,5 @@
+{
+  "previous_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "candidate_bytes": "candidate changed bytes",
+  "expected_change_detected": true
+}
