@@ -876,8 +876,17 @@ Production-запуск описан в:
 
 - `docs/07_operations/production_runbook.md` — пошаговый runbook для clone, `.venv`, CLI, pipeline, cleanup outputs, QA, release bundle и Git workflow.
 - `docs/07_operations/release_checklist.md` — контрольный checklist перед production release.
+- `docs/07_operations/minfin_monthly_update_procedure.md` — русскоязычная инструкция для ежемесячного обновления источника Минфина, январского annual-final и manual fallback.
 - `docs/07_operations/windows_setup.md` — reproducible Windows setup workflow for a new machine.
 - `docs/07_operations/docker_plan.md` — optional Docker plan; Windows-first remains the primary supported path.
+
+Minfin source acquisition uses the CLI entry point:
+
+```powershell
+.\.venv\Scripts\ofz-fetch-minfin.exe --help
+```
+
+Monthly download requires `--confirm DOWNLOAD_MINFIN_SOURCE`, annual final replacement requires `--confirm REPLACE_MINFIN_FINAL`, and manual fallback requires `--confirm IMPORT_MINFIN_FILE`. Generated acquisition reports under `outputs/reports/source_acquisition/` and version snapshots under `data/raw/minfin/ofz_auction_results/versions/` are not committed.
 
 Windows setup dry-run:
 

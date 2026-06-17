@@ -1,5 +1,44 @@
 # P3 modernization progress report
 
+## P3.8 - Операционная инструкция monthly/final update
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Завершен этап `P3.8 Operator procedure`.
+- Создана русскоязычная инструкция `docs/07_operations/minfin_monthly_update_procedure.md`.
+- Описаны monthly update, январский annual-final, changed final hash и manual fallback.
+- Зафиксирована HTML-структура Минфина: `id_66`, `page_66`, `ajax-pagination-content-10090-66`, `ajax-pagination-10090-66`, links `a.file_item`.
+- Описано, как оператор проверяет правильность выбранного XLSX.
+- Описана обработка `503 Service Unavailable`: не угадывать URL, не мутировать raw вручную, использовать manual fallback или отложить обновление.
+- Описана политика commit: `latest/`, `final/`, `registry/` можно коммитить только после controlled workflow; `versions/` и `outputs/reports/source_acquisition/` не коммитятся.
+- Windows Task Scheduler описан только как reminder-only план, без auto-download и без confirm tokens.
+
+### Изменения
+
+- `docs/07_operations/minfin_monthly_update_procedure.md`
+- `docs/07_operations/minfin_source_acquisition.md`
+- `docs/07_operations/release_checklist.md`
+- `README.md`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/00_project/p3_modernization_progress_report.md`
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| `git diff --name-only` | OK | Проверен набор измененных docs-only файлов перед commit. |
+
+### Пропущенные проверки
+
+- `compileall` и `ofz-quality` не запускались, потому что этап docs-only и Python-код не менялся.
+- GitHub Actions runs не проверялись по явной инструкции пользователя.
+
+### Следующий этап
+
+Следующий этап: P3 handoff/finalization по отдельной команде.
+
 ## P3.7 - Parser QA fixtures/tests
 
 Дата: 2026-06-17.

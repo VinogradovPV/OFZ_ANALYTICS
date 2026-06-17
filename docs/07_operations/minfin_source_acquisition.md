@@ -1,5 +1,24 @@
 # Minfin source acquisition operation design
 
+## P3.8 Operator Procedure
+
+Русскоязычная операционная инструкция для monthly update, январского annual-final, changed final hash и manual fallback находится в:
+
+```text
+docs/07_operations/minfin_monthly_update_procedure.md
+```
+
+Ключевые правила P3.8:
+
+- monthly сначала выполняется через `--dry-run`, затем через `--download --confirm DOWNLOAD_MINFIN_SOURCE`;
+- annual-final для предыдущего года сначала выполняется через `--dry-run`;
+- changed final hash нельзя заменять без ручной проверки и `--confirm REPLACE_MINFIN_FINAL`;
+- manual fallback использует canonical option `--manual-file` и confirm token `IMPORT_MINFIN_FILE`;
+- target HTML structure: `id_66`, `page_66`, `ajax-pagination-content-10090-66`, links `a.file_item`;
+- `data/raw/minfin/ofz_auction_results/versions/` не коммитится;
+- `outputs/reports/source_acquisition/` не коммитится;
+- Windows Task Scheduler допускается только как reminder, без auto-download и без confirm tokens.
+
 ## P3.6 Registry Validation In Data Audit
 
 Data audit теперь умеет проверять controlled Minfin source registry, но не меняет legacy ingestion.

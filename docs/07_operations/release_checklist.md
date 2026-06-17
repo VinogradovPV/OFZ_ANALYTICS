@@ -53,6 +53,13 @@
 - [ ] `data/raw` tracked in Git.
 - [ ] Raw files are small and expected.
 - [ ] No temporary Excel files: `~$*.xlsx`, `*.tmp`, `*.bak`.
+- [ ] Minfin monthly update procedure reviewed: `docs/07_operations/minfin_monthly_update_procedure.md`.
+- [ ] For monthly update, `ofz-fetch-minfin --mode monthly --dry-run` was reviewed before any `--download`.
+- [ ] For annual-final update, selected title/year/file were reviewed before any final promotion.
+- [ ] Changed annual-final hash was not replaced without `REPLACE_MINFIN_FINAL` and manual review.
+- [ ] Manual fallback, if used, used `--manual-file` and `IMPORT_MINFIN_FILE`.
+- [ ] `data/raw/minfin/ofz_auction_results/versions/` is not staged.
+- [ ] `outputs/reports/source_acquisition/` is not staged.
 - [ ] Raw data registry updated.
 - [ ] Raw hashes captured in registry and/or run manifest.
 - [ ] `data/raw` was not modified by pipeline.
