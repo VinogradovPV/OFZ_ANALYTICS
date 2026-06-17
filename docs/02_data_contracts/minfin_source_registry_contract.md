@@ -1,5 +1,62 @@
 # Minfin source registry contract
 
+## P3.6 Data Audit Integration Contract
+
+Дата: 2026-06-17.
+
+Data audit поддерживает validation-only интеграцию controlled Minfin registry без переключения legacy pipeline на controlled source.
+
+CLI параметры `scripts/01_data_audit.py`:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\01_data_audit.py --source-registry-mode off
+.\.venv\Scripts\python.exe scripts\01_data_audit.py --source-registry-mode warn --allow-legacy-raw
+.\.venv\Scripts\python.exe scripts\01_data_audit.py --source-registry-mode strict
+```
+
+Default:
+
+```text
+source-registry-mode=warn
+allow-legacy-raw=true
+```
+
+Режимы:
+
+- `off`: registry не читается; legacy `data/raw` audit работает как раньше.
+- `warn`: registry читается, если существует; ошибки registry пишутся как warnings/errors в audit report, но при доступном legacy raw pipeline продолжает работу.
+- `strict`: registry обязателен; missing registry, duplicate active rows, missing active file и hash/size mismatch возвращают fail; legacy fallback не используется.
+
+Validation helpers:
+
+- `validate_source_registry(...)`
+- `load_active_source_records(...)`
+- `validate_active_file_hashes(...)`
+- `summarize_registry_status(...)`
+
+Data audit report обязан явно показывать:
+
+- `source_registry_mode`
+- `source_registry_status`
+- `controlled_source_used`
+- `legacy_raw_fallback_used`
+- `registry_warnings_count`
+- `registry_errors_count`
+
+P3.6 не меняет cleaning behavior и не переключает Excel input selection на controlled source. Controlled source remains validation-only until a separate migration decision.
+
+Дополнительные validation rules:
+
+- Registry schema должна соответствовать `RegistryRecord`.
+- Для одного `year + storage_role` не допускаются duplicate active rows.
+- Active `latest` для текущего года проверяется при включенном controlled registry.
+- Active file path для `latest`/`final` должен существовать в controlled storage layout.
+- Active file `sha256` должен совпадать с registry.
+- `file_size_bytes` должен совпадать, если поле заполнено.
+- `discovery_method=html` требует `section_id`, `page_param`, `document_title`, а также `document_id` или `document_page_url`, `file_url` или `absolute_file_url`.
+- `discovery_method=manual-import` должен содержать `notes` с `original_local_file=...`.
+- Validation не выполняет live network calls.
+
 Дата актуализации: 2026-06-16.
 
 ## Назначение

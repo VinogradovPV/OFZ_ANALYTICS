@@ -1,5 +1,62 @@
 # P3 modernization progress report
 
+## P3.6 - Интеграция source registry в data audit
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Завершен этап `P3.6 Registry integration with legacy pipeline compatibility`.
+- В `scripts/source_acquisition/source_registry.py` добавлены helpers:
+  - `validate_source_registry(...)`;
+  - `load_active_source_records(...)`;
+  - `validate_active_file_hashes(...)`;
+  - `summarize_registry_status(...)`.
+- `scripts/01_data_audit.py` получил CLI параметры:
+  - `--source-registry-mode off|warn|strict`;
+  - `--allow-legacy-raw` / `--no-allow-legacy-raw`.
+- Default сохранен совместимым: `source-registry-mode=warn`, `allow-legacy-raw=true`.
+- `off` не читает registry и сохраняет legacy behavior.
+- `warn` читает registry при наличии и пишет warnings/errors в audit report, но legacy raw fallback продолжает работу.
+- `strict` требует registry и active controlled files; missing registry, duplicate active rows, missing active file, hash mismatch и size mismatch приводят к non-zero.
+- Data audit report теперь включает раздел `Source registry validation` с `source_registry_mode`, `source_registry_status`, `controlled_source_used`, `legacy_raw_fallback_used`, `registry_warnings_count`, `registry_errors_count`.
+- Controlled source остается validation-only; Excel input selection и cleaning behavior не менялись.
+- Live network calls не добавлялись.
+
+### Изменения
+
+- `scripts/01_data_audit.py`
+- `scripts/source_acquisition/source_registry.py`
+- `scripts/qa/minfin_data_audit_registry_smoke.py`
+- `tests/fixtures/minfin_data_audit_registry_valid.json`
+- `tests/fixtures/minfin_data_audit_registry_missing_file.json`
+- `tests/fixtures/minfin_data_audit_registry_hash_mismatch.json`
+- `tests/fixtures/minfin_data_audit_registry_duplicate_active.json`
+- `docs/02_data_contracts/minfin_source_registry_contract.md`
+- `docs/07_operations/minfin_source_acquisition.md`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/00_project/p3_modernization_progress_report.md`
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| `py_compile scripts/01_data_audit.py scripts/source_acquisition/source_registry.py` | OK | Data audit CLI и registry helpers компилируются. |
+| `py_compile scripts/qa/minfin_data_audit_registry_smoke.py` | OK | Smoke test компилируется. |
+| `scripts/qa/minfin_data_audit_registry_smoke.py` | OK | Проверены missing registry warn/strict, valid registry, missing active file, hash mismatch, duplicate active rows, legacy fallback allowed, no live network. |
+| `compileall -q scripts` | OK | Все scripts компилируются. |
+| `ofz-quality --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` | OK | Fast quality gate не сломан. |
+| `scripts/01_data_audit.py --source-registry-mode warn --allow-legacy-raw` | OK | При отсутствующем registry audit продолжил legacy raw fallback и записал warning. |
+
+### Пропущенные проверки
+
+- GitHub Actions runs не проверялись по явной инструкции пользователя.
+- Strict run на настоящем raw/registry не запускался как production gate, потому что controlled source migration еще не принято.
+
+### Следующий этап
+
+Следующий этап: `P3.7 Operator reports and acquisition observability`.
+
 ## P3.5 - Manual fallback import
 
 Дата: 2026-06-17.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 import warnings
@@ -15,8 +16,18 @@ import pandas as pd
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from scripts import config, utils
+    from scripts.source_acquisition.source_registry import (
+        SourceRegistryValidation,
+        summarize_registry_status,
+        validate_source_registry,
+    )
 else:
     from . import config, utils
+    from .source_acquisition.source_registry import (
+        SourceRegistryValidation,
+        summarize_registry_status,
+        validate_source_registry,
+    )
 
 
 RAW_EXTENSIONS = {".xlsx", ".xls", ".csv"}
@@ -57,12 +68,65 @@ class TableAudit:
     read_error: str | None = None
 
 
-def main() -> None:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Audit raw OFZ source files.")
+    parser.add_argument(
+        "--source-registry-mode",
+        choices=["off", "warn", "strict"],
+        default="warn",
+        help="Validate controlled Minfin source registry without changing legacy raw ingestion.",
+    )
+    parser.add_argument(
+        "--allow-legacy-raw",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Allow legacy data/raw audit fallback when registry validation is warning-only.",
+    )
+    return parser.parse_args(argv)
+
+
+def minfin_registry_path() -> Path:
+    return (
+        config.DATA_RAW_DIR
+        / "minfin"
+        / "ofz_auction_results"
+        / "registry"
+        / "minfin_ofz_auction_sources.csv"
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     logger = utils.setup_logging(config.PIPELINE_LOG_PATH)
     logger.info("Старт этапа 1: аудит исходных данных")
 
     raw_files = list_raw_files(config.DATA_RAW_DIR)
     logger.info("Найдено raw-файлов: %s", len(raw_files))
+    expected_years = sorted(
+        {
+            int(match.group(1))
+            for path in raw_files
+            if (match := re.search(r"(20\d{2})", path.name))
+        }
+    )
+    registry_status = validate_source_registry(
+        minfin_registry_path(),
+        project_root=config.ROOT_DIR,
+        mode=args.source_registry_mode,
+        expected_years=expected_years,
+        allow_legacy_raw=args.allow_legacy_raw,
+        legacy_raw_available=bool(raw_files),
+    )
+    for message in registry_status.warnings:
+        logger.warning("Source registry warning: %s", message)
+    for message in registry_status.errors:
+        logger.error("Source registry error: %s", message)
+
+    if args.source_registry_mode == "strict" and not registry_status.ok:
+        report = build_markdown_report(raw_files, [], registry_status)
+        utils.write_markdown(config.DATA_AUDIT_DOC, report)
+        logger.error("Source registry strict validation failed; legacy raw fallback disabled")
+        return 1
 
     audits: list[TableAudit] = []
     for raw_file in raw_files:
@@ -88,10 +152,11 @@ def main() -> None:
                     audit.missing_cells,
                 )
 
-    report = build_markdown_report(raw_files, audits)
+    report = build_markdown_report(raw_files, audits, registry_status)
     utils.write_markdown(config.DATA_AUDIT_DOC, report)
     logger.info("Отчет аудита записан: %s", config.DATA_AUDIT_DOC)
     logger.info("Этап 1 завершен")
+    return 0
 
 
 def list_raw_files(raw_dir: Path) -> list[Path]:
@@ -423,7 +488,11 @@ def make_unique_column_names(columns: Iterable[str]) -> list[str]:
     return result
 
 
-def build_markdown_report(raw_files: list[Path], audits: list[TableAudit]) -> str:
+def build_markdown_report(
+    raw_files: list[Path],
+    audits: list[TableAudit],
+    registry_status: SourceRegistryValidation | None = None,
+) -> str:
     lines: list[str] = []
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -449,6 +518,8 @@ def build_markdown_report(raw_files: list[Path], audits: list[TableAudit]) -> st
         ]
     )
 
+    if registry_status is not None:
+        append_source_registry_section(lines, registry_status)
     append_raw_file_section(lines, raw_files)
     append_table_summary_section(lines, audits)
     append_column_section(lines, audits)
@@ -458,6 +529,41 @@ def build_markdown_report(raw_files: list[Path], audits: list[TableAudit]) -> st
     append_stage_compliance_section(lines, raw_files, audits)
 
     return "\n".join(lines)
+
+
+def append_source_registry_section(lines: list[str], status: SourceRegistryValidation) -> None:
+    summary = summarize_registry_status(status)
+    lines.extend(
+        [
+            "## Source registry validation",
+            "",
+            "| Параметр | Значение |",
+            "|---|---|",
+        ]
+    )
+    for key in (
+        "source_registry_mode",
+        "source_registry_status",
+        "controlled_source_used",
+        "legacy_raw_fallback_used",
+        "registry_warnings_count",
+        "registry_errors_count",
+        "registry_exists",
+        "records_count",
+        "active_records_count",
+    ):
+        lines.append(f"| `{key}` | `{summary[key]}` |")
+    lines.append("")
+    if status.warnings:
+        lines.extend(["### Registry warnings", ""])
+        for warning in status.warnings:
+            lines.append(f"- {markdown_cell(warning)}")
+        lines.append("")
+    if status.errors:
+        lines.extend(["### Registry errors", ""])
+        for error in status.errors:
+            lines.append(f"- {markdown_cell(error)}")
+        lines.append("")
 
 
 def append_raw_file_section(lines: list[str], raw_files: list[Path]) -> None:
@@ -666,4 +772,4 @@ def markdown_cell(value: str) -> str:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

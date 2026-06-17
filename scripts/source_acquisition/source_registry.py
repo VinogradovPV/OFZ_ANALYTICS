@@ -153,6 +153,26 @@ class RegistryStatus:
         return result
 
 
+@dataclass(frozen=True)
+class SourceRegistryValidation:
+    mode: str
+    ok: bool
+    registry_path: str
+    registry_exists: bool
+    records_count: int
+    active_records_count: int
+    controlled_source_used: bool
+    legacy_raw_fallback_used: bool
+    errors: tuple[str, ...]
+    warnings: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        result = asdict(self)
+        result["errors"] = list(self.errors)
+        result["warnings"] = list(self.warnings)
+        return result
+
+
 def _parse_bool(value: Any) -> bool:
     if isinstance(value, bool):
         return value
@@ -223,6 +243,13 @@ def load_registry_json(path: str | Path) -> list[RegistryRecord]:
     return [_record_from_dict(row) for row in rows]
 
 
+def load_registry(path: str | Path) -> list[RegistryRecord]:
+    registry_path = Path(path)
+    if registry_path.suffix.lower() == ".json":
+        return load_registry_json(registry_path)
+    return load_registry_csv(registry_path)
+
+
 def write_registry_csv(path: str | Path, records: list[RegistryRecord]) -> None:
     registry_path = Path(path)
     registry_path.parent.mkdir(parents=True, exist_ok=True)
@@ -259,6 +286,18 @@ def find_active_record(
     return None
 
 
+def load_active_source_records(
+    records: list[RegistryRecord],
+    storage_roles: set[str] | None = None,
+) -> list[RegistryRecord]:
+    roles = storage_roles or {"latest", "final"}
+    return [
+        record
+        for record in records
+        if record.is_active_for_pipeline and record.storage_role in roles
+    ]
+
+
 def detect_hash_change(previous_record: RegistryRecord | None, candidate_sha256: str) -> bool:
     if previous_record is None:
         return True
@@ -289,12 +328,179 @@ def validate_registry_record(record: RegistryRecord) -> RegistryStatus:
     if record.file_size_bytes < 0:
         errors.append("file_size_bytes must be non-negative")
     if record.discovery_method == "html":
-        for field in ("section_id", "page_param", "document_title", "absolute_file_url"):
+        for field in ("section_id", "page_param", "document_title"):
             if getattr(record, field) in (None, ""):
                 errors.append(f"html discovery requires {field}")
+        if not (record.document_id or record.document_page_url):
+            errors.append("html discovery requires document_id or document_page_url")
+        if not (record.file_url or record.absolute_file_url):
+            errors.append("html discovery requires file_url or absolute_file_url")
     if record.discovery_method == "manual-import":
         if not record.notes:
             warnings.append("manual-import should include notes with original local file context")
         elif "original_local_file=" not in record.notes:
             warnings.append("manual-import notes should include original_local_file")
     return RegistryStatus(ok=not errors, errors=tuple(errors), warnings=tuple(warnings), record_count=1)
+
+
+def _controlled_file_path(project_root: str | Path, record: RegistryRecord) -> Path | None:
+    root = Path(project_root)
+    base = root / "data" / "raw" / "minfin" / "ofz_auction_results"
+    if record.storage_role == "latest":
+        return base / "latest" / f"INTERNET_Auction_Results_rus_{record.year}_latest.xlsx"
+    if record.storage_role == "final":
+        return base / "final" / f"INTERNET_Auction_Results_rus_{record.year}_final.xlsx"
+    return None
+
+
+def validate_active_file_hashes(
+    records: list[RegistryRecord],
+    project_root: str | Path,
+) -> RegistryStatus:
+    errors: list[str] = []
+    warnings: list[str] = []
+    active_records = load_active_source_records(records)
+    for record in active_records:
+        path = _controlled_file_path(project_root, record)
+        if path is None:
+            continue
+        if not path.exists():
+            errors.append(
+                f"active {record.storage_role} file is missing for {record.year}: {path}"
+            )
+            continue
+        actual_sha = compute_sha256(path)
+        if actual_sha != record.sha256:
+            errors.append(
+                f"active {record.storage_role} hash mismatch for {record.year}: "
+                f"registry={record.sha256} actual={actual_sha}"
+            )
+        actual_size = get_file_size(path)
+        if record.file_size_bytes and actual_size != record.file_size_bytes:
+            errors.append(
+                f"active {record.storage_role} size mismatch for {record.year}: "
+                f"registry={record.file_size_bytes} actual={actual_size}"
+            )
+    return RegistryStatus(
+        ok=not errors,
+        errors=tuple(errors),
+        warnings=tuple(warnings),
+        record_count=len(active_records),
+    )
+
+
+def _duplicate_active_errors(records: list[RegistryRecord]) -> list[str]:
+    counts: dict[tuple[int, str], int] = {}
+    for record in load_active_source_records(records):
+        key = (record.year, record.storage_role)
+        counts[key] = counts.get(key, 0) + 1
+    return [
+        f"duplicate active rows for year={year} storage_role={role}: {count}"
+        for (year, role), count in sorted(counts.items())
+        if count > 1
+    ]
+
+
+def validate_source_registry(
+    registry_path: str | Path,
+    *,
+    project_root: str | Path,
+    mode: str = "warn",
+    expected_years: list[int] | None = None,
+    allow_legacy_raw: bool = True,
+    legacy_raw_available: bool = True,
+) -> SourceRegistryValidation:
+    if mode not in {"off", "warn", "strict"}:
+        raise ValueError(f"unsupported source registry mode: {mode}")
+
+    path = Path(registry_path)
+    legacy_fallback = mode != "strict" and allow_legacy_raw and legacy_raw_available
+    if mode == "off":
+        return SourceRegistryValidation(
+            mode=mode,
+            ok=True,
+            registry_path=str(path),
+            registry_exists=False,
+            records_count=0,
+            active_records_count=0,
+            controlled_source_used=False,
+            legacy_raw_fallback_used=legacy_fallback,
+            errors=(),
+            warnings=("source registry validation disabled",),
+        )
+
+    errors: list[str] = []
+    warnings: list[str] = []
+    if not path.exists():
+        message = f"source registry file is missing: {path}"
+        if mode == "strict":
+            errors.append(message)
+        else:
+            warnings.append(message)
+        return SourceRegistryValidation(
+            mode=mode,
+            ok=not errors,
+            registry_path=str(path),
+            registry_exists=False,
+            records_count=0,
+            active_records_count=0,
+            controlled_source_used=False,
+            legacy_raw_fallback_used=legacy_fallback,
+            errors=tuple(errors),
+            warnings=tuple(warnings),
+        )
+
+    try:
+        records = load_registry(path)
+    except Exception as exc:
+        errors.append(f"source registry cannot be read: {type(exc).__name__}: {exc}")
+        records = []
+
+    for index, record in enumerate(records, start=1):
+        status = validate_registry_record(record)
+        errors.extend(f"row {index}: {message}" for message in status.errors)
+        warnings.extend(f"row {index}: {message}" for message in status.warnings)
+
+    errors.extend(_duplicate_active_errors(records))
+    active_records = load_active_source_records(records)
+    years = expected_years or []
+    if years:
+        current_year = max(years)
+        if not find_active_record(records, current_year, "latest"):
+            message = f"active latest row is missing for current year {current_year}"
+            if mode == "strict":
+                errors.append(message)
+            else:
+                warnings.append(message)
+
+    hash_status = validate_active_file_hashes(records, project_root)
+    errors.extend(hash_status.errors)
+    warnings.extend(hash_status.warnings)
+
+    ok = not errors or (mode == "warn" and legacy_fallback)
+    return SourceRegistryValidation(
+        mode=mode,
+        ok=ok,
+        registry_path=str(path),
+        registry_exists=path.exists(),
+        records_count=len(records),
+        active_records_count=len(active_records),
+        controlled_source_used=False,
+        legacy_raw_fallback_used=legacy_fallback,
+        errors=tuple(errors),
+        warnings=tuple(warnings),
+    )
+
+
+def summarize_registry_status(status: SourceRegistryValidation) -> dict[str, Any]:
+    return {
+        "source_registry_mode": status.mode,
+        "source_registry_status": "ok" if status.ok and not status.errors else "error" if status.errors else "warning",
+        "controlled_source_used": status.controlled_source_used,
+        "legacy_raw_fallback_used": status.legacy_raw_fallback_used,
+        "registry_warnings_count": len(status.warnings),
+        "registry_errors_count": len(status.errors),
+        "registry_exists": status.registry_exists,
+        "records_count": status.records_count,
+        "active_records_count": status.active_records_count,
+    }

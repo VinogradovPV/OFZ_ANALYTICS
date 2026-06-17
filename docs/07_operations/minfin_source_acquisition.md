@@ -1,5 +1,33 @@
 # Minfin source acquisition operation design
 
+## P3.6 Registry Validation In Data Audit
+
+Data audit теперь умеет проверять controlled Minfin source registry, но не меняет legacy ingestion.
+
+Default behavior:
+
+```text
+source-registry-mode=warn
+allow-legacy-raw=true
+```
+
+Operational modes:
+
+1. `off`: registry не читается, legacy raw audit идет как раньше.
+2. `warn`: registry читается при наличии; validation problems видны в audit report, но legacy raw fallback продолжает работу.
+3. `strict`: registry обязателен; missing registry, duplicate active rows, missing active file, hash mismatch и size mismatch блокируют audit.
+
+В audit report добавляется раздел `Source registry validation` с полями:
+
+- `source_registry_mode`
+- `source_registry_status`
+- `controlled_source_used`
+- `legacy_raw_fallback_used`
+- `registry_warnings_count`
+- `registry_errors_count`
+
+P3.6 не выполняет live network calls и не переключает pipeline на controlled files. Cleaning behavior не меняется.
+
 ## P3.5 Manual Fallback Import
 
 Manual fallback используется, когда сайт Минфина недоступен или HTML-верстка изменилась, но оператор получил корректный Excel-файл вручную.

@@ -1,0 +1,40 @@
+{
+  "records": [
+    {
+      "absolute_file_url": "https://minfin.gov.ru/common/upload/example.xlsx",
+      "as_of_date": "11.06.2026",
+      "change_detected": true,
+      "discovery_method": "html",
+      "document_id": "6601",
+      "document_page_url": null,
+      "document_title": "Auction results 2026",
+      "downloaded_at": "2026-06-17T00:00:00Z",
+      "file_info": "xlsx",
+      "file_name": "INTERNET_Auction_Results_rus_2026_latest.xlsx",
+      "file_size_bytes": 22,
+      "file_size_text": "xlsx",
+      "file_title": "INTERNET_Auction_Results_rus_2026_latest.xlsx",
+      "file_url": "/common/upload/example.xlsx",
+      "http_etag": null,
+      "http_last_modified": null,
+      "is_active_for_pipeline": true,
+      "link_text": "INTERNET_Auction_Results_rus_2026_latest.xlsx",
+      "modified_at": "15.06.2026",
+      "notes": "fixture sample; smoke rewrites temp hashes",
+      "page_number": 1,
+      "page_param": "page_66",
+      "page_title": "Minfin auction page",
+      "pagination_page_count": 1,
+      "publication_period": "monthly",
+      "published_at": "15.06.2026",
+      "section_id": 66,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "source_last_modified": null,
+      "source_name": "minfin_ofz_auction_results",
+      "source_url": "https://minfin.gov.ru/example.xlsx",
+      "storage_role": "latest",
+      "supersedes_sha256": null,
+      "year": 2026
+    }
+  ]
+}
