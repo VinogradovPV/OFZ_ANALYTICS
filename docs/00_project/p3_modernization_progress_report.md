@@ -1,5 +1,47 @@
 # P3 modernization progress report
 
+## P3.REL.1 - Stable release procedure update
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Завершен этап `P3.REL.1 Stable release procedure update`.
+- Создан `docs/07_operations/stable_release_procedure.md`.
+- Stable release flow обновлен с учетом source acquisition:
+  - source acquisition dry-run;
+  - monthly/annual-final update при необходимости;
+  - registry review;
+  - data audit;
+  - quality-fast;
+  - screenshot validation outside sandbox;
+  - quality-full;
+  - release bundle dry-run;
+  - release bundle build;
+  - optional BI package;
+  - git tag;
+  - `gh release create/upload` только по отдельному явному разрешению пользователя.
+- `release_checklist.md` и `README.md` обновлены ссылками и контрольными пунктами stable release procedure.
+
+### Изменения
+
+- `docs/07_operations/stable_release_procedure.md`
+- `docs/07_operations/release_checklist.md`
+- `README.md`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/00_project/p3_modernization_progress_report.md`
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| `git diff --name-only` | OK | Docs-only проверка набора измененных файлов. |
+
+### Пропущенные проверки
+
+- `compileall` и `ofz-quality` не запускались, потому что Python-код не менялся.
+- GitHub Actions runs не проверялись по явной инструкции пользователя.
+
 ## P3.8 - Операционная инструкция monthly/final update
 
 Дата: 2026-06-17.

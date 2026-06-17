@@ -1,5 +1,21 @@
 # Release checklist
 
+## Stable Release Procedure
+
+- [ ] Stable release procedure reviewed: `docs/07_operations/stable_release_procedure.md`.
+- [ ] Source acquisition dry-run completed before release decision.
+- [ ] Monthly or annual-final update completed if needed.
+- [ ] Source registry reviewed after update.
+- [ ] Data audit completed with source registry validation.
+- [ ] `ofz-quality --fast` completed.
+- [ ] Screenshot validation completed outside sandbox or fallback limitation documented.
+- [ ] `ofz-quality --full` completed before stable release.
+- [ ] Release bundle dry-run reviewed.
+- [ ] Release bundle build completed only after dry-run review.
+- [ ] Optional BI package dry-run/build completed if BI handoff is in scope.
+- [ ] Git tag planned after final commit/push.
+- [ ] `gh release create/upload` not run without separate explicit user permission.
+
 Дата актуализации: 2026-06-08.
 
 Использовать перед production release или перед публикацией release bundle.

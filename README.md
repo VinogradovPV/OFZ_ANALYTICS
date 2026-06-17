@@ -875,6 +875,7 @@ Data strategy:
 Production-запуск описан в:
 
 - `docs/07_operations/production_runbook.md` — пошаговый runbook для clone, `.venv`, CLI, pipeline, cleanup outputs, QA, release bundle и Git workflow.
+- `docs/07_operations/stable_release_procedure.md` — stable release procedure с source acquisition dry-run/update, registry review, quality gates, release bundle, tag и правилом `gh release` только по отдельному разрешению.
 - `docs/07_operations/release_checklist.md` — контрольный checklist перед production release.
 - `docs/07_operations/minfin_monthly_update_procedure.md` — русскоязычная инструкция для ежемесячного обновления источника Минфина, январского annual-final и manual fallback.
 - `docs/07_operations/windows_setup.md` — reproducible Windows setup workflow for a new machine.
