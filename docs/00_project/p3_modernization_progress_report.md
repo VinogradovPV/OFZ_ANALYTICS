@@ -352,3 +352,44 @@ Date: 2026-06-17.
 - `compileall`: skipped because this is an instruction acceptance/docs-only stage with no Python code changes.
 - `ofz-quality --fast`: skipped because no pipeline behavior changed.
 - `ofz-quality --full`: skipped because full quality is out of scope for this instruction acceptance step.
+
+## P3.1-pre - P3 prompt/instruction v6 accepted
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Приняты актуальные инструкции P3 v6 из `prompts/ofz_p3_modernization_system_prompt_v6.md` и `prompts/ofz_p3_modernization_step_by_step_v6_ru.md`.
+- Подтвержден текущий статус проекта: P2 modernization завершена как `stable-release-candidate`; P3.PRE.0, P3.0-pre CI UTF-8 fix, P3.PRE.1, P3.PRE.2 и P3.0 Source acquisition design завершены.
+- Русскоязычная пошаговая инструкция v6 принята как актуальная замена v5.
+- Приняты отдельные команды Codex для этапов P3.1-P3.8.
+- Принят детализированный план P3.6: `source-registry-mode off|warn|strict`, `allow-legacy-raw`, registry validation, legacy fallback, smoke tests и `ofz-quality --fast`; P3.6 не должна ломать legacy pipeline и не должна требовать live network в data audit.
+- HTML-aware parser logic для Минфина сохраняется: целевая секция `id_66` / `page_66` / `ajax-pagination-content-10090-66`, игнорирование секций `65`, `38`, `39`, поддержка pagination через `?page_66=N`, резолв относительных ссылок, monthly title с `на DD.MM.YYYY`, annual-final без требования суффикса `YYYY1231`.
+- Canonical entry point остается `ofz-fetch-minfin = "scripts.source_acquisition.minfin_fetch:main"`.
+- Canonical manual option остается `--manual-file`.
+- P3.1 остается следующим этапом и включает HTML-aware parser skeleton.
+- P3.1 не выполняет production download, не меняет `data/raw`, не создает raw storage dirs или `.gitkeep`, и не пишет registry в raw storage.
+- Правило Git/GitHub outside-sandbox-only принято и сохраняется для всех команд `git` и `gh`.
+- Следующий этап: `P3.1 Source acquisition skeleton` с HTML-aware parser.
+
+### Объем изменений
+
+- Изменена только документация progress report.
+- Код, raw data, processed data, generated outputs, release artifacts, logs и source acquisition storage directories не изменялись.
+- Token/cost-aware mode сохранен: использованы targeted reads, без широкого quality gate, без production download и без сетевого source acquisition.
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| Обзор source-of-truth документов | OK | Перечитаны P3 progress report, source roadmap, Minfin source registry contract, Minfin source acquisition operations, manual checks log, `pyproject.toml`, `.gitignore`. |
+| Обзор v6 prompt/instruction | OK | Прочитаны v6 system prompt и русская step-by-step инструкция из `prompts/`. |
+| `git status --short --branch` | OK outside sandbox | Реальный Git status проверен из корня проекта outside sandbox. |
+| `git log --oneline -5` | OK outside sandbox | Последняя история коммитов проверена из корня проекта outside sandbox. |
+| Session preflight | OK outside sandbox | Проверены branch, remote, `gh --version`, `gh auth status`, `gh repo view VinogradovPV/OFZ_ANALYTICS`. |
+
+### Пропущенные проверки
+
+- `compileall`: пропущен, потому что это instruction acceptance/docs-only stage без изменений Python-кода.
+- `ofz-quality --fast`: пропущен, потому что поведение pipeline не менялось.
+- `ofz-quality --full`: пропущен, потому что full quality gate не входит в scope этого acceptance stage.
