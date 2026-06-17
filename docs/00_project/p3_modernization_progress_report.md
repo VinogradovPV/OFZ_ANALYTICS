@@ -312,3 +312,43 @@ Variant C - hybrid latest + final + version snapshots on hash change
 ### Next stage
 
 Next stage: `P3.1 Source acquisition skeleton` or the next user-approved P3 implementation step.
+
+## P3.1-pre - P3 prompt/instruction v5 accepted
+
+Date: 2026-06-17.
+
+### Status
+
+- P3 prompt/instruction v5 accepted from `prompts/ofz_p3_modernization_system_prompt_v5.md` and `prompts/ofz_p3_modernization_step_by_step_v5.md`.
+- Current status confirmed: P2 modernization is `stable-release-candidate`; P3.PRE.0, P3.0-pre CI UTF-8 fix, P3.PRE.1, P3.PRE.2 and P3.0 Source acquisition design are completed.
+- Minfin supplied HTML structure is incorporated into the P3 working rules.
+- Target source section confirmed as section/document id `66`, page parameter `page_66`, container `ajax-pagination-content-10090-66`, pagination id `ajax-pagination-10090-66`, anchor `tablitsy_po_rezultatam_provedeniya_auktsionov`, and file links `a.file_item`.
+- P3.1 now requires an HTML-aware parser skeleton for local/offline parsing and candidate selection.
+- Parser must ignore non-target sections `65`, `38` and `39`; support pagination through `?page_66=N`; resolve relative file URLs against `https://minfin.gov.ru`; use title `на DD.MM.YYYY` for monthly selection; and tolerate annual-final files whose suffix is not `YYYY1231`.
+- Canonical entry point remains `ofz-fetch-minfin = "scripts.source_acquisition.minfin_fetch:main"`.
+- Canonical manual fallback option remains `--manual-file`.
+- P3.1 remains a skeleton/offline dry-run stage: no production download, no raw Excel mutation, and no raw storage directory or `.gitkeep` creation.
+- Git/GitHub outside-sandbox-only rule accepted and preserved for all `git` and `gh` commands.
+- Next stage: `P3.1 Source acquisition skeleton` with HTML-aware parser.
+
+### Scope
+
+- No code changes.
+- No raw data, processed data, generated outputs, release artifacts, logs or source acquisition storage directories changed.
+- Token/cost-aware mode preserved: targeted reads, no broad quality gate, no production network/download action.
+
+### Checks
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| source-of-truth document review | OK | Reviewed P3 progress, source roadmap, Minfin source registry contract, Minfin acquisition operations, manual checks log, `pyproject.toml`, and `.gitignore`. |
+| v5 prompt/instruction review | OK | Reviewed the v5 system prompt and step-by-step prompt from `prompts/`. |
+| `git status --short --branch` | OK outside sandbox | Real Git state checked from project root outside sandbox. |
+| `git log --oneline -5` | OK outside sandbox | Recent history checked from project root outside sandbox. |
+| session preflight | OK outside sandbox | Confirmed branch, remote, `gh` version/auth, and GitHub repo view. |
+
+### Skipped checks
+
+- `compileall`: skipped because this is an instruction acceptance/docs-only stage with no Python code changes.
+- `ofz-quality --fast`: skipped because no pipeline behavior changed.
+- `ofz-quality --full`: skipped because full quality is out of scope for this instruction acceptance step.
