@@ -20,6 +20,7 @@ class PlannedStoragePaths:
     version_snapshot_dir: str
     temp_download_path: str
     report_path: str
+    annual_final_report_path: str
 
     def to_dict(self) -> dict[str, str]:
         return asdict(self)
@@ -37,6 +38,9 @@ def build_storage_paths(output_root: str | Path, year: int) -> PlannedStoragePat
         version_snapshot_dir=str(base / "versions" / str(year)),
         temp_download_path=str(root / "outputs" / "tmp" / "source_acquisition" / f"minfin_{year}.download"),
         report_path=str(root / "outputs" / "reports" / "source_acquisition" / f"minfin_monthly_{year}.json"),
+        annual_final_report_path=str(
+            root / "outputs" / "reports" / "source_acquisition" / f"minfin_annual_final_{year}.json"
+        ),
     )
 
 

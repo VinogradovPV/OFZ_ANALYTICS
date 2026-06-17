@@ -1,5 +1,53 @@
 # P3 modernization progress report
 
+## P3.4 - Annual finalization
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Завершен этап `P3.4 Annual finalization`.
+- Реализован controlled `annual-final` workflow для закрытия предыдущего года.
+- Annual-final candidate выбирается из секции 66 по году, XLSX-ссылке `a.file_item` и отсутствию `на DD.MM.YYYY` в заголовке.
+- Суффикс имени файла `YYYY1231` не требуется; поддержан финальный файл вида `INTERNET_Auction_Results_rus_2025_20251230.xlsx`.
+- При выборе кандидата annual-final предпочтение отдается публикации/изменению в январе-феврале года `year + 1`, но это не является жестким требованием.
+- Если final отсутствует, файл продвигается в `final/` после валидации, расчета sha256 и размера.
+- Если existing final имеет тот же hash, замена не выполняется.
+- Если existing final имеет другой hash, замена блокируется без `--confirm REPLACE_MINFIN_FINAL`.
+- Registry row для annual-final пишется со `storage_role=final` и `publication_period=annual-final`; активной строка становится только при создании/подтвержденной замене.
+- Реальное скачивание из Минфина не выполнялось; smoke использует fixture HTML и dummy xlsx bytes во временной директории.
+- Настоящий `data/raw` не изменялся.
+
+### Изменения
+
+- `scripts/source_acquisition/minfin_fetch.py`
+- `scripts/source_acquisition/minfin_html_parser.py`
+- `scripts/source_acquisition/minfin_patterns.py`
+- `scripts/source_acquisition/path_planning.py`
+- `scripts/qa/minfin_annual_final_smoke.py`
+- `docs/07_operations/minfin_source_acquisition.md`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/00_project/p3_modernization_progress_report.md`
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| `py_compile scripts/source_acquisition/minfin_fetch.py scripts/source_acquisition/source_registry.py` | OK | CLI annual-final path и registry layer компилируются. |
+| `py_compile scripts/qa/minfin_annual_final_smoke.py` | OK | Smoke test компилируется. |
+| `scripts/qa/minfin_annual_final_smoke.py` | OK | Проверены no final, same hash, different hash blocked, replacement with confirm в temp root. |
+| `compileall -q scripts` | OK | Все scripts компилируются. |
+| `ofz-fetch-minfin --year 2025 --mode annual-final --dry-run --no-network` | OK | Dry-run без сети возвращает план без мутаций. |
+
+### Пропущенные проверки
+
+- Реальный `--download --confirm DOWNLOAD_MINFIN_SOURCE`: пропущен, потому что пользователь не давал отдельного разрешения на live download.
+- GitHub Actions runs: не проверялись по явной инструкции пользователя.
+
+### Следующий этап
+
+Следующий этап: `P3.5 Manual import and operator workflow`.
+
 ## P3.2 - Registry writer с HTML provenance
 
 Дата: 2026-06-17.

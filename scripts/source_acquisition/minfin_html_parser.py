@@ -216,6 +216,15 @@ def _record_sort_date(value: str | None) -> datetime:
         return datetime.min
 
 
+def _annual_final_preference(record: SourceDocumentRecord, year: int) -> int:
+    next_year = year + 1
+    for value in (record.modified_at, record.published_at):
+        parsed = _record_sort_date(value)
+        if parsed.year == next_year and parsed.month in {1, 2}:
+            return 1
+    return 0
+
+
 def parse_minfin_auction_table_documents(
     html: str,
     base_url: str = BASE_URL,
@@ -327,6 +336,7 @@ def select_candidate(
         return max(
             pool,
             key=lambda record: (
+                _annual_final_preference(record, year),
                 _record_sort_date(record.modified_at),
                 _record_sort_date(record.published_at),
             ),

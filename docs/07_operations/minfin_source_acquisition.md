@@ -1,5 +1,36 @@
 # Minfin source acquisition operation design
 
+## P3.4 Annual-Final Workflow
+
+Annual-final mode закрывает предыдущий год и пишет только подтвержденный `final` источник.
+
+Команды:
+
+```powershell
+.\.venv\Scripts\ofz-fetch-minfin.exe --year 2025 --mode annual-final --dry-run --no-network
+.\.venv\Scripts\ofz-fetch-minfin.exe --year 2025 --mode annual-final --download --confirm DOWNLOAD_MINFIN_SOURCE
+.\.venv\Scripts\ofz-fetch-minfin.exe --year 2025 --mode annual-final --download --confirm REPLACE_MINFIN_FINAL
+```
+
+Правила выбора:
+
+1. Используется только HTML section 66: `id_66`, `page_66`, `ajax-pagination-content-10090-66`.
+2. Кандидат должен быть XLSX из `a.file_item`, относительные ссылки резолвятся от `https://minfin.gov.ru`.
+3. Заголовок annual-final не должен содержать `на DD.MM.YYYY`.
+4. Суффикс `YYYY1231` в имени файла не требуется; валидируется год в имени `INTERNET_Auction_Results_rus_<year>_*.xlsx`.
+5. Приоритет имеют документы, опубликованные или измененные в январе-феврале года `year + 1`.
+
+Правила продвижения:
+
+1. Скачивание разрешено только с `--download --confirm DOWNLOAD_MINFIN_SOURCE` или `--download --confirm REPLACE_MINFIN_FINAL`.
+2. Файл сначала скачивается во временный путь, затем валидируется, хэшируется и только после этого продвигается.
+3. Если `final` отсутствует, файл создается после успешной валидации.
+4. Если existing final имеет тот же sha256, замена не выполняется.
+5. Если existing final имеет другой sha256, замена блокируется без `REPLACE_MINFIN_FINAL`.
+6. Registry row пишется со `storage_role=final`, `publication_period=annual-final` и HTML provenance.
+7. Active final row включается только при создании нового final или подтвержденной замене.
+8. Partial temp file удаляется после завершения workflow.
+
 Дата актуализации: 2026-06-16.
 
 ## Status

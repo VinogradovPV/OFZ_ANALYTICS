@@ -26,6 +26,7 @@ from scripts.source_acquisition.minfin_patterns import (
     DEFAULT_TIMEOUT_SECONDS,
     DEFAULT_USER_AGENT,
     FILE_NAME_RE,
+    REPLACE_FINAL_CONFIRM_TOKEN,
     TARGET_PAGE_PARAM,
 )
 from scripts.source_acquisition.path_planning import build_storage_paths, build_version_snapshot_path
@@ -117,7 +118,7 @@ def _discover_records(
     return list(deduped.values()), pagination
 
 
-def _validate_monthly_candidate(candidate: SourceDocumentRecord, year: int) -> None:
+def _validate_candidate_file(candidate: SourceDocumentRecord, year: int) -> None:
     if candidate.file_extension.lower() != "xlsx":
         raise ValueError("selected candidate is not an xlsx file")
     match = FILE_NAME_RE.match(candidate.file_name)
@@ -125,10 +126,21 @@ def _validate_monthly_candidate(candidate: SourceDocumentRecord, year: int) -> N
         raise ValueError(f"selected candidate filename does not match year {year}: {candidate.file_name}")
 
 
+def _validate_monthly_candidate(candidate: SourceDocumentRecord, year: int) -> None:
+    _validate_candidate_file(candidate, year)
+
+
+def _validate_annual_final_candidate(candidate: SourceDocumentRecord, year: int) -> None:
+    _validate_candidate_file(candidate, year)
+    if candidate.as_of_date:
+        raise ValueError("selected annual-final candidate has a monthly as-of date in the title")
+
+
 def _registry_record(
     *,
     candidate: SourceDocumentRecord,
     year: int,
+    publication_period: str,
     file_size_bytes: int,
     sha256: str,
     storage_role: str,
@@ -145,7 +157,7 @@ def _registry_record(
         link_text=candidate.file_title or candidate.file_name,
         file_name=candidate.file_name,
         year=year,
-        publication_period="monthly",
+        publication_period=publication_period,
         downloaded_at=datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         source_last_modified=candidate.modified_at,
         http_etag=None,
@@ -210,6 +222,7 @@ def _promote_monthly_download(
         new_record = _registry_record(
             candidate=candidate,
             year=year,
+            publication_period="monthly",
             file_size_bytes=candidate_size,
             sha256=candidate_sha,
             storage_role="latest",
@@ -225,6 +238,7 @@ def _promote_monthly_download(
         new_record = _registry_record(
             candidate=candidate,
             year=year,
+            publication_period="monthly",
             file_size_bytes=candidate_size,
             sha256=candidate_sha,
             storage_role="observation",
@@ -252,6 +266,88 @@ def _promote_monthly_download(
         "registry_json_path": paths["registry_json_path"],
     }
     _write_report(paths["report_path"], payload)
+    return payload
+
+
+def _promote_annual_final_download(
+    *,
+    candidate: SourceDocumentRecord,
+    downloaded_path: Path,
+    output_root: str,
+    year: int,
+    pagination: dict[str, object] | None,
+    replace_final: bool,
+) -> dict[str, object]:
+    _validate_annual_final_candidate(candidate, year)
+    paths = build_storage_paths(output_root, year).to_dict()
+    final_path = Path(paths["final_path"])
+    candidate_sha = compute_sha256(downloaded_path)
+    candidate_size = get_file_size(downloaded_path)
+    registry_path = Path(paths["registry_csv_path"])
+    records = load_registry_csv(registry_path)
+    previous = find_active_record(records, year, "final")
+    existing_final_sha = compute_sha256(final_path) if final_path.exists() else None
+    existing_sha = existing_final_sha or (previous.sha256 if previous else None)
+    changed = existing_sha != candidate_sha if existing_sha else True
+
+    if existing_sha and changed and not replace_final:
+        raise RuntimeError(
+            "existing annual final hash differs; manual review required with "
+            "--confirm REPLACE_MINFIN_FINAL"
+        )
+
+    promoted = False
+    replaced = False
+    if not existing_sha:
+        final_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(downloaded_path, final_path)
+        promoted = True
+    elif not changed:
+        promoted = False
+    else:
+        final_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(downloaded_path, final_path)
+        records = mark_superseded(records, previous.sha256) if previous else records
+        promoted = True
+        replaced = True
+
+    active = promoted or replaced
+    new_record = _registry_record(
+        candidate=candidate,
+        year=year,
+        publication_period="annual-final",
+        file_size_bytes=candidate_size,
+        sha256=candidate_sha,
+        storage_role="final",
+        is_active_for_pipeline=active,
+        supersedes_sha256=existing_sha if replaced else None,
+        change_detected=changed,
+        pagination_page_count=pagination.get("page_count") if pagination else None,
+        notes=(
+            "annual final promoted"
+            if promoted and not replaced
+            else "annual final replaced after manual confirmation"
+            if replaced
+            else "annual final observed unchanged; no replacement"
+        ),
+    )
+    records.append(new_record)
+    write_registry_csv(registry_path, records)
+    write_registry_json(paths["registry_json_path"], records)
+    payload = {
+        "year": year,
+        "mode": "annual-final",
+        "selected_candidate": candidate.to_dict(),
+        "sha256": candidate_sha,
+        "file_size_bytes": candidate_size,
+        "change_detected": changed,
+        "final_path": paths["final_path"] if active else None,
+        "existing_final_sha256": existing_sha,
+        "replacement_performed": replaced,
+        "registry_csv_path": paths["registry_csv_path"],
+        "registry_json_path": paths["registry_json_path"],
+    }
+    _write_report(paths["annual_final_report_path"], payload)
     return payload
 
 
@@ -296,6 +392,55 @@ def run_monthly_download(
             output_root=output_root,
             year=year,
             pagination=pagination,
+        )
+    finally:
+        if temp_path.exists():
+            temp_path.unlink()
+
+
+def run_annual_final_download(
+    *,
+    year: int,
+    source_url: str,
+    output_root: str,
+    timeout_seconds: int,
+    retries: int,
+    user_agent: str,
+    max_pages: int,
+    replace_final: bool = False,
+    page_fetcher=fetch_page,
+    file_downloader=download_file,
+) -> dict[str, object]:
+    candidates, pagination = _discover_records(
+        source_url=source_url,
+        year=year,
+        timeout_seconds=timeout_seconds,
+        retries=retries,
+        user_agent=user_agent,
+        max_pages=max_pages,
+        page_fetcher=page_fetcher,
+    )
+    selected = select_candidate(candidates, year, "annual-final")
+    if selected is None:
+        raise RuntimeError(f"no annual-final candidate found for {year}")
+    _validate_annual_final_candidate(selected, year)
+    paths = build_storage_paths(output_root, year).to_dict()
+    temp_path = Path(paths["temp_download_path"])
+    try:
+        downloaded = file_downloader(
+            selected.absolute_file_url,
+            temp_path,
+            timeout_seconds,
+            retries,
+            user_agent,
+        )
+        return _promote_annual_final_download(
+            candidate=selected,
+            downloaded_path=Path(downloaded),
+            output_root=output_root,
+            year=year,
+            pagination=pagination,
+            replace_final=replace_final,
         )
     finally:
         if temp_path.exists():
@@ -359,22 +504,41 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.download:
-        if args.confirm != DOWNLOAD_CONFIRM_TOKEN:
-            print("ERROR: --download requires --confirm DOWNLOAD_MINFIN_SOURCE.", file=sys.stderr)
-            return 2
-        if args.mode != "monthly":
-            print("ERROR: P3.3 implements --download only for --mode monthly.", file=sys.stderr)
-            return 2
         try:
-            payload = run_monthly_download(
-                year=args.year,
-                source_url=args.url,
-                output_root=args.output_root,
-                timeout_seconds=args.timeout_seconds,
-                retries=args.retries,
-                user_agent=args.user_agent,
-                max_pages=args.max_pages,
-            )
+            if args.mode == "monthly":
+                if args.confirm != DOWNLOAD_CONFIRM_TOKEN:
+                    print("ERROR: --download requires --confirm DOWNLOAD_MINFIN_SOURCE.", file=sys.stderr)
+                    return 2
+                payload = run_monthly_download(
+                    year=args.year,
+                    source_url=args.url,
+                    output_root=args.output_root,
+                    timeout_seconds=args.timeout_seconds,
+                    retries=args.retries,
+                    user_agent=args.user_agent,
+                    max_pages=args.max_pages,
+                )
+            elif args.mode == "annual-final":
+                if args.confirm not in {DOWNLOAD_CONFIRM_TOKEN, REPLACE_FINAL_CONFIRM_TOKEN}:
+                    print(
+                        "ERROR: --download requires --confirm DOWNLOAD_MINFIN_SOURCE "
+                        "or --confirm REPLACE_MINFIN_FINAL.",
+                        file=sys.stderr,
+                    )
+                    return 2
+                payload = run_annual_final_download(
+                    year=args.year,
+                    source_url=args.url,
+                    output_root=args.output_root,
+                    timeout_seconds=args.timeout_seconds,
+                    retries=args.retries,
+                    user_agent=args.user_agent,
+                    max_pages=args.max_pages,
+                    replace_final=args.confirm == REPLACE_FINAL_CONFIRM_TOKEN,
+                )
+            else:
+                print("ERROR: --download is not supported for --mode manual-import.", file=sys.stderr)
+                return 2
         except (HttpClientError, RuntimeError, ValueError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
