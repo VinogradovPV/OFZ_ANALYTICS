@@ -292,6 +292,9 @@ def validate_registry_record(record: RegistryRecord) -> RegistryStatus:
         for field in ("section_id", "page_param", "document_title", "absolute_file_url"):
             if getattr(record, field) in (None, ""):
                 errors.append(f"html discovery requires {field}")
-    if record.discovery_method == "manual-import" and not record.notes:
-        warnings.append("manual-import should include notes with original local file context")
+    if record.discovery_method == "manual-import":
+        if not record.notes:
+            warnings.append("manual-import should include notes with original local file context")
+        elif "original_local_file=" not in record.notes:
+            warnings.append("manual-import notes should include original_local_file")
     return RegistryStatus(ok=not errors, errors=tuple(errors), warnings=tuple(warnings), record_count=1)

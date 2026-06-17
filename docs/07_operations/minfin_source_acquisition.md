@@ -1,5 +1,29 @@
 # Minfin source acquisition operation design
 
+## P3.5 Manual Fallback Import
+
+Manual fallback используется, когда сайт Минфина недоступен или HTML-верстка изменилась, но оператор получил корректный Excel-файл вручную.
+
+Команды:
+
+```powershell
+.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode manual-import --manual-file C:\path\INTERNET_Auction_Results_rus_2026_YYYYMMDD.xlsx --dry-run
+.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode manual-import --manual-file C:\path\INTERNET_Auction_Results_rus_2026_YYYYMMDD.xlsx --download --confirm IMPORT_MINFIN_FILE
+```
+
+Правила:
+
+1. `--manual-file` является canonical option для ручного импорта.
+2. `--download` в режиме `manual-import` заблокирован без `--confirm IMPORT_MINFIN_FILE`.
+3. Файл должен существовать, быть обычным файлом, иметь расширение `.xlsx`, соответствовать шаблону `INTERNET_Auction_Results_rus_<year>_*.xlsx` и году `--year`.
+4. Dry-run считает `sha256` и `file_size_bytes`, показывает planned role/path и не создает raw storage.
+5. Import использует temp+promote workflow: исходный локальный файл сначала копируется во временный путь, затем продвигается после валидации и hash compare.
+6. При новом hash manual import обновляет `latest/` и пишет version snapshot.
+7. При неизменном hash manual import пишет observation и не выполняет повторную копию в `latest/`.
+8. `final/` не создается и не перезаписывается через `manual-import`; annual-final replacement остается только в `annual-final` workflow.
+9. Registry row получает `discovery_method=manual-import`, `publication_period=manual-import`; `notes` содержит `original_local_file=...`.
+10. Blind copy запрещен: promote выполняется только после имени/года/расширения/hash validation.
+
 ## P3.4 Annual-Final Workflow
 
 Annual-final mode закрывает предыдущий год и пишет только подтвержденный `final` источник.

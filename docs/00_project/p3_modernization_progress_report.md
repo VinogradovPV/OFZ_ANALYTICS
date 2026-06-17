@@ -1,5 +1,50 @@
 # P3 modernization progress report
 
+## P3.5 - Manual fallback import
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Завершен этап `P3.5 Manual fallback import`.
+- Реализован `manual-import` для ручного импорта локального Excel-файла Минфина через canonical option `--manual-file`.
+- Импорт через `--download` заблокирован без `--confirm IMPORT_MINFIN_FILE`.
+- Валидация manual file проверяет существование файла, `.xlsx`, шаблон имени `INTERNET_Auction_Results_rus_<year>_*.xlsx` и соответствие года `--year`.
+- Dry-run manual-import считает `sha256`, размер файла и показывает planned storage role/path без создания raw storage.
+- Import использует temp+promote workflow: локальный файл сначала копируется во временный путь, затем валидируется, хэшируется и продвигается.
+- Manual import продвигает только `latest`/`versions` по hash-change модели; `final` не перезаписывается и не создается.
+- Registry rows для ручного импорта получают `discovery_method=manual-import`, `publication_period=manual-import`; notes содержит `original_local_file=...`.
+- Same-hash manual import пишет observation без blind copy и без нового snapshot.
+- Smoke test использует только temp XLSX-файлы и удаляет временный каталог после завершения.
+
+### Изменения
+
+- `scripts/source_acquisition/minfin_fetch.py`
+- `scripts/source_acquisition/source_registry.py`
+- `scripts/source_acquisition/minfin_patterns.py`
+- `scripts/qa/minfin_manual_import_smoke.py`
+- `docs/07_operations/minfin_source_acquisition.md`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/00_project/p3_modernization_progress_report.md`
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| `py_compile scripts/source_acquisition/minfin_fetch.py` | OK | CLI manual-import path компилируется. |
+| `py_compile scripts/qa/minfin_manual_import_smoke.py` | OK | Smoke test компилируется. |
+| `scripts/qa/minfin_manual_import_smoke.py` | OK | Проверены dry-run hash/role, блокировка без confirm, successful import, unchanged observation, year mismatch, invalid extension, отсутствие final overwrite. |
+| `compileall -q scripts` | OK | Все scripts компилируются. |
+
+### Пропущенные проверки
+
+- Реальный импорт внешнего пользовательского файла не выполнялся; smoke использует temp XLSX bytes.
+- GitHub Actions runs не проверялись по явной инструкции пользователя.
+
+### Следующий этап
+
+Следующий этап: `P3.6 Registry integration with legacy pipeline compatibility`.
+
 ## P3.4 - Annual finalization
 
 Дата: 2026-06-17.

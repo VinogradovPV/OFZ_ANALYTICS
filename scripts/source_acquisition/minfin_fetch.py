@@ -26,6 +26,7 @@ from scripts.source_acquisition.minfin_patterns import (
     DEFAULT_TIMEOUT_SECONDS,
     DEFAULT_USER_AGENT,
     FILE_NAME_RE,
+    IMPORT_CONFIRM_TOKEN,
     REPLACE_FINAL_CONFIRM_TOKEN,
     TARGET_PAGE_PARAM,
 )
@@ -134,6 +135,47 @@ def _validate_annual_final_candidate(candidate: SourceDocumentRecord, year: int)
     _validate_candidate_file(candidate, year)
     if candidate.as_of_date:
         raise ValueError("selected annual-final candidate has a monthly as-of date in the title")
+
+
+def _validate_manual_file(path: str | Path, year: int) -> Path:
+    manual_path = Path(path)
+    if not manual_path.exists():
+        raise FileNotFoundError(f"manual file does not exist: {manual_path}")
+    if not manual_path.is_file():
+        raise ValueError(f"manual file is not a file: {manual_path}")
+    if manual_path.suffix.lower() != ".xlsx":
+        raise ValueError(f"manual file must be .xlsx: {manual_path}")
+    match = FILE_NAME_RE.match(manual_path.name)
+    if not match:
+        raise ValueError(f"manual file name does not match Minfin pattern: {manual_path.name}")
+    if match.group("year") != str(year):
+        raise ValueError(f"manual file year does not match --year {year}: {manual_path.name}")
+    return manual_path
+
+
+def _manual_candidate(path: str | Path, year: int) -> SourceDocumentRecord:
+    manual_path = _validate_manual_file(path, year).resolve()
+    return SourceDocumentRecord(
+        section_id=None,
+        page_param=None,
+        page_number=None,
+        document_id=None,
+        document_page_url=None,
+        document_title=f"Manual Minfin OFZ auction results import for {year}",
+        document_type="manual-import",
+        published_at=None,
+        modified_at=None,
+        tags=(),
+        file_url=str(manual_path),
+        absolute_file_url=str(manual_path),
+        file_name=manual_path.name,
+        file_title=manual_path.name,
+        file_info=None,
+        file_size_text=None,
+        file_extension=manual_path.suffix.lower().lstrip("."),
+        as_of_date=None,
+        discovery_method="manual-import",
+    )
 
 
 def _registry_record(
@@ -351,6 +393,84 @@ def _promote_annual_final_download(
     return payload
 
 
+def _promote_manual_import(
+    *,
+    candidate: SourceDocumentRecord,
+    imported_path: Path,
+    original_path: Path,
+    output_root: str,
+    year: int,
+) -> dict[str, object]:
+    _validate_candidate_file(candidate, year)
+    paths = build_storage_paths(output_root, year).to_dict()
+    candidate_sha = compute_sha256(imported_path)
+    candidate_size = get_file_size(imported_path)
+    registry_path = Path(paths["registry_csv_path"])
+    records = load_registry_csv(registry_path)
+    previous = find_active_record(records, year, "latest")
+    changed = detect_hash_change(previous, candidate_sha)
+
+    if changed:
+        version_path = build_version_snapshot_path(output_root, year, candidate.file_name, candidate_sha)
+        latest_path = Path(paths["latest_path"])
+        version_path.parent.mkdir(parents=True, exist_ok=True)
+        latest_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(imported_path, version_path)
+        shutil.copy2(imported_path, latest_path)
+        records = mark_superseded(records, previous.sha256) if previous else records
+        new_record = _registry_record(
+            candidate=candidate,
+            year=year,
+            publication_period="manual-import",
+            file_size_bytes=candidate_size,
+            sha256=candidate_sha,
+            storage_role="latest",
+            is_active_for_pipeline=True,
+            supersedes_sha256=previous.sha256 if previous else None,
+            change_detected=True,
+            pagination_page_count=None,
+            notes=f"manual import promoted; original_local_file={original_path}; version_snapshot={version_path}",
+        )
+        records.append(new_record)
+        version_snapshot = str(version_path)
+    else:
+        new_record = _registry_record(
+            candidate=candidate,
+            year=year,
+            publication_period="manual-import",
+            file_size_bytes=candidate_size,
+            sha256=candidate_sha,
+            storage_role="observation",
+            is_active_for_pipeline=False,
+            supersedes_sha256=None,
+            change_detected=False,
+            pagination_page_count=None,
+            notes=f"manual import observed unchanged; original_local_file={original_path}; no copy promoted",
+        )
+        records.append(new_record)
+        version_snapshot = None
+
+    write_registry_csv(registry_path, records)
+    write_registry_json(paths["registry_json_path"], records)
+    payload = {
+        "year": year,
+        "mode": "manual-import",
+        "selected_candidate": candidate.to_dict(),
+        "sha256": candidate_sha,
+        "file_size_bytes": candidate_size,
+        "change_detected": changed,
+        "planned_storage_role": "latest" if changed else "observation",
+        "latest_path": paths["latest_path"] if changed else None,
+        "version_snapshot_path": version_snapshot,
+        "final_path": None,
+        "registry_csv_path": paths["registry_csv_path"],
+        "registry_json_path": paths["registry_json_path"],
+        "original_local_file": str(original_path),
+    }
+    _write_report(paths["report_path"], payload)
+    return payload
+
+
 def run_monthly_download(
     *,
     year: int,
@@ -447,6 +567,31 @@ def run_annual_final_download(
             temp_path.unlink()
 
 
+def run_manual_import(
+    *,
+    year: int,
+    manual_file: str | Path,
+    output_root: str,
+) -> dict[str, object]:
+    original_path = _validate_manual_file(manual_file, year).resolve()
+    candidate = _manual_candidate(original_path, year)
+    paths = build_storage_paths(output_root, year).to_dict()
+    temp_path = Path(paths["temp_download_path"])
+    try:
+        temp_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(original_path, temp_path)
+        return _promote_manual_import(
+            candidate=candidate,
+            imported_path=temp_path,
+            original_path=original_path,
+            output_root=output_root,
+            year=year,
+        )
+    finally:
+        if temp_path.exists():
+            temp_path.unlink()
+
+
 def build_acquisition_plan(
     *,
     year: int,
@@ -469,7 +614,25 @@ def build_acquisition_plan(
     if mode == "manual-import":
         if not manual_file:
             warnings.append("--manual-file is required for manual-import mode.")
-        selected = None
+            selected = None
+        else:
+            manual_path = _validate_manual_file(manual_file, year).resolve()
+            candidate = _manual_candidate(manual_path, year)
+            paths = build_storage_paths(output_root, year).to_dict()
+            candidate_sha = compute_sha256(manual_path)
+            candidate_size = get_file_size(manual_path)
+            previous = find_active_record(load_registry_csv(paths["registry_csv_path"]), year, "latest")
+            changed = detect_hash_change(previous, candidate_sha)
+            selected = {
+                **candidate.to_dict(),
+                "sha256": candidate_sha,
+                "file_size_bytes": candidate_size,
+                "planned_storage_role": "latest" if changed else "observation",
+                "planned_target_path": paths["latest_path"] if changed else None,
+                "planned_version_snapshot_dir": paths["version_snapshot_dir"] if changed else None,
+                "final_path": None,
+                "original_local_file": str(manual_path),
+            }
     elif html:
         records = parse_minfin_auction_table_documents(html, BASE_URL, page_number=1)
         pagination = extract_pagination_info(html)
@@ -536,10 +699,22 @@ def main(argv: list[str] | None = None) -> int:
                     max_pages=args.max_pages,
                     replace_final=args.confirm == REPLACE_FINAL_CONFIRM_TOKEN,
                 )
+            elif args.mode == "manual-import":
+                if args.confirm != IMPORT_CONFIRM_TOKEN:
+                    print("ERROR: --download requires --confirm IMPORT_MINFIN_FILE.", file=sys.stderr)
+                    return 2
+                if not args.manual_file:
+                    print("ERROR: --manual-file is required for manual-import.", file=sys.stderr)
+                    return 2
+                payload = run_manual_import(
+                    year=args.year,
+                    manual_file=args.manual_file,
+                    output_root=args.output_root,
+                )
             else:
-                print("ERROR: --download is not supported for --mode manual-import.", file=sys.stderr)
+                print("ERROR: unsupported --mode for --download.", file=sys.stderr)
                 return 2
-        except (HttpClientError, RuntimeError, ValueError) as exc:
+        except (FileNotFoundError, HttpClientError, RuntimeError, ValueError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
@@ -552,17 +727,21 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     html = _load_html(args.html_file)
-    plan, records, pagination = build_acquisition_plan(
-        year=args.year,
-        mode=args.mode,
-        dry_run=args.dry_run,
-        download_requested=args.download,
-        source_url=args.url,
-        output_root=args.output_root,
-        html=html,
-        manual_file=args.manual_file,
-        no_network=args.no_network,
-    )
+    try:
+        plan, records, pagination = build_acquisition_plan(
+            year=args.year,
+            mode=args.mode,
+            dry_run=args.dry_run,
+            download_requested=args.download,
+            source_url=args.url,
+            output_root=args.output_root,
+            html=html,
+            manual_file=args.manual_file,
+            no_network=args.no_network,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
     payload = {
         "plan": plan.to_dict(),
         "pagination": pagination,
