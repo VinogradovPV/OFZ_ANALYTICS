@@ -149,3 +149,126 @@ If the Minfin site is unavailable, the future acquisition tool must:
 - suggest manual fallback import.
 
 If only HTTP metadata is missing but file bytes download successfully, the acquisition may continue with blank `http_etag` / `http_last_modified` and a note.
+
+## P3.2 Registry Writer Contract
+
+Дата обновления: 2026-06-17.
+
+P3.2 реализует registry writer layer без реального скачивания и без записи в настоящий `data/raw/minfin/ofz_auction_results/`. Проверки используют только temporary fixtures.
+
+Поддерживаемые форматы:
+
+- CSV registry с полным набором полей;
+- JSON registry в форме `{ "records": [...] }`;
+- append одного registry record в CSV;
+- roundtrip чтение/запись CSV и JSON.
+
+Storage roles:
+
+```text
+latest
+version_snapshot
+final
+manual_candidate
+observation
+```
+
+P3.2 registry fields:
+
+```text
+source_name
+source_url
+page_title
+link_text
+file_name
+year
+publication_period
+downloaded_at
+source_last_modified
+http_etag
+http_last_modified
+file_size_bytes
+sha256
+storage_role
+is_active_for_pipeline
+supersedes_sha256
+change_detected
+notes
+section_id
+page_param
+page_number
+document_id
+document_page_url
+document_title
+published_at
+modified_at
+as_of_date
+file_url
+absolute_file_url
+file_title
+file_info
+file_size_text
+discovery_method
+pagination_page_count
+```
+
+Validation rules implemented in P3.2:
+
+- `storage_role` must be one of the supported storage roles;
+- `publication_period` must be `monthly`, `annual-final`, `manual-import`, or `unknown`;
+- `discovery_method` must be `html`, `manual-import`, or `observation`;
+- `sha256` must be a 64-character digest string;
+- `file_size_bytes` must be non-negative;
+- `discovery_method=html` requires HTML provenance fields such as `section_id`, `page_param`, `document_title`, and `absolute_file_url`;
+- `manual-import` should include human-readable `notes`.
+
+## P3.2 Registry Writer Contract Update
+
+Дата обновления: 2026-06-17.
+
+P3.2 добавляет offline registry writer layer без скачивания и без записи в настоящий `data/raw/minfin/ofz_auction_results/`.
+
+Реализованные helper-функции:
+
+- `RegistryRecord`;
+- `RegistryStatus`;
+- `compute_sha256(path)`;
+- `get_file_size(path)`;
+- `load_registry_csv(path)`;
+- `load_registry_json(path)`;
+- `write_registry_csv(path, records)`;
+- `write_registry_json(path, records)`;
+- `append_registry_record(path, record)`;
+- `find_active_record(records, year, storage_role)`;
+- `detect_hash_change(previous_record, candidate_sha256)`;
+- `mark_superseded(records, superseded_sha256)`;
+- `validate_registry_record(record)`.
+
+P3.2 поддерживает HTML provenance поля:
+
+- `section_id`;
+- `page_param`;
+- `page_number`;
+- `document_id`;
+- `document_page_url`;
+- `document_title`;
+- `published_at`;
+- `modified_at`;
+- `as_of_date`;
+- `file_url`;
+- `absolute_file_url`;
+- `file_title`;
+- `file_info`;
+- `file_size_text`;
+- `discovery_method`;
+- `pagination_page_count`.
+
+Допустимые `storage_role`:
+
+- `latest`;
+- `version_snapshot`;
+- `final`;
+- `manual_candidate`;
+- `observation`.
+
+P3.2 smoke test пишет CSV/JSON только во временную директорию и проверяет roundtrip, hash changed/unchanged, active row selection, superseded active row и validation failure. Настоящий raw storage не изменяется.

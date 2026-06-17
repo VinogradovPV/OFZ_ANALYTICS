@@ -1,5 +1,47 @@
 # P3 modernization progress report
 
+## P3.2 - Registry writer с HTML provenance
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Завершен P3.2 Registry writer.
+- Реализованы `RegistryRecord` и `RegistryStatus`.
+- Реализован CSV/JSON read-write layer для source registry.
+- Добавлены hash metadata helpers: `compute_sha256(path)` и `get_file_size(path)`.
+- Добавлены helpers для append, active row selection, hash changed/unchanged, superseded records и validation.
+- Поддержаны HTML provenance поля: `section_id`, `page_param`, `page_number`, `document_id`, `document_page_url`, `document_title`, `published_at`, `modified_at`, `as_of_date`, `file_url`, `absolute_file_url`, `file_title`, `file_info`, `file_size_text`, `discovery_method`, `pagination_page_count`.
+- Настоящий `data/raw/minfin/ofz_auction_results/` не создавался и не изменялся.
+- Реальное скачивание не выполнялось.
+
+### Изменения
+
+- `scripts/source_acquisition/source_registry.py`
+- `scripts/qa/minfin_source_registry_smoke.py`
+- `tests/fixtures/minfin_registry_sample.json`
+- `docs/02_data_contracts/minfin_source_registry_contract.md`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/00_project/p3_modernization_progress_report.md`
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| `py_compile scripts/source_acquisition/source_registry.py` | OK | Registry writer компилируется. |
+| `py_compile scripts/qa/minfin_source_registry_smoke.py` | OK | Smoke test компилируется. |
+| `scripts/qa/minfin_source_registry_smoke.py` | OK | Проверены temp file hash/size, CSV/JSON roundtrip, append, active row selection, unchanged/changed hash, superseded active row. |
+| `compileall -q scripts` | OK | Все scripts компилируются. |
+
+### Пропущенные проверки
+
+- `ofz-quality --fast`: пропущен, потому что P3.2 добавляет isolated registry writer и smoke без изменения pipeline behavior.
+- `ofz-quality --full`: пропущен, потому что full quality gate не входит в scope registry writer stage.
+
+### Следующий этап
+
+Следующий этап: `P3.3 Monthly acquisition implementation`.
+
 ## P3.0-pre - P3 rules accepted and session preflight
 
 Date: 2026-06-16.
@@ -447,3 +489,44 @@ Date: 2026-06-17.
 ### Следующий этап
 
 Следующий этап: `P3.2 Registry writer с HTML provenance`.
+## P3.2 - Registry writer с HTML provenance
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Завершен P3.2 Registry writer.
+- Реализованы `RegistryRecord` и `RegistryStatus`.
+- Добавлены CSV/JSON read-write helpers.
+- Добавлены hash/file metadata helpers: `compute_sha256` и `get_file_size`.
+- Добавлены helpers для active row selection, changed/unchanged hash detection, superseded active row и validation.
+- HTML provenance поля поддержаны в registry record contract.
+- Smoke test пишет registry только во временную директорию, не в настоящий `data/raw/minfin/ofz_auction_results/`.
+- Реальное скачивание не выполнялось; raw storage не изменялся.
+
+### Изменения
+
+- `scripts/source_acquisition/source_registry.py`
+- `scripts/qa/minfin_source_registry_smoke.py`
+- `tests/fixtures/minfin_registry_sample.json`
+- `docs/02_data_contracts/minfin_source_registry_contract.md`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/00_project/p3_modernization_progress_report.md`
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| `py_compile scripts\source_acquisition\source_registry.py` | OK | Registry writer компилируется. |
+| `py_compile scripts\qa\minfin_source_registry_smoke.py` | OK | Smoke test компилируется. |
+| `scripts\qa\minfin_source_registry_smoke.py` | OK | Проверены CSV/JSON roundtrip, hash changed/unchanged, active row selection, supersede и validation failure во временной директории. |
+| `compileall -q scripts` | OK | Все scripts компилируются. |
+
+### Пропущенные проверки
+
+- `ofz-quality --fast`: пропущен, потому что P3.2 добавляет isolated registry writer и offline smoke, без изменения pipeline behavior.
+- `ofz-quality --full`: пропущен, потому что full quality gate не входит в scope registry writer stage.
+
+### Следующий этап
+
+Следующий этап: `P3.3 Monthly acquisition implementation`.
