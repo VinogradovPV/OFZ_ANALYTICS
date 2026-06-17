@@ -1,0 +1,20 @@
+{
+  "monthly": {
+    "year": 2026,
+    "file_name": "INTERNET_Auction_Results_rus_2026_20260611.xlsx",
+    "as_of_date": "11.06.2026",
+    "absolute_file_url": "https://minfin.gov.ru/common/upload/library/2026/06/main/INTERNET_Auction_Results_rus_2026_20260611.xlsx"
+  },
+  "annual_final": {
+    "year": 2025,
+    "file_name": "INTERNET_Auction_Results_rus_2025_20251230.xlsx",
+    "as_of_date": null,
+    "absolute_file_url": "https://minfin.gov.ru/common/upload/library/2026/01/main/INTERNET_Auction_Results_rus_2025_20251230.xlsx"
+  },
+  "pagination": {
+    "page_param": "page_66",
+    "page_count": 4,
+    "container": "#ajax-pagination-content-10090-66"
+  }
+}
+

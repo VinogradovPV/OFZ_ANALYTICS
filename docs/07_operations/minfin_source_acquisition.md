@@ -208,3 +208,35 @@ P3 implementation should add integration gradually:
 3. Add compatibility path or migration from current `data/raw/INTERNET_Auction_Results_rus_*.xlsx`.
 4. Add targeted tests for dry-run, unchanged hash, changed hash, manual import, and site unavailable.
 5. Only then connect production runbook to `ofz-fetch-minfin`.
+
+## P3.1 Skeleton Implementation
+
+Дата обновления: 2026-06-17.
+
+P3.1 добавляет только skeleton source acquisition и offline HTML-aware parser. Реальное скачивание, запись registry в `data/raw`, создание `data/raw/minfin/ofz_auction_results/` и изменение raw Excel файлов на этом этапе запрещены.
+
+CLI entry point:
+
+```text
+ofz-fetch-minfin = scripts.source_acquisition.minfin_fetch:main
+```
+
+Поддерживаемые dry-run опции P3.1:
+
+```powershell
+.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode monthly --dry-run --no-network
+.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode monthly --dry-run --html-file tests\fixtures\minfin_auction_page_section_66_sample.html
+.\.venv\Scripts\ofz-fetch-minfin.exe --year 2025 --mode annual-final --dry-run --html-file tests\fixtures\minfin_auction_page_section_66_sample.html
+```
+
+Parser contract:
+
+- target section: `id_66`, `page_66`, `ajax-pagination-content-10090-66`;
+- ignored sections: `65`, `38`, `39`;
+- file links are read only from `a.file_item`;
+- relative file URLs are resolved against `https://minfin.gov.ru`;
+- pagination metadata is read from `ajax-pagination-10090-66`;
+- monthly selection prefers title with `на DD.MM.YYYY`;
+- annual-final selection does not require file suffix `YYYY1231`.
+
+P3.1 deliberately blocks `--download` and `--save-html-snapshot`. Live network discovery is not implemented in this stage; `--no-network` dry-run returns a non-mutating plan with warning when no local `--html-file` is supplied.

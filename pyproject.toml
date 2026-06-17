@@ -29,6 +29,7 @@ ofz-quality = "scripts.quality_gate:main"
 ofz-clean-outputs = "scripts.maintenance.cleanup_outputs:main"
 ofz-schema = "scripts.schema_validation:main"
 ofz-build-release-bundle = "scripts.maintenance.build_release_bundle:main"
+ofz-fetch-minfin = "scripts.source_acquisition.minfin_fetch:main"
 
 [tool.setuptools.packages.find]
 include = ["scripts", "scripts.*"]

@@ -393,3 +393,57 @@ Date: 2026-06-17.
 - `compileall`: пропущен, потому что это instruction acceptance/docs-only stage без изменений Python-кода.
 - `ofz-quality --fast`: пропущен, потому что поведение pipeline не менялось.
 - `ofz-quality --full`: пропущен, потому что full quality gate не входит в scope этого acceptance stage.
+## P3.1 - Skeleton source acquisition с HTML-aware parser
+
+Дата: 2026-06-17.
+
+### Статус
+
+- Завершен P3.1 Source acquisition skeleton.
+- Создан package `scripts/source_acquisition`.
+- Добавлен CLI entry point `ofz-fetch-minfin = "scripts.source_acquisition.minfin_fetch:main"`.
+- Добавлен offline HTML-aware parser для страницы Минфина: target section `id_66` / `page_66` / `ajax-pagination-content-10090-66`, ignored sections `65`, `38`, `39`, file links из `a.file_item`, relative URL resolve через `https://minfin.gov.ru`, pagination metadata из `ajax-pagination-10090-66`.
+- Добавлен dry-run режим `--html-file`, выбирающий monthly и annual-final кандидатов из fixture.
+- Monthly selection выбирает заголовок с `на DD.MM.YYYY`; annual-final selection не требует суффикс `YYYY1231`.
+- `--download` намеренно заблокирован на P3.1; production download не выполнялся.
+- Raw storage dirs и `.gitkeep` для `data/raw/minfin/ofz_auction_results/` не создавались.
+- `data/raw` не изменялся, registry в `data/raw` не писался.
+
+### Изменения
+
+- `scripts/source_acquisition/__init__.py`
+- `scripts/source_acquisition/minfin_fetch.py`
+- `scripts/source_acquisition/source_registry.py`
+- `scripts/source_acquisition/minfin_patterns.py`
+- `scripts/source_acquisition/path_planning.py`
+- `scripts/source_acquisition/minfin_html_parser.py`
+- `scripts/qa/minfin_source_acquisition_smoke.py`
+- `tests/fixtures/minfin_auction_page_section_66_sample.html`
+- `tests/fixtures/minfin_auction_candidates_expected.json`
+- `pyproject.toml`
+- `docs/07_operations/minfin_source_acquisition.md`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/00_project/p3_modernization_progress_report.md`
+
+### Проверки
+
+| Проверка | Результат | Примечания |
+| --- | --- | --- |
+| `py_compile` source acquisition files | OK | Проверены `minfin_fetch.py`, `minfin_html_parser.py`, `source_registry.py`. |
+| `compileall -q scripts` | OK | Все scripts компилируются. |
+| `pip install -e .` | OK | Entry point `ofz-fetch-minfin` установлен. |
+| `ofz-fetch-minfin --help` | OK | CLI help работает. |
+| `ofz-fetch-minfin --year 2026 --mode monthly --dry-run --no-network` | OK | Возвращает non-mutating dry-run plan с warning о пропущенном discovery. |
+| `ofz-fetch-minfin --year 2025 --mode annual-final --dry-run --no-network` | OK | Возвращает non-mutating dry-run plan с warning о пропущенном discovery. |
+| `ofz-fetch-minfin --year 2026 --mode monthly --dry-run --html-file ...` | OK | Выбран monthly candidate `INTERNET_Auction_Results_rus_2026_20260611.xlsx`. |
+| `ofz-fetch-minfin --year 2025 --mode annual-final --dry-run --html-file ...` | OK | Выбран annual-final candidate `INTERNET_Auction_Results_rus_2025_20251230.xlsx`, без требования `YYYY1231`. |
+| `scripts/qa/minfin_source_acquisition_smoke.py` | OK | Offline smoke проверяет section 66, ignored sections, pagination, URL resolve, monthly/annual-final selection. |
+
+### Пропущенные проверки
+
+- `ofz-quality --fast`: пропущен, потому что P3.1 добавляет isolated source acquisition skeleton и offline smoke, без изменения pipeline behavior.
+- `ofz-quality --full`: пропущен, потому что full quality gate не входит в scope skeleton stage.
+
+### Следующий этап
+
+Следующий этап: `P3.2 Registry writer с HTML provenance`.
