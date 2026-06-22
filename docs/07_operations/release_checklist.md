@@ -8,6 +8,7 @@
 - [ ] Source registry reviewed after update.
 - [ ] Data audit completed with source registry validation.
 - [ ] `ofz-quality --fast` completed.
+- [ ] `UTF-8 / Mojibake check passed`: `.\.venv\Scripts\python.exe scripts\qa\check_text_encoding.py`.
 - [ ] Screenshot validation completed outside sandbox or fallback limitation documented.
 - [ ] `ofz-quality --full` completed before stable release.
 - [ ] Release bundle dry-run reviewed.
@@ -98,6 +99,11 @@ ofz-run --all --report-date 2026-01-01 --retrospective-years 4 --period-type yea
 - [ ] Run manifest created.
 
 ## QA
+
+- [ ] Все source/docs/config/scripts читаются как UTF-8.
+- [ ] Запрещенные mojibake-маркеры отсутствуют вне allowlisted test fixtures.
+- [ ] Invalid UTF-8 или mojibake рассматривается как blocker для release.
+- [ ] Перед commit выполнен `git diff --check`.
 
 - [ ] Для базовых yield artifacts подтвержден `yield_scope=ofz_pd_only`.
 - [ ] В ноябре 2025 `yield_weighted_avg` близок к `14.87`, `yield_min` близок к `14.73`, `yield_max` близок к `14.95`.

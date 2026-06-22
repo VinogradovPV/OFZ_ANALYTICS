@@ -17,7 +17,7 @@
 | `run_pipeline.py --all` | ok | `ALL_STAGES` включает `1, 2, 3, 4, 5, 6, 7, 8, 8.1, 9, 9.1, 10`. | Полный запуск зависит от наличия report scope и доступности XLSX-файлов. |
 | `data/raw/` | ok | Workflow не требует изменения исходных файлов; скрипты читают raw/processed данные и пишут в `data/processed`, `docs`, `outputs`, `logs`. | В self-review не выполнялась проверка хэшей raw-файлов. |
 
-## Pipeline Рё CLI
+## Pipeline и CLI
 
 | Проверка | Статус | Комментарий |
 | --- | --- | --- |
@@ -89,7 +89,7 @@
 | Контрастные цвета | ok | В `scripts/06_build_charts.py` заданы качественные, последовательные и контрастные последовательные палитры. |
 | Легенды на русском | ok | Легенды и colorbar подписываются на русском, где график имеет легенду/colorbar. |
 
-## Dashboard architecture Рё exports
+## Dashboard architecture и exports
 
 | Проверка | Статус | Основание |
 | --- | --- | --- |
@@ -146,7 +146,7 @@
 .\.venv\Scripts\python.exe scripts\run_pipeline.py --all --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-## Р’С‹РІРѕРґ
+## Вывод
 
 Проект можно считать методологически собранным для воспроизводимого Python-first pipeline: ранние этапы формируют cleaned/features/report scope, downstream-этапы используют report scope, обязательные таблицы и графики созданы, dashboard exports реализованы, ограничения документированы. Основной остаточный риск - необходимость регулярной ручной runtime-проверки проектным Python после правок кода и перед использованием результатов в отчетности.
 

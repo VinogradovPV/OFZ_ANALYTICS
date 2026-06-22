@@ -291,26 +291,13 @@ archived_no_change
 
 ## Mojibake patterns
 
-Искать признаки:
+Искать признаки двойной перекодировки по Unicode-кодам, например:
 
 ```text
-Д
-а
-П
-С
-е
-н
-с
-т
-ь
-вЂ
-в„
-â€
-Ð
-Ñ
+U+00D0, U+00D1, U+00E2 U+20AC, U+0420 U+045F
 ```
 
-Осторожно: не каждый символ `Ð` или `Ñ` обязательно ошибка. Если сомневаешься — manual review.
+Одиночный код может встречаться в корректном тексте. Если контекст неоднозначен, требуется manual review.
 
 ## Задачи
 
@@ -378,8 +365,7 @@ manual_review_required
 - data/raw/*.xlsx
 - binary files
 
-Найди mojibake patterns:
-Р”, Р°, Рџ, РЎ, Рµ, РЅ, СЃ, С‚, СЊ, вЂ, â€, Ð, Ñ.
+Найди mojibake patterns по Unicode-кодам из раздела выше.
 
 Для каждого документа запиши:
 path, encoding_detected, mojibake_detected, action, notes.

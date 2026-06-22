@@ -161,7 +161,7 @@ Rollback:
 Зависимости:
 - monthly metrics: `data/processed/ofz_monthly_metrics.csv`;
 - `config.py`, `palette.py`, `report_params.py`, `utils.py`;
-- QA: monthly checks РІ `html_chart_qa.py` Рё `visual_regression.py`.
+- QA: monthly checks в `html_chart_qa.py` и `visual_regression.py`.
 
 Предлагаемая target structure:
 
@@ -236,7 +236,7 @@ scripts/qa/html/structure_checks.py
 - `compileall`;
 - `scripts/html_chart_qa.py`;
 - `quality_gate.py --fast`;
-- manual diff РїРѕ `docs/06_quality/quality_gate_report.md`.
+- manual diff по `docs/06_quality/quality_gate_report.md`.
 
 Rollback:
 - если количество проверок или статус меняется без причины, откатить конкретный group extraction;
@@ -386,4 +386,3 @@ Rollback:
 - `quality_gate.py --fast` проходит;
 - generated output names не меняются без отдельного documented contract update;
 - `scripts_inventory_before_cleanup.md` обновлен после фактической миграции.
-

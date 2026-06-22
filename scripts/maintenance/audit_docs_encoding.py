@@ -25,21 +25,24 @@ INCLUDE_ROOTS = (
 )
 
 EXCLUDED_PARTS = {".git", ".venv", "outputs", "releases"}
-MOJIBAKE_PATTERNS = (
-    "Р”",
-    "Р°",
-    "Рџ",
-    "РЎ",
-    "Рµ",
-    "РЅ",
-    "СЃ",
-    "С‚",
-    "СЊ",
-    "вЂ",
-    "в„",
-    "â€",
-    "Ð",
-    "Ñ",
+MOJIBAKE_PATTERNS = tuple(
+    value.encode("ascii").decode("unicode_escape")
+    for value in (
+        r"\u0420\u201d",
+        r"\u0420\u00b0",
+        r"\u0420\u045f",
+        r"\u0420\u040e",
+        r"\u0420\u00b5",
+        r"\u0420\u0405",
+        r"\u0421\u0453",
+        r"\u0421\u201a",
+        r"\u0421\u040a",
+        r"\u0432\u0402",
+        r"\u0432\u201e",
+        r"\u00e2\u20ac",
+        r"\u00d0",
+        r"\u00d1",
+    )
 )
 
 PATTERN_REFERENCE_DOCS = {
@@ -285,11 +288,11 @@ def only_pattern_reference_hits(text: str) -> bool:
 
 
 def is_pattern_reference_line(line: str) -> bool:
-    if line in {"вЂ", "в„", "â€", "Ð", "Ñ"}:
+    if line in set(MOJIBAKE_PATTERNS[-5:]):
         return True
     if "mojibake" in line.lower() or "manual review" in line.lower():
         return True
-    return "Р”" in line and "Р°" in line and "Рџ" in line
+    return all(pattern in line for pattern in MOJIBAKE_PATTERNS[:3])
 
 
 def is_excluded(path: Path) -> bool:

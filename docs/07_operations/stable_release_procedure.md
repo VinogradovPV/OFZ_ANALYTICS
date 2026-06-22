@@ -28,6 +28,20 @@ git status --short --branch
 .\.venv\Scripts\ofz-build-release-bundle.exe --help
 ```
 
+### 1.1. UTF-8 / Mojibake gate
+
+До source acquisition, pipeline и сборки release выполнить:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\qa\check_text_encoding.py
+.\.venv\Scripts\ofz-quality.exe --stage encoding-mojibake
+git diff --check
+```
+
+Все source/docs/config/scripts должны быть UTF-8. Mojibake запрещен вне allowlisted test fixtures. Invalid UTF-8 или mojibake блокирует release. Generated artifacts и raw Excel в эту проверку не входят и не должны коммититься.
+
+Для Windows PowerShell при проблемах вывода кириллицы настроить UTF-8-сессию командами из раздела `UTF-8 и PowerShell` в `README.md`.
+
 ## 2. Source acquisition dry-run
 
 Для текущего года выполнить dry-run:

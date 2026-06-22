@@ -68,14 +68,14 @@
 
 Минимальный production release bundle должен включать:
 
-- run manifest (`json` Рё `md`);
+- run manifest (`json` и `md`);
 - параметры запуска (`report_date`, `period_type`, `aggregation_mode`, `retrospective_years`);
 - analytical/monthly/revenue reports;
-- dashboard exports Рё semantic model v2;
+- dashboard exports и semantic model v2;
 - HTML-графики;
 - chart data CSV;
 - quality gate report;
-- visual regression report РёР»Рё fallback inspection report;
+- visual regression report или fallback inspection report;
 - schema validation report;
 - anomaly/regression/smoke test reports, если они запускались.
 
@@ -157,7 +157,7 @@ outputs/cache/
 
 Минимальный состав archive bundle:
 
-- run manifest `json` Рё `md`;
+- run manifest `json` и `md`;
 - quality gate report;
 - schema validation report;
 - HTML charts;

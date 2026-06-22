@@ -31,4 +31,4 @@ FILE_NAME_RE = re.compile(
     r"^INTERNET_Auction_Results_rus_(?P<year>\d{4})_(?P<suffix>[^/\\]+)\.xlsx$",
     re.IGNORECASE,
 )
-AS_OF_DATE_RE = re.compile(r"\b(?:на|РЅР°)\s+(?P<date>\d{2}\.\d{2}\.\d{4})\b", re.IGNORECASE)
+AS_OF_DATE_RE = re.compile(r"\b(?:на|\u0420\u0405\u0420\u00b0)\s+(?P<date>\d{2}\.\d{2}\.\d{4})\b", re.IGNORECASE)

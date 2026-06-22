@@ -1,5 +1,19 @@
 # Отчет о прогрессе модернизации P3
 
+## 2026-06-22 - UTF-8 / Mojibake quality policy
+
+- Внедрен строгий scanner `scripts/qa/check_text_encoding.py` для source/docs/config/scripts и поддерживаемых текстовых расширений.
+- Scanner читает файлы строго как UTF-8, проверяет mojibake-маркеры, ограничивает вывод 200 проблемами и формирует JSON/Markdown-отчеты.
+- Generated artifacts, caches, virtual environments, `data/processed`, `outputs`, `logs` и `releases` исключены.
+- Первичный аудит: 238 файлов, invalid UTF-8 не найден; mojibake выявлен в 9 файлах.
+- Очевидные поврежденные фрагменты исправлены по смыслу; compatibility/test markers переведены в Unicode escape-представление.
+- Контрольный аудит: 240 файлов, invalid UTF-8 `0`, mojibake `0`, manual review `0`.
+- Stage `encoding-mojibake` добавлен в `ofz-quality`, quality-fast/full и GitHub Actions Windows workflow.
+- UTF-8 PowerShell setup и release blocker policy добавлены в README и операционные документы.
+- `py_compile`, standalone scanner, отдельный quality stage, `compileall`, pipeline для scope `2026-05-01` и schema 16/16 прошли.
+- `quality-fast` подтвердил encoding stage и все расчетные QA; общий статус остался blocked только из-за ранее удаленного `outputs/charts/index.md`.
+- UI/P3/P4/release работы приостановлены до завершения этого remediation.
+
 ## 2026-06-22 - Критическое исправление yield metrics после P3
 
 - Устранено включение нулевой/неприменимой доходности ОФЗ-ПК в базовые yield metrics.

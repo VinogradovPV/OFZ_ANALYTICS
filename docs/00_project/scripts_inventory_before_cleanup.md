@@ -105,7 +105,7 @@
 | `scripts/html_chart_qa.py` | 113969 | HTML/Plotly QA контракт графиков. | quality | no | runtime | yes | yes | yes | `refactor_candidate` | Активный QA script, вызывается quality gate; крупный файл для будущего разбиения по контрактам. |
 | `scripts/interactive_pipeline.py` | 16519 | Интерактивный launcher с cleanup pre-flight. | CLI entry | no | no | entry point | yes | no | `keep_active` | Активный CLI entry point `ofz-interactive`; no-touch. |
 | `scripts/maintenance/__init__.py` | 83 | Package marker для maintenance entry points. | library | no | no | yes | no | no | `keep_active` | Нужен для `scripts.maintenance.*` imports и entry points. |
-| `scripts/maintenance/cleanup_docs.py` | 18528 | Inventory-first docs cleanup workflow. | maintenance | no | no | no | yes | yes | `keep_active` | РќРѕРІС‹Р№ production maintenance script; dry-run/archive/delete-archived modes. |
+| `scripts/maintenance/cleanup_docs.py` | 18528 | Inventory-first docs cleanup workflow. | maintenance | no | no | no | yes | yes | `keep_active` | Новый production maintenance script; dry-run/archive/delete-archived modes. |
 | `scripts/maintenance/cleanup_outputs.py` | 11917 | Safe outputs cleanup. | maintenance | no | entry/help | yes | yes | yes | `keep_active` | Активный maintenance CLI, используется interactive launcher и entry point `ofz-clean-outputs`. |
 | `scripts/archive/2026-06-15/migrate_legacy_docs_archive.py` | 8578 | Миграция старого docs/archive в новую структуру. | maintenance | no | no | no | yes | yes | `archive_candidate` | Одноразовая legacy migration utility; оставить до отдельного archive decision. |
 | `scripts/maintenance/reorganize_charts.py` | 16627 | Dry-run/apply реорганизация HTML charts. | maintenance | no | no | no | yes | yes | `keep_active` | Полезный maintenance script для chart routing cleanup; оставлен активным. |
@@ -144,5 +144,4 @@ Summary:
 - no Python files were deleted;
 - recommendation for each candidate is now `archived`;
 - P2.10 validation requires `compileall`, CLI help checks and `ofz-quality --fast`.
-
 

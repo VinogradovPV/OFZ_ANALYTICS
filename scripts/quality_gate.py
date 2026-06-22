@@ -103,6 +103,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     mode_group = parser.add_mutually_exclusive_group()
     mode_group.add_argument("--fast", action="store_true", help="Быстрые проверки без тяжелых сценариев.")
     mode_group.add_argument("--full", action="store_true", help="Полный набор доступных проверок.")
+    mode_group.add_argument(
+        "--stage",
+        choices=["encoding-mojibake"],
+        help="Запустить отдельный quality stage.",
+    )
     parser.add_argument("--report-date", default="2026-05-01", help="Отчетная дата YYYY-MM-DD.")
     parser.add_argument("--retrospective-years", type=int, default=4, help="Количество лет ретроспективы.")
     parser.add_argument("--period-type", choices=sorted(report_params.ALLOWED_PERIOD_TYPES), default="month", help="Тип периода.")
@@ -123,7 +128,7 @@ def build_context(args: argparse.Namespace) -> GateContext:
     report_params.validate_report_date(report_date)
     report_params.validate_period_constraints(report_date, period_type, aggregation_mode)
     report_params.validate_retrospective_years(args.retrospective_years)
-    mode = "full" if args.full else "fast"
+    mode = args.stage or ("full" if args.full else "fast")
     run_id = build_run_id(mode, report_date, period_type, aggregation_mode, args.retrospective_years)
     return GateContext(
         mode=mode,
@@ -137,7 +142,11 @@ def build_context(args: argparse.Namespace) -> GateContext:
 
 def run_checks(context: GateContext) -> list[GateResult]:
     """Выполнить набор проверок quality gate."""
+    if context.mode == "encoding-mojibake":
+        return [check_encoding_mojibake(context)]
+
     checks: list[tuple[str, Callable[[GateContext], GateResult]]] = [
+        ("encoding-mojibake", check_encoding_mojibake),
         ("py_compile_key_scripts", check_py_compile_key_scripts),
         ("schema_validation", lambda ctx: run_required_script(ctx, "schema_validation.py", report_args(ctx))),
         ("regression_tests", lambda ctx: run_required_script(ctx, "regression_tests.py", [])),
@@ -163,6 +172,20 @@ def run_checks(context: GateContext) -> list[GateResult]:
         except Exception as exc:  # pragma: no cover - нужен полный отчет при ручном запуске.
             results.append(GateResult(getattr(check, "__name__", "unknown_check"), "fail", f"Неожиданная ошибка: {exc}"))
     return results
+
+
+def check_encoding_mojibake(_context: GateContext) -> GateResult:
+    """Проверить исходные текстовые файлы на UTF-8 и mojibake."""
+    relative_path = Path("scripts/qa/check_text_encoding.py")
+    script_path = config.PROJECT_ROOT / relative_path
+    command = [sys.executable, str(script_path)]
+    command_text = ".\\.venv\\Scripts\\python.exe scripts\\qa\\check_text_encoding.py"
+    if not script_path.exists():
+        return GateResult("encoding-mojibake", "fail", f"Обязательный скрипт отсутствует: {relative_path}", command_text)
+    result = subprocess.run(command, cwd=config.PROJECT_ROOT, text=True, capture_output=True, check=False)
+    output = compact_output(result.stdout, result.stderr)
+    status = "ok" if result.returncode == 0 else "fail"
+    return GateResult("encoding-mojibake", status, output or f"Код завершения: {result.returncode}", command_text)
 
 
 def check_py_compile_key_scripts(_context: GateContext) -> GateResult:

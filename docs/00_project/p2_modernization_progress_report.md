@@ -50,7 +50,7 @@
 
 Commit message: `Record P2 starting checkpoint`.
 
-### 7. Р‘С‹Р» Р»Рё push
+### 7. Был ли push
 
 Push выполняется в `origin/main` после commit P2.0.
 
@@ -113,7 +113,7 @@ Production-проверки не упали. Первый запуск `pip inst
 
 Commit message: `Add release bundle automation`.
 
-### 7. Р‘С‹Р» Р»Рё push
+### 7. Был ли push
 
 Push выполняется после commit P2.1.
 
@@ -165,7 +165,7 @@ Push выполняется после commit P2.1.
 
 Commit message: `Add pipeline telemetry reporting`.
 
-### 7. Р‘С‹Р» Р»Рё push
+### 7. Был ли push
 
 Push выполняется после commit P2.2.
 

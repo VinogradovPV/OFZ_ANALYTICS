@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-22 - UTF-8 / Mojibake quality gate
+
+| Дата | Изменение | Проверка | Результат | Ограничения |
+|---|---|---|---|---|
+| 2026-06-22 | Добавлен строгий UTF-8/mojibake scanner, stage `encoding-mojibake`, интеграция в quality-fast/full и GitHub Actions; исправлены найденные старые фрагменты mojibake. | `py_compile`; первичный и контрольный encoding audit; отдельный `ofz-quality --stage encoding-mojibake`; `compileall`; pipeline; schema; quality-fast; `git diff --check`. | Первичный аудит: 238 файлов, invalid UTF-8 `0`, mojibake-файлов `9`. После remediation: 240 файлов, invalid UTF-8 `0`, mojibake `0`, manual review `0`. Encoding stage OK, pipeline OK, schema 16/16. | Generated/cache/raw Excel исключены из scanner scope. Общий quality-fast имеет один внешний FAIL из-за ранее удаленного `outputs/charts/index.md`; все encoding и расчетные проверки прошли. CI проверяется после push. |
+
 ## 2026-06-22 - Регрессия базовых yield metrics ОФЗ-ПД
 
 | Дата | Изменение | Проверка | Результат | Ограничения |
