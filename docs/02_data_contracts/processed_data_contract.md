@@ -57,6 +57,15 @@ Display-поля в млрд рублей создаются на export/chart l
 | `ofz_type` | Нормализованные типы ОФЗ из raw/source layer |
 | `maturity_bucket_label` | Краткосрочные, среднесрочные, долгосрочные или project-local equivalents |
 
+## Политика базовых показателей доходности ОФЗ-ПД
+
+- Базовые поля `weighted_avg_yield`, `yield_weighted_avg`, `yield_min`, `yield_median`, `yield_max` и `cumulative_weighted_avg_yield` рассчитываются только для `security_type == "ОФЗ-ПД"`.
+- В cohort входят только строки с числовой доходностью и положительным `placement_volume`; аукционы и ДРПА ОФЗ-ПД включаются одинаково.
+- Для ОФЗ-ПК `yield_applicable=false`, `yield_exclusion_reason=ofz_pk_yield_not_applicable`; `0`, `-`, `-****`, пустые и неприменимые значения не становятся аналитическим нулем.
+- ОФЗ-ИН не смешивается с ОФЗ-ПД: `yield_exclusion_reason=ofz_in_separate_yield_scope`.
+- `yield_scope` базового слоя равен `ofz_pd_only`. Месяцы с несколькими типами бумаг получают `mixed_security_types=true`, а объемы типов сохраняются раздельно.
+- Если валидного cohort ОФЗ-ПД нет, yield metrics остаются null, а `data_quality_flag` содержит `no_valid_ofz_pd_yield`.
+
 ## QA / Schema Связь
 
 - `scripts/schema_validation.py` проверяет report scope, periods, monthly layer и outputs structure.

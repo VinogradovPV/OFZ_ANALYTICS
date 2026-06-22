@@ -13,9 +13,9 @@ import pandas as pd
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from scripts import config, utils
+    from scripts import config, utils, yield_policy
 else:
-    from . import config, utils
+    from . import config, utils, yield_policy
 
 
 FeatureBuilder = Callable[[pd.DataFrame, "FeatureContext"], None]
@@ -199,9 +199,27 @@ def add_volume_aliases(df: pd.DataFrame, context: FeatureContext) -> None:
 
 
 def add_weighted_avg_yield(df: pd.DataFrame, context: FeatureContext) -> None:
+    normalized = yield_policy.apply_base_yield_policy(
+        df,
+        ("cutoff_yield_pct", "weighted_avg_yield_pct"),
+    )
+    for column in (
+        "cutoff_yield_pct",
+        "weighted_avg_yield_pct",
+        "yield_applicable",
+        "yield_exclusion_reason",
+        "yield_scope",
+    ):
+        df[column] = normalized[column]
     df["weighted_avg_yield"] = df["weighted_avg_yield_pct"]
     df["yield"] = df["weighted_avg_yield"]
-    context.add("weighted_avg_yield", "yield")
+    context.add(
+        "weighted_avg_yield",
+        "yield",
+        "yield_applicable",
+        "yield_exclusion_reason",
+        "yield_scope",
+    )
 
 
 def add_price_and_cutoff_aliases(df: pd.DataFrame, context: FeatureContext) -> None:

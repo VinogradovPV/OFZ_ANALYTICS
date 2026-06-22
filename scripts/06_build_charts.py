@@ -990,7 +990,7 @@ def build_yield_by_type_chart(
         color="ofz_type",
         markers=True,
         text="Подпись",
-        title="Средневзвешенная доходность по видам ОФЗ",
+        title="Средневзвешенная доходность ОФЗ-ПД",
         color_discrete_sequence=QUALITATIVE_COLORS,
         labels={
             "report_period_label": "Период",
@@ -3025,7 +3025,7 @@ def build_yield_boxplot_by_ofz_type_chart(
         font={"size": 12, "color": "#1F2933"},
     )
     fig.update_layout(
-        title="Распределение доходности ОФЗ по видам бумаг",
+        title="Распределение доходности ОФЗ-ПД",
         xaxis_title="Вид ОФЗ",
         yaxis_title="Доходность, % годовых",
         margin={"l": 72, "r": 72, "t": 120, "b": 92},
@@ -6083,7 +6083,7 @@ def build_yield_boxplot_facet_figure(
     )
     apply_common_layout(figure, legend_title=None)
     figure.update_layout(
-        title="Распределение доходности ОФЗ по видам бумаг",
+        title="Распределение доходности ОФЗ-ПД",
         yaxis_title="Доходность, % годовых",
         margin={"l": 72, "r": 48, "t": 130, "b": 120},
         boxmode="group",

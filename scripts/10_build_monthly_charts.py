@@ -20,9 +20,9 @@ except ImportError:
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from scripts import config, palette, report_params, utils
+    from scripts import config, palette, report_params, utils, yield_policy
 else:
-    from . import config, palette, report_params, utils
+    from . import config, palette, report_params, utils, yield_policy
 
 
 MONTHLY_METRICS_CSV = config.PROCESSED_DATA_DIR / "ofz_monthly_metrics.csv"
@@ -510,16 +510,16 @@ def build_monthly_weighted_avg_yield_chart(
         y="yield_weighted_avg",
         color="Год",
         markers=True,
-        title="Помесячная средневзвешенная доходность ОФЗ",
+        title=yield_policy.BASE_YIELD_TITLE,
         color_discrete_sequence=QUALITATIVE_COLORS,
         category_orders=category_orders(df),
-        labels={"yield_weighted_avg": "Средневзвешенная доходность, % годовых", "Месяц": "Месяц"},
+        labels={"yield_weighted_avg": "Средневзвешенная доходность ОФЗ-ПД, % годовых", "Месяц": "Месяц"},
         custom_data=monthly_custom_data(df),
     )
     figure.update_traces(
         text=df["yield_weighted_avg"].map(lambda value: format_ru_number(value, 2)),
         textposition="top center",
-        hovertemplate=base_ratio_hover("Средневзвешенная доходность", "%{y:.2f}%"),
+        hovertemplate=base_ratio_hover("Средневзвешенная доходность ОФЗ-ПД", "%{y:.2f}%"),
     )
     apply_common_layout(figure, "Год")
     export_data = chart_export_data(
@@ -1475,6 +1475,9 @@ def chart_export_data(df: pd.DataFrame, value_columns: Sequence[str]) -> pd.Data
         "Год",
         "Месяц",
         "data_quality_flag",
+        "yield_scope",
+        "yield_observation_count",
+        "mixed_security_types",
     ]
     columns = list(dict.fromkeys(base_columns + list(value_columns)))
     existing_columns = [column for column in columns if column in df.columns]
@@ -1564,7 +1567,7 @@ def _build_strategy_doc_base(
         "| Накопленный объем размещения по номиналу | line | `cumulative_placement_volume`, млрд руб. | Сравнивает траекторию накопления размещений между годами. |",
         "| Помесячный спрос и предложение | grouped/facet bar | `total_demand` и `total_supply` | Показывает баланс рыночного спроса и объема предложения по месяцам. |",
         "| Помесячный bid-to-cover | line | `bid_to_cover_ratio = total_demand / total_supply` | Показывает месяцы с дефицитом или избытком спроса относительно предложения. |",
-        "| Помесячная средневзвешенная доходность | line | `yield_weighted_avg` | Показывает изменение стоимости заимствований внутри накопленного периода. |",
+        "| Помесячная средневзвешенная доходность ОФЗ-ПД | line | `yield_weighted_avg`, `yield_scope=ofz_pd_only` | Показывает изменение стоимости фиксированных заимствований без ОФЗ-ПК и ОФЗ-ИН. |",
         "| Структура объема размещения по номиналу по форматам | stacked bar | аукционы и ДРПА, млрд руб. | Разделяет рыночные размещения и ДРПА. |",
         "| Структура объема размещения по номиналу по срокам | stacked bar | кратко-, средне- и долгосрочные размещения, млрд руб. | Показывает сдвиги в сроковой структуре размещений. |",
         "| Heatmap месяц × год | heatmap | `total_placement_volume`, млрд руб. | Быстро выделяет месяцы и годы с максимальной активностью. |",

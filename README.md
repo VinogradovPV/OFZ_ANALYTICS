@@ -534,6 +534,10 @@ Revenue-графики также используют млрд рублей и 
 
 ## Dashboard exports
 
+### Базовая методология доходности
+
+Базовые yield-графики, monthly metrics и dashboard summaries используют только сопоставимый cohort ОФЗ-ПД: числовая доходность и положительный объем размещения. Аукционы и ДРПА ОФЗ-ПД включаются; ОФЗ-ПК учитывается только в объемах и имеет `yield_exclusion_reason=ofz_pk_yield_not_applicable`; ОФЗ-ИН не смешивается с номинальной доходностью ОФЗ-ПД. Missing/non-applicable yield остается null, а exports содержат `yield_scope=ofz_pd_only` и `mixed_security_types`.
+
 Dashboard-ready файлы сохраняются в `outputs/dashboards/`.
 
 Основные datasets:

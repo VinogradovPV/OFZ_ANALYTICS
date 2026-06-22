@@ -49,6 +49,10 @@ Dashboard exports могут хранить одновременно raw и disp
 
 Если dashboard export содержит `_volume_bln`, рядом должен быть unit field или запись в data dictionary/semantic model.
 
+## Yield scope
+
+Dashboard-поля базовой доходности рассчитываются только по ОФЗ-ПД и сопровождаются `yield_scope=ofz_pd_only`. ОФЗ-ПК остается в volume/type breakdown, но его доходность неприменима; ОФЗ-ИН требует отдельного аналитического scope. Monthly dashboard export сохраняет `yield_observation_count` и `mixed_security_types`.
+
 ## Display-поля
 
 Dashboard layer должен предпочитать явные display fields:

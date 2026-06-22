@@ -47,6 +47,7 @@ def main() -> int:
         test_zero_placement_ratio_handling,
         test_unsatisfied_auction_ratios,
         test_zero_or_missing_yield_handling,
+        test_ofz_pd_yield_cohort_excludes_ofz_pk_and_ofz_in,
         test_bid_to_cover_outlier_detection,
         test_outputs_structure_contract,
     ]
@@ -261,6 +262,56 @@ def test_zero_or_missing_yield_handling() -> None:
     result = build_charts.mark_near_zero_floating_rate_yields(data, limitations)
     assert pd.isna(result.loc[0, "_yield"]), "Около-нулевая доходность ОФЗ-ПК с requires_review должна исключаться из boxplot."
     assert limitations, "Ограничение по zero/missing yield должно документироваться."
+
+
+def test_ofz_pd_yield_cohort_excludes_ofz_pk_and_ofz_in() -> None:
+    monthly_analytics = importlib.import_module("scripts.09_monthly_analytics")
+    monthly_charts = importlib.import_module("scripts.10_build_monthly_charts")
+    yield_policy = importlib.import_module("scripts.yield_policy")
+    source = pd.DataFrame(
+        {
+            "auction_date": ["2025-11-12", "2025-11-19", "2025-11-20", "2025-11-21", "2025-11-22"],
+            "placement_volume": [100.0, 200.0, 1000.0, 100.0, 200.0],
+            "demand_volume": [150.0, 250.0, 1200.0, 120.0, 240.0],
+            "supply_volume": [120.0, 220.0, 1100.0, 110.0, 220.0],
+            "weighted_avg_yield": [14.73, 14.95, 0.0, "-", 5.1],
+            "format": ["Аукцион", "ДРПА", "Аукцион", "Аукцион", "Аукцион"],
+            "maturity_bucket": ["long_term"] * 5,
+            "security_type": ["ОФЗ-ПД", "ОФЗ-ПД", "ОФЗ-ПК", "ОФЗ-ПК", "ОФЗ-ИН"],
+            "ofz_type": ["ОФЗ-ПД", "ОФЗ-ПД", "ОФЗ-ПК", "ОФЗ-ПК", "ОФЗ-ИН"],
+        }
+    )
+    params = report_params.ReportParams(
+        report_date=date(2025, 12, 1),
+        retrospective_years=0,
+        period_type="month",
+        aggregation_mode="point",
+        periods=report_params.build_report_periods(date(2025, 12, 1), 0, "month", "point"),
+    )
+
+    normalized = yield_policy.apply_base_yield_policy(source, ("weighted_avg_yield",))
+    assert pd.isna(normalized.loc[2, "weighted_avg_yield"]), "ОФЗ-ПК yield=0 должен стать неприменимым, а не нулевым."
+    assert pd.isna(normalized.loc[3, "weighted_avg_yield"]), "Маркер '-' не должен превращаться в нулевую доходность."
+    assert normalized.loc[2, "yield_exclusion_reason"] == "ofz_pk_yield_not_applicable"
+
+    metrics, _limitations = monthly_analytics.build_monthly_metrics(source, params)
+    november = metrics.iloc[0]
+    expected_weighted = (14.73 * 100.0 + 14.95 * 200.0) / 300.0
+    assert abs(float(november["yield_weighted_avg"]) - expected_weighted) < 1e-9
+    assert float(november["yield_min"]) == 14.73
+    assert float(november["yield_median"]) == 14.84
+    assert float(november["yield_max"]) == 14.95
+    assert abs(float(november["cumulative_weighted_avg_yield"]) - expected_weighted) < 1e-9
+    assert float(november["ofz_pk_placement_volume"]) == 1100.0
+    assert float(november["ofz_in_placement_volume"]) == 200.0
+    assert november["yield_scope"] == "ofz_pd_only"
+    assert bool(november["mixed_security_types"])
+    assert "mixed_security_types" in str(november["data_quality_flag"])
+
+    chart_df = monthly_charts.prepare_metrics(metrics)
+    result = monthly_charts.build_monthly_weighted_avg_yield_chart(chart_df, params, [])
+    assert result is not None
+    assert "ОФЗ-ПД" in str(result.figure.layout.title.text)
 
 
 def test_bid_to_cover_outlier_detection() -> None:

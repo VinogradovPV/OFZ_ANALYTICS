@@ -233,6 +233,9 @@ def validate_monthly_layer_schema(monthly: pd.DataFrame | None) -> None:
         "aggregation_mode",
         "total_placement_volume",
         "cumulative_placement_volume",
+        "yield_scope",
+        "yield_observation_count",
+        "mixed_security_types",
     }
     missing = required.difference(df.columns)
     assert not missing, f"В monthly layer отсутствуют колонки: {', '.join(sorted(missing))}."
@@ -240,6 +243,8 @@ def validate_monthly_layer_schema(monthly: pd.DataFrame | None) -> None:
     month_number = pd.to_numeric(df["month_number"], errors="coerce")
     invalid = df.loc[month_number.isna() | month_number.lt(1) | month_number.gt(12)]
     assert invalid.empty, "`month_number` должен быть в диапазоне 1-12."
+    scopes = set(df["yield_scope"].dropna().astype(str))
+    assert scopes == {"ofz_pd_only"}, f"Ожидался yield_scope=ofz_pd_only, получено: {sorted(scopes)}."
 
 
 def validate_monthly_target_months(

@@ -13,9 +13,9 @@ import pandas as pd
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from scripts import config, utils
+    from scripts import config, utils, yield_policy
 else:
-    from . import config, utils
+    from . import config, utils, yield_policy
 
 
 RAW_EXTENSIONS = {".xlsx", ".xls", ".csv"}
@@ -47,6 +47,9 @@ STANDARD_COLUMNS = [
     "demand_satisfaction_ratio",
     "demand_available",
     "yield_available",
+    "yield_applicable",
+    "yield_exclusion_reason",
+    "yield_scope",
     "failed_or_no_deal",
     "marker_fields",
     "data_quality_flag",
@@ -280,6 +283,11 @@ def clean_table(table: RawTable) -> pd.DataFrame:
     rows["yield_available"] = (
         rows["cutoff_yield_pct"].notna() | rows["weighted_avg_yield_pct"].notna()
     )
+    rows = yield_policy.apply_base_yield_policy(
+        rows,
+        ("cutoff_yield_pct", "weighted_avg_yield_pct"),
+    )
+    rows["yield_available"] = rows["yield_applicable"]
     rows["failed_or_no_deal"] = detect_failed_or_no_deal(rows)
     rows["marker_fields"] = build_marker_fields(raw_filtered, column_map)
     rows["data_quality_flag"] = build_data_quality_flag(rows)
@@ -428,7 +436,11 @@ def build_data_quality_flag(rows: pd.DataFrame) -> pd.Series:
             row_flags.append("format_requires_review")
         if not bool(row.get("demand_available", False)):
             row_flags.append("missing_demand")
-        if not bool(row.get("yield_available", False)):
+        raw_exclusion_reason = row.get("yield_exclusion_reason")
+        exclusion_reason = "" if pd.isna(raw_exclusion_reason) else str(raw_exclusion_reason).strip()
+        if exclusion_reason:
+            row_flags.append(exclusion_reason)
+        elif not bool(row.get("yield_available", False)):
             row_flags.append("missing_yield")
         if bool(row.get("failed_or_no_deal", False)):
             row_flags.append("failed_or_no_deal")

@@ -1295,7 +1295,11 @@ def check_yield_boxplot_mode(html_by_file: dict[Path, str]) -> QaResult:
     failed_title: list[str] = []
     failed_long_mode: list[str] = []
     for path, html in boxplot_files.items():
-        if "Распределение доходности ОФЗ по видам бумаг" not in html:
+        valid_titles = (
+            "Распределение доходности ОФЗ по видам бумаг",
+            "Распределение доходности ОФЗ-ПД",
+        )
+        if not any(title in html for title in valid_titles):
             failed_title.append(path.name)
         retrospective = retrospective_years_from_name(path.name)
         if retrospective is not None and retrospective > 2:

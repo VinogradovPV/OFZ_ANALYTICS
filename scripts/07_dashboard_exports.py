@@ -14,9 +14,9 @@ import pandas as pd
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from scripts import config, report_params, utils
+    from scripts import config, report_params, utils, yield_policy
 else:
-    from . import config, report_params, utils
+    from . import config, report_params, utils, yield_policy
 
 
 DASHBOARDS_DIR = config.DASHBOARDS_DIR
@@ -55,7 +55,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     exports.append(write_dataset("period_summary", build_period_summary(prepared), suffix, params, "Периодная сводка спроса, предложения, размещения и доходности."))
     exports.append(write_dataset("kpi_summary", build_kpi_summary(prepared), suffix, params, "KPI в long-format для карточек dashboard."))
     exports.append(write_dataset("maturity_structure", build_maturity_structure(prepared), suffix, params, "Структура размещения по срокам обращения."))
-    exports.append(write_dataset("yield_distribution", build_yield_distribution(prepared), suffix, params, "Распределение доходности по периодам и видам ОФЗ."))
+    exports.append(write_dataset("yield_distribution", build_yield_distribution(prepared), suffix, params, "Распределение доходности ОФЗ-ПД по периодам."))
     exports.append(write_dataset("demand_supply", build_demand_supply(prepared, limitations), suffix, params, "Спрос и предложение по периодам и форматам."))
 
     metadata_path = write_metadata(prepared, params, suffix, limitations)
@@ -190,6 +190,19 @@ def prepare_dashboard_scope(scope: pd.DataFrame, limitations: list[str]) -> pd.D
 
     df["data_quality_flag"] = get_text(df, "data_quality_flag", default="ok")
 
+    normalized = yield_policy.apply_base_yield_policy(
+        df,
+        ("weighted_avg_yield", "cutoff_yield"),
+    )
+    for column in (
+        "weighted_avg_yield",
+        "cutoff_yield",
+        "yield_applicable",
+        "yield_exclusion_reason",
+        "yield_scope",
+    ):
+        df[column] = normalized[column]
+
     register_missing_fields(df, limitations)
     register_context_limitations(df, limitations)
     return df
@@ -311,16 +324,23 @@ def build_auction_level(df: pd.DataFrame, limitations: list[str]) -> pd.DataFram
 def build_period_summary(df: pd.DataFrame) -> pd.DataFrame:
     group_cols = ["report_period_label", "report_year", "report_period_type", "aggregation_mode", "is_target_period"]
     grouped = df.groupby(group_cols, dropna=False)
+    yield_data = df.loc[
+        yield_policy.base_yield_cohort_mask(df, "weighted_avg_yield", "placement_volume")
+    ]
+    yield_grouped = yield_data.groupby(group_cols, dropna=False)
     result = grouped.agg(
         auction_count=("report_period_label", "size"),
         total_demand=("demand_volume", "sum"),
         total_supply=("supply_volume", "sum"),
         total_placement_volume=("placement_volume", "sum"),
         total_revenue_volume=("revenue_volume", "sum"),
+    ).reset_index()
+    yield_summary = yield_grouped.agg(
         yield_min=("weighted_avg_yield", "min"),
         yield_median=("weighted_avg_yield", "median"),
         yield_max=("weighted_avg_yield", "max"),
     ).reset_index()
+    result = result.merge(yield_summary, on=group_cols, how="left")
     result["bid_to_cover_ratio"] = safe_divide(result["total_demand"], result["total_supply"])
     result["demand_to_placement_ratio"] = safe_divide(result["total_demand"], result["total_placement_volume"])
     result["weighted_avg_yield_by_placement"] = [
@@ -347,7 +367,7 @@ def build_period_summary(df: pd.DataFrame) -> pd.DataFrame:
 def weighted_average_by_placement(df: pd.DataFrame, value_column: str) -> float | None:
     values = pd.to_numeric(df[value_column], errors="coerce")
     weights = pd.to_numeric(df["placement_volume"], errors="coerce")
-    mask = values.notna() & weights.notna() & (weights > 0)
+    mask = yield_policy.base_yield_cohort_mask(df, value_column, "placement_volume")
     if not mask.any():
         return None
     return float((values.loc[mask] * weights.loc[mask]).sum() / weights.loc[mask].sum())
@@ -1009,11 +1029,15 @@ def prepare_monthly_dashboard_metrics(monthly: pd.DataFrame) -> pd.DataFrame:
         "cumulative_bid_to_cover_ratio",
         "cumulative_weighted_avg_yield",
         "cumulative_auction_count",
+        "yield_observation_count",
     ]
     for column in numeric_columns:
         result[column] = pd.to_numeric(result[column], errors="coerce")
     if "is_target_year" in result.columns:
         result["is_target_year"] = result["is_target_year"].astype("string").str.lower().isin({"true", "1", "yes"})
+    result["mixed_security_types"] = result["mixed_security_types"].astype("string").str.lower().isin(
+        {"true", "1", "yes"}
+    )
     return result[monthly_dashboard_columns()].sort_values(["report_year", "month_number"]).reset_index(drop=True)
 
 
@@ -1049,6 +1073,9 @@ def monthly_dashboard_columns() -> list[str]:
         "ofz_pd_placement_volume",
         "ofz_in_placement_volume",
         "ofz_pk_placement_volume",
+        "yield_scope",
+        "yield_observation_count",
+        "mixed_security_types",
         "cumulative_demand",
         "cumulative_supply",
         "cumulative_placement_volume",
@@ -1151,10 +1178,10 @@ def build_monthly_data_dictionary() -> pd.DataFrame:
         ("monthly_metrics", "bid_to_cover_ratio", "Спрос / предложение за месяц", "bid_to_cover_ratio", "ratio", "total_demand / total_supply", "расчет", "не равно спрос / размещение"),
         ("monthly_metrics", "demand_to_placement_ratio", "Спрос / размещение за месяц", "demand_to_placement_ratio", "ratio", "total_demand / total_placement_volume", "расчет", "не называть bid-to-cover"),
         ("monthly_metrics", "demand_satisfaction_ratio", "Коэффициент удовлетворения спроса за месяц", "demand_satisfaction_ratio", "ratio", "total_placement_volume / total_demand", "расчет", ""),
-        ("monthly_metrics", "yield_weighted_avg", "Средневзвешенная доходность за месяц", "yield_weighted_avg", "%", "sum(yield * placement) / sum(placement)", "weighted_avg_yield, placement_volume", "пусто без валидной доходности или размещения"),
-        ("monthly_metrics", "yield_min", "Минимальная доходность за месяц", "yield_min", "%", "min(yield)", "weighted_avg_yield", ""),
-        ("monthly_metrics", "yield_median", "Медианная доходность за месяц", "yield_median", "%", "median(yield)", "weighted_avg_yield", ""),
-        ("monthly_metrics", "yield_max", "Максимальная доходность за месяц", "yield_max", "%", "max(yield)", "weighted_avg_yield", ""),
+        ("monthly_metrics", "yield_weighted_avg", "Средневзвешенная доходность ОФЗ-ПД за месяц", "yield_weighted_avg", "%", "sum(yield * placement) / sum(placement) для ОФЗ-ПД", "weighted_avg_yield, placement_volume, yield_scope", "пусто без валидной доходности ОФЗ-ПД или положительного размещения"),
+        ("monthly_metrics", "yield_min", "Минимальная доходность ОФЗ-ПД за месяц", "yield_min", "%", "min(yield) для ОФЗ-ПД", "weighted_avg_yield, yield_scope", ""),
+        ("monthly_metrics", "yield_median", "Медианная доходность ОФЗ-ПД за месяц", "yield_median", "%", "median(yield) для ОФЗ-ПД", "weighted_avg_yield, yield_scope", ""),
+        ("monthly_metrics", "yield_max", "Максимальная доходность ОФЗ-ПД за месяц", "yield_max", "%", "max(yield) для ОФЗ-ПД", "weighted_avg_yield, yield_scope", ""),
         ("monthly_metrics", "placement_volume_auction", "Размещение через аукционы", "placement_volume_auction", "млн руб.", "sum(placement_volume where format != ДРПА)", "format, placement_volume", ""),
         ("monthly_metrics", "placement_volume_drpa", "Размещение через ДРПА", "placement_volume_drpa", "млн руб.", "sum(placement_volume where format = ДРПА)", "format, placement_volume", ""),
         ("monthly_metrics", "placement_volume_short_term", "Размещение краткосрочных ОФЗ", "placement_volume_short_term", "млн руб.", "sum(placement_volume where maturity_bucket=short_term)", "maturity_bucket, placement_volume", "до 5 лет включительно"),
@@ -1168,7 +1195,10 @@ def build_monthly_data_dictionary() -> pd.DataFrame:
         ("monthly_metrics", "cumulative_placement_volume", "Накопленное размещение", "cumulative_placement_volume", "млн руб.", "cumsum(total_placement_volume) с января", "monthly layer", ""),
         ("monthly_metrics", "cumulative_revenue_volume", "Накопленная выручка", "cumulative_revenue_volume", "млн руб.", "cumsum(total_revenue_volume) с января", "monthly layer", "пусто или 0 при недоступной выручке"),
         ("monthly_metrics", "cumulative_bid_to_cover_ratio", "Накопленный спрос / предложение", "cumulative_bid_to_cover_ratio", "ratio", "cumulative_demand / cumulative_supply", "расчет", ""),
-        ("monthly_metrics", "cumulative_weighted_avg_yield", "Накопленная средневзвешенная доходность", "cumulative_weighted_avg_yield", "%", "sum(yield * placement) / sum(placement) с января", "monthly layer", ""),
+        ("monthly_metrics", "cumulative_weighted_avg_yield", "Накопленная средневзвешенная доходность ОФЗ-ПД", "cumulative_weighted_avg_yield", "%", "sum(yield * placement) / sum(placement) с января только для ОФЗ-ПД", "monthly layer", ""),
+        ("monthly_metrics", "yield_scope", "Область расчета доходности", "yield_scope", "scope", "фиксированное значение ofz_pd_only", "yield policy", "ОФЗ-ПК и ОФЗ-ИН исключены из базовых yield metrics"),
+        ("monthly_metrics", "yield_observation_count", "Число валидных наблюдений доходности ОФЗ-ПД", "yield_observation_count", "count", "count(ОФЗ-ПД с numeric yield и placement > 0)", "monthly layer", ""),
+        ("monthly_metrics", "mixed_security_types", "Признак смешанного состава типов бумаг", "mixed_security_types", "boolean", "true при наличии более одного security_type в месяце", "monthly layer", "не меняет volume totals"),
         ("monthly_metrics", "cumulative_auction_count", "Накопленное количество размещений", "cumulative_auction_count", "count", "cumsum(auction_count) с января", "monthly layer", ""),
         ("monthly_metrics", "data_quality_flag", "Флаг качества данных", "data_quality_flag", "flag", "сводный флаг monthly layer", "monthly layer", "указывает пустые месяцы, ДРПА, отсутствие спроса/предложения/доходности"),
     ]

@@ -99,6 +99,12 @@ ofz-run --all --report-date 2026-01-01 --retrospective-years 4 --period-type yea
 
 ## QA
 
+- [ ] Для базовых yield artifacts подтвержден `yield_scope=ofz_pd_only`.
+- [ ] В ноябре 2025 `yield_weighted_avg` близок к `14.87`, `yield_min` близок к `14.73`, `yield_max` близок к `14.95`.
+- [ ] Объем ОФЗ-ПК сохранен в type breakdown, но не входит в yield numerator/denominator или min/median/max.
+- [ ] Заголовок monthly yield chart явно содержит `ОФЗ-ПД`.
+- [ ] Месяцы со смешанными типами бумаг имеют `mixed_security_types` в metadata/data quality.
+
 - [ ] `ofz-schema --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` OK.
 - [ ] `.\.venv\Scripts\python.exe scripts\smoke_tests.py` OK.
 - [ ] `.\.venv\Scripts\python.exe scripts\regression_tests.py` OK.

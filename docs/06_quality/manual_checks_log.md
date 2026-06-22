@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-22 - Регрессия базовых yield metrics ОФЗ-ПД
+
+| Дата | Изменение | Проверка | Результат | Ограничения |
+|---|---|---|---|---|
+| 2026-06-22 | Базовые yield metrics переведены на cohort ОФЗ-ПД; ОФЗ-ПК/ОФЗ-ИН исключены из yield, но сохранены в volume breakdown. | Targeted regression; `compileall`; полный `ofz-run`; `ofz-schema`; `ofz-quality --fast`; HTML QA; visual regression auto; ручная проверка regenerated CSV/HTML за ноябрь 2025. | Ноябрь 2025: weighted `14.873469`, min `14.73`, median `14.75`, max `14.95`; ОФЗ-ПК `1 691 219.3 млн руб.` не влияет на yield. Schema 16/16, regression 15/15, HTML QA OK, visual fallback OK. | `quality-fast` имеет один внешний FAIL: ранее удален `outputs/charts/index.md`. Screenshot backend недоступен в managed sandbox; требуется ручная проверка outside sandbox. |
+
 ## 2026-06-17 - Повторная русификация и UTF-8 аудит документации
 
 | Дата | Изменение | Проверка | Результат | Ограничения |

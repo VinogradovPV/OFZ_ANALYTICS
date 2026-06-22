@@ -13,9 +13,9 @@ import pandas as pd
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from scripts import config, report_params, utils
+    from scripts import config, report_params, utils, yield_policy
 else:
-    from . import config, report_params, utils
+    from . import config, report_params, utils, yield_policy
 
 
 MONTHLY_METRICS_CSV = config.PROCESSED_DATA_DIR / "ofz_monthly_metrics.csv"
@@ -257,6 +257,12 @@ def prepare_source(source: pd.DataFrame, limitations: list[str]) -> pd.DataFrame
     df["_revenue"] = resolve_numeric(df, ["revenue_volume", "revenue_amount_mln_rub"], "выручка", limitations)
     df["_yield"] = resolve_numeric(df, ["weighted_avg_yield", "yield", "weighted_avg_yield_pct"], "доходность", limitations)
 
+    normalized = yield_policy.apply_base_yield_policy(df, ("_yield",))
+    df["_yield"] = normalized["_yield"]
+    df["yield_applicable"] = normalized["yield_applicable"]
+    df["yield_exclusion_reason"] = normalized["yield_exclusion_reason"]
+    df["yield_scope"] = normalized["yield_scope"]
+
     if "format" not in df.columns:
         df["format"] = pd.NA
         limitations.append("Колонка `format` отсутствует; объемы аукционов и ДРПА не разделены.")
@@ -302,7 +308,9 @@ def build_month_row(month_info: pd.Series, month_rows: pd.DataFrame) -> dict[str
     total_supply = sum_numeric(month_rows, "_supply")
     total_placement = sum_numeric(month_rows, "_placement")
     total_revenue = sum_numeric(month_rows, "_revenue")
-    yield_values = month_rows["_yield"] if "_yield" in month_rows.columns else pd.Series(dtype="Float64")
+    yield_mask = yield_policy.base_yield_cohort_mask(month_rows, "_yield", "_placement")
+    yield_rows = month_rows.loc[yield_mask]
+    yield_values = yield_rows["_yield"] if "_yield" in yield_rows.columns else pd.Series(dtype="Float64")
 
     return {
         "report_year": int(month_info["report_year"]),
@@ -322,7 +330,7 @@ def build_month_row(month_info: pd.Series, month_rows: pd.DataFrame) -> dict[str
         "bid_to_cover_ratio": safe_divide(total_demand, total_supply),
         "demand_to_placement_ratio": safe_divide(total_demand, total_placement),
         "demand_satisfaction_ratio": safe_divide(total_placement, total_demand),
-        "yield_weighted_avg": weighted_average(month_rows, "_yield", "_placement"),
+        "yield_weighted_avg": weighted_average(yield_rows, "_yield", "_placement"),
         "yield_min": min_numeric(yield_values),
         "yield_median": median_numeric(yield_values),
         "yield_max": max_numeric(yield_values),
@@ -334,6 +342,9 @@ def build_month_row(month_info: pd.Series, month_rows: pd.DataFrame) -> dict[str
         "ofz_pd_placement_volume": placement_by_ofz_type(month_rows, "ПД"),
         "ofz_in_placement_volume": placement_by_ofz_type(month_rows, "ИН"),
         "ofz_pk_placement_volume": placement_by_ofz_type(month_rows, "ПК"),
+        "yield_scope": yield_policy.BASE_YIELD_SCOPE,
+        "yield_observation_count": int(len(yield_rows)),
+        "mixed_security_types": yield_policy.has_mixed_security_types(month_rows),
         "cumulative_demand": pd.NA,
         "cumulative_supply": pd.NA,
         "cumulative_placement_volume": pd.NA,
@@ -341,8 +352,8 @@ def build_month_row(month_info: pd.Series, month_rows: pd.DataFrame) -> dict[str
         "cumulative_bid_to_cover_ratio": pd.NA,
         "cumulative_weighted_avg_yield": pd.NA,
         "cumulative_auction_count": pd.NA,
-        "_yield_weighted_numerator": weighted_numerator(month_rows, "_yield", "_placement"),
-        "_yield_weighted_denominator": weighted_denominator(month_rows, "_yield", "_placement"),
+        "_yield_weighted_numerator": weighted_numerator(yield_rows, "_yield", "_placement"),
+        "_yield_weighted_denominator": weighted_denominator(yield_rows, "_yield", "_placement"),
         "_has_drpa": has_drpa(month_rows),
     }
 
@@ -479,7 +490,9 @@ def build_quality_flag(row: pd.Series) -> str:
     if pd.isna(row["total_placement_volume"]):
         flags.append("no_placement")
     if pd.isna(row["yield_weighted_avg"]):
-        flags.append("no_weighted_yield")
+        flags.append("no_valid_ofz_pd_yield")
+    if bool(row.get("mixed_security_types", False)):
+        flags.append("mixed_security_types")
     if bool(row.get("_has_drpa", False)):
         flags.append("drpa_present")
     return "; ".join(flags) if flags else "ok"
@@ -539,6 +552,9 @@ def monthly_output_columns() -> list[str]:
         "ofz_pd_placement_volume",
         "ofz_in_placement_volume",
         "ofz_pk_placement_volume",
+        "yield_scope",
+        "yield_observation_count",
+        "mixed_security_types",
         "cumulative_demand",
         "cumulative_supply",
         "cumulative_placement_volume",

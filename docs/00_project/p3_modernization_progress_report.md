@@ -1,5 +1,16 @@
 # Отчет о прогрессе модернизации P3
 
+## 2026-06-22 - Критическое исправление yield metrics после P3
+
+- Устранено включение нулевой/неприменимой доходности ОФЗ-ПК в базовые yield metrics.
+- Введен единый cohort: ОФЗ-ПД, числовая доходность, положительный placement volume; ДРПА ОФЗ-ПД включается.
+- Добавлены `yield_applicable`, `yield_exclusion_reason`, `yield_scope=ofz_pd_only`, `yield_observation_count`, `mixed_security_types`.
+- Monthly weighted/min/median/max и cumulative weighted yield используют один denominator только по валидным ОФЗ-ПД.
+- Ноябрь 2025 после исправления: weighted `14.873469`, min `14.73`, median `14.75`, max `14.95`; объем ОФЗ-ПК `1 691 219.3 млн руб.` сохранен отдельно.
+- Добавлена targeted regression с крупным ОФЗ-ПК, значениями `0`, `-`, null и отдельным ОФЗ-ИН.
+- Pipeline, schema, HTML QA и visual regression fallback прошли. `quality-fast` остановлен только из-за ранее удаленного `outputs/charts/index.md`; yield regression внутри quality прошла.
+- Stable release/tag остается заблокирован до commit/push исправления и ручной screenshot-проверки outside sandbox.
+
 ## 2026-06-17 - Повторная русификация и UTF-8 аудит документации
 
 Дата: 2026-06-17.
