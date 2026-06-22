@@ -1,6 +1,6 @@
 # Отчет о генерации executive summary
 
-Дата формирования: `2026-06-16 11:32:34`.
+Дата формирования: `2026-06-22 15:11:11`.
 
 ## Параметры
 
@@ -15,7 +15,7 @@
 | Источник | Статус | Строк | Путь | Примечание |
 |---|---|---:|---|---|
 | demand_supply | ok | 5 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/analytical_csv/demand_supply_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
-| ofz_yield_by_type | ok | 8 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/analytical_csv/ofz_yield_by_type_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
+| ofz_yield_by_type | ok | 5 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/analytical_csv/ofz_yield_by_type_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
 | placement_volume_by_maturity | ok | 13 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/analytical_csv/placement_volume_by_maturity_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
 | monthly_metrics | ok | 20 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/analytical_csv/monthly_metrics_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
 | revenue_summary | ok | 5 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/analytical_csv/revenue_summary_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
@@ -32,7 +32,7 @@
 | chart_format_structure | ok | 8 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/chart_data/structure/format_structure_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
 | chart_bid_to_cover | ok | 5 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/chart_data/risk_quadrant/bid_to_cover_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
 | chart_yield_by_type | ok | 9 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/chart_data/structure/yield_by_type_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
-| chart_yield_boxplot_stats | ok | 8 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/chart_data/boxplot/yield_boxplot_stats_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
+| chart_yield_boxplot_stats | ok | 5 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/chart_data/boxplot/yield_boxplot_stats_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
 | chart_yield_boxplot_ofz_pd_stats | ok | 5 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/chart_data/boxplot/yield_boxplot_ofz_pd_stats_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
 | chart_monthly_bid_to_cover | ok | 20 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/chart_data/monthly_bid_to_cover_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |
 | chart_discount_vs_demand | ok | 121 | `C:/Users/Rockaudit/LLM_CHAT/ofz_analytics/outputs/exports/chart_data/risk_quadrant/discount_vs_demand_month_cumulative_2026-05-01_retrospective_4.csv` | Источник использован. |

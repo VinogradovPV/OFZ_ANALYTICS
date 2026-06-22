@@ -43,10 +43,11 @@ def main() -> int:
 
     monthly = select_candidate(records, 2026, "monthly")
     _assert(monthly is not None, "monthly candidate expected")
-    _assert(monthly.file_name == expected["monthly"]["file_name"], "latest monthly candidate mismatch")
-    _assert(monthly.as_of_date == expected["monthly"]["as_of_date"], "monthly as_of_date mismatch")
+    expected_monthly = expected["monthly_page1"]
+    _assert(monthly.file_name == expected_monthly["file_name"], "latest monthly candidate mismatch")
+    _assert(monthly.as_of_date == expected_monthly["as_of_date"], "monthly as_of_date mismatch")
     _assert(
-        monthly.absolute_file_url == expected["monthly"]["absolute_file_url"],
+        monthly.absolute_file_url == expected_monthly["absolute_file_url"],
         "relative monthly URL should be resolved",
     )
 
@@ -73,4 +74,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

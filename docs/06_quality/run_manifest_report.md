@@ -4,8 +4,8 @@
 
 ## Параметры запуска
 
-- `run_id`: `20260616_113234_d6e92621`
-- `timestamp`: `2026-06-16T11:32:34`
+- `run_id`: `20260622_151111_99b65045`
+- `timestamp`: `2026-06-22T15:11:11`
 - `report_date`: `2026-05-01`
 - `period_type`: `month`
 - `aggregation_mode`: `cumulative`
@@ -44,7 +44,7 @@
 | `monthly_placement_by_maturity_html_exists` | `ok` |
 | `monthly_placement_volume_csv_exists` | `ok` |
 | `monthly_placement_volume_html_exists` | `ok` |
-| `no_direct_files_in_outputs_exports` | `warning` |
+| `no_direct_files_in_outputs_exports` | `ok` |
 | `pipeline_all_run` | `ok` |
 | `pipeline_compare` | `not_requested` |
 | `pipeline_safe_mode` | `disabled` |
@@ -57,73 +57,72 @@
 | `yield_vs_discount_outliers_csv_exists` | `ok` |
 | `yield_vs_discount_outliers_html_exists` | `ok` |
 
-## Выходные файлы
+## Outputs
 
-- Файлов: `164`
-- Размер, байт: `249841781`
+- Файлов: `1057`
+- Размер, байт: `1476210910`
 
 | Область | Файлов | Размер, байт |
 | --- | ---: | ---: |
-| `outputs/.gitkeep` | 1 | 0 |
-| `outputs/archive` | 4 | 4865416 |
-| `outputs/charts` | 57 | 243724033 |
-| `outputs/dashboards` | 20 | 150977 |
-| `outputs/exports` | 65 | 957504 |
-| `outputs/reports` | 16 | 143851 |
+| `outputs/archive` | 403 | 499687995 |
+| `outputs/charts` | 197 | 962281885 |
+| `outputs/dashboards` | 64 | 871191 |
+| `outputs/exports` | 241 | 6622544 |
+| `outputs/reports` | 151 | 6747295 |
 | `outputs/tmp` | 1 | 0 |
 
 ## Ключевые графики и CSV-основы
 
 | Артефакт | Путь | Статус | Размер, байт |
 | --- | --- | --- | ---: |
-| `monthly_placement_volume_html` | `outputs/charts/monthly/placement/monthly_placement_volume_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4861474 |
-| `monthly_placement_volume_csv` | `outputs/exports/chart_data/monthly_placement_volume_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 6254 |
-| `monthly_cumulative_placement_html` | `outputs/charts/monthly/placement/monthly_cumulative_placement_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4862493 |
-| `monthly_cumulative_placement_csv` | `outputs/exports/chart_data/monthly_cumulative_placement_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 4987 |
-| `monthly_demand_supply_html` | `outputs/charts/monthly/demand_supply/monthly_demand_supply_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4873543 |
-| `monthly_demand_supply_csv` | `outputs/exports/chart_data/monthly_demand_supply_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 11151 |
-| `monthly_placement_by_format_html` | `outputs/charts/monthly/structure/monthly_placement_by_format_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4872872 |
-| `monthly_placement_by_format_csv` | `outputs/exports/chart_data/monthly_placement_by_format_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 11935 |
-| `monthly_placement_by_maturity_html` | `outputs/charts/monthly/structure/monthly_placement_by_maturity_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4882412 |
-| `monthly_placement_by_maturity_csv` | `outputs/exports/chart_data/monthly_placement_by_maturity_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 19190 |
+| `monthly_placement_volume_html` | `outputs/charts/monthly/placement/monthly_placement_volume_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4861678 |
+| `monthly_placement_volume_csv` | `outputs/exports/chart_data/monthly_placement_volume_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 6912 |
+| `monthly_cumulative_placement_html` | `outputs/charts/monthly/placement/monthly_cumulative_placement_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4862697 |
+| `monthly_cumulative_placement_csv` | `outputs/exports/chart_data/monthly_cumulative_placement_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 5645 |
+| `monthly_demand_supply_html` | `outputs/charts/monthly/demand_supply/monthly_demand_supply_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4873951 |
+| `monthly_demand_supply_csv` | `outputs/exports/chart_data/monthly_demand_supply_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 11559 |
+| `monthly_placement_by_format_html` | `outputs/charts/monthly/structure/monthly_placement_by_format_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4873280 |
+| `monthly_placement_by_format_csv` | `outputs/exports/chart_data/monthly_placement_by_format_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 12343 |
+| `monthly_placement_by_maturity_html` | `outputs/charts/monthly/structure/monthly_placement_by_maturity_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4883024 |
+| `monthly_placement_by_maturity_csv` | `outputs/exports/chart_data/monthly_placement_by_maturity_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 19802 |
 | `demand_cutoff_explanation_html` | `outputs/charts/scatter/demand_cutoff/demand_cutoff_explanation_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4869184 |
 | `demand_cutoff_explanation_csv` | `outputs/exports/chart_data/risk_quadrant/demand_cutoff_explanation_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 12541 |
-| `yield_vs_discount_html` | `outputs/charts/scatter/yield_discount/yield_vs_discount_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4927814 |
-| `yield_vs_discount_csv` | `outputs/exports/chart_data/scatter/yield_vs_discount_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 91657 |
-| `yield_vs_discount_facet_html` | `outputs/charts/scatter/yield_discount/yield_vs_discount_facet_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4930632 |
-| `yield_vs_discount_facet_csv` | `outputs/exports/chart_data/scatter/yield_vs_discount_facet_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 93387 |
-| `yield_vs_discount_outliers_html` | `outputs/charts/scatter/yield_discount/yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4886420 |
-| `yield_vs_discount_outliers_csv` | `outputs/exports/chart_data/scatter/yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 32264 |
+| `yield_vs_discount_html` | `outputs/charts/scatter/yield_discount/yield_vs_discount_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4923954 |
+| `yield_vs_discount_csv` | `outputs/exports/chart_data/scatter/yield_vs_discount_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 86621 |
+| `yield_vs_discount_facet_html` | `outputs/charts/scatter/yield_discount/yield_vs_discount_facet_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4926742 |
+| `yield_vs_discount_facet_csv` | `outputs/exports/chart_data/scatter/yield_vs_discount_facet_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 86422 |
+| `yield_vs_discount_outliers_html` | `outputs/charts/scatter/yield_discount/yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `exists` | 4878409 |
+| `yield_vs_discount_outliers_csv` | `outputs/exports/chart_data/scatter/yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.csv` | `exists` | 26515 |
 
 ## Контрольные суммы
 
 - Ключевых scripts: `22`
 - Raw files: `8`
 
-## Предупреждения
+## Warnings
 
 - Нет.
 
-## Ограничения
+## Limitations
 
 - Manifest формируется после успешного `--all` и фиксирует существующие outputs на момент записи.
 - Статусы внешних QA-проверок отражают наличие артефактов; отдельные runtime QA-скрипты запускаются через quality gate или вручную.
 
 ## Cleanup pre-flight
 
-- `status`: `ok`
-- `mode`: `--delete-all --confirm DELETE_OUTPUTS`
-- `returncode`: `0`
+- `status`: `not_requested`
+- `mode`: `not_interactive`
+- `returncode`: ``
 
 ## Pipeline telemetry
 
 - `status`: `written`
-- `json`: `outputs/reports/telemetry/telemetry_20260616_083221_62c61294.json`
-- `markdown`: `outputs/reports/telemetry/telemetry_20260616_083221_62c61294.md`
+- `json`: `outputs/reports/telemetry/telemetry_20260622_121057_05bfc639.json`
+- `markdown`: `outputs/reports/telemetry/telemetry_20260622_121057_05bfc639.md`
 
 ## Файлы manifest
 
-- `json`: `outputs/reports/run_manifest_20260616_113234_d6e92621.json`
-- `markdown`: `outputs/reports/run_manifest_20260616_113234_d6e92621.md`
+- `json`: `outputs/reports/run_manifest_20260622_151111_99b65045.json`
+- `markdown`: `outputs/reports/run_manifest_20260622_151111_99b65045.md`
 - `latest_json`: `data/processed/run_manifest_latest.json`
 - `docs_report`: `docs/06_quality/run_manifest_report.md`

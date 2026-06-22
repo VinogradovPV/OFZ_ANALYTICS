@@ -1,6 +1,6 @@
 # Отчет об очистке данных
 
-Дата формирования: 2026-06-16 11:32:23
+Дата формирования: 2026-06-22 15:10:59
 
 ## Краткий вывод
 
@@ -46,14 +46,17 @@
 | `offer_amount_mln_rub` | `Float64` | 0 |
 | `cutoff_price_pct` | `Float64` | 42 |
 | `weighted_avg_price_pct` | `Float64` | 42 |
-| `cutoff_yield_pct` | `Float64` | 106 |
-| `weighted_avg_yield_pct` | `Float64` | 106 |
+| `cutoff_yield_pct` | `Float64` | 171 |
+| `weighted_avg_yield_pct` | `Float64` | 171 |
 | `demand_amount_mln_rub` | `Float64` | 79 |
 | `placement_amount_mln_rub` | `Float64` | 1 |
 | `proceeds_mln_rub` | `Float64` | 1 |
 | `demand_satisfaction_ratio` | `Float64` | 79 |
 | `demand_available` | `bool` | 0 |
 | `yield_available` | `bool` | 0 |
+| `yield_applicable` | `bool` | 0 |
+| `yield_exclusion_reason` | `string` | 507 |
+| `yield_scope` | `str` | 0 |
 | `failed_or_no_deal` | `boolean` | 0 |
 | `marker_fields` | `object` | 0 |
 | `data_quality_flag` | `object` | 0 |
@@ -88,13 +91,20 @@
 - Полных дубликатов после очистки: 0.
 - Строк `requires_review`: 0.
 - Распределение `data_quality_flag`:
-  - `ok`: 500
+  - `ok`: 435
   - `missing_demand|source_markers:demand_amount_mln_rub|demand_satisfaction_ratio`: 72
-  - `missing_yield|source_markers:cutoff_yield_pct|weighted_avg_yield_pct`: 64
-  - `missing_yield|failed_or_no_deal|source_markers:cutoff_price_pct|weighted_avg_price_pct|cutoff_yield_pct|weighted_avg_yield_pct`: 19
-  - `missing_yield|failed_or_no_deal`: 16
-  - `missing_demand|missing_yield|failed_or_no_deal|source_markers:cutoff_price_pct|weighted_avg_price_pct|cutoff_yield_pct|weighted_avg_yield_pct|demand_amount_mln_rub|demand_satisfaction_ratio`: 6
-  - `missing_demand|missing_yield|failed_or_no_deal|source_markers:cutoff_price_pct|weighted_avg_price_pct|cutoff_yield_pct|weighted_avg_yield_pct|demand_amount_mln_rub|placement_amount_mln_rub|proceeds_mln_rub|demand_satisfaction_ratio`: 1
+  - `ofz_pk_yield_not_applicable|source_markers:cutoff_yield_pct|weighted_avg_yield_pct`: 64
+  - `ofz_in_separate_yield_scope`: 62
+  - `missing_or_non_numeric_yield|failed_or_no_deal|source_markers:cutoff_price_pct|weighted_avg_price_pct|cutoff_yield_pct|weighted_avg_yield_pct`: 11
+  - `missing_or_non_numeric_yield|failed_or_no_deal`: 9
+  - `ofz_in_separate_yield_scope|failed_or_no_deal`: 4
+  - `ofz_in_separate_yield_scope|failed_or_no_deal|source_markers:cutoff_price_pct|weighted_avg_price_pct|cutoff_yield_pct|weighted_avg_yield_pct`: 4
+  - `missing_demand|missing_or_non_numeric_yield|failed_or_no_deal|source_markers:cutoff_price_pct|weighted_avg_price_pct|cutoff_yield_pct|weighted_avg_yield_pct|demand_amount_mln_rub|demand_satisfaction_ratio`: 4
+  - `ofz_pk_yield_not_applicable|failed_or_no_deal|source_markers:cutoff_price_pct|weighted_avg_price_pct|cutoff_yield_pct|weighted_avg_yield_pct`: 4
+  - `ofz_pk_yield_not_applicable|failed_or_no_deal`: 3
+  - `ofz_pk_yield_not_applicable`: 3
+  - `missing_demand|ofz_pk_yield_not_applicable|failed_or_no_deal|source_markers:cutoff_price_pct|weighted_avg_price_pct|cutoff_yield_pct|weighted_avg_yield_pct|demand_amount_mln_rub|demand_satisfaction_ratio`: 2
+  - `missing_demand|ofz_in_separate_yield_scope|failed_or_no_deal|source_markers:cutoff_price_pct|weighted_avg_price_pct|cutoff_yield_pct|weighted_avg_yield_pct|demand_amount_mln_rub|placement_amount_mln_rub|proceeds_mln_rub|demand_satisfaction_ratio`: 1
 
 ## Нормализованные аналитические колонки
 

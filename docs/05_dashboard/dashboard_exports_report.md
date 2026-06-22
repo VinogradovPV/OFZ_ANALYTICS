@@ -1,6 +1,6 @@
-# Отчет dashboard exports
+# Dashboard exports report
 
-Дата формирования: `2026-06-16 11:32:33`.
+Дата формирования: `2026-06-22 15:11:10`.
 
 ## Параметры
 
@@ -28,17 +28,17 @@
 | `period_summary` | `outputs/dashboards/monthly/dashboard_period_summary_month_cumulative_2026-05-01_retrospective_4.csv` | 5 | Периодная сводка спроса, предложения, размещения и доходности. |
 | `kpi_summary` | `outputs/dashboards/monthly/dashboard_kpi_summary_month_cumulative_2026-05-01_retrospective_4.csv` | 75 | KPI в long-format для карточек dashboard. |
 | `maturity_structure` | `outputs/dashboards/monthly/dashboard_maturity_structure_month_cumulative_2026-05-01_retrospective_4.csv` | 13 | Структура размещения по срокам обращения. |
-| `yield_distribution` | `outputs/dashboards/monthly/dashboard_yield_distribution_month_cumulative_2026-05-01_retrospective_4.csv` | 8 | Распределение доходности по периодам и видам ОФЗ. |
+| `yield_distribution` | `outputs/dashboards/monthly/dashboard_yield_distribution_month_cumulative_2026-05-01_retrospective_4.csv` | 5 | Распределение доходности ОФЗ-ПД по периодам. |
 | `demand_supply` | `outputs/dashboards/monthly/dashboard_demand_supply_month_cumulative_2026-05-01_retrospective_4.csv` | 8 | Спрос и предложение по периодам и форматам. |
 | `metadata` | `outputs/dashboards/monthly/dashboard_metadata_month_cumulative_2026-05-01_retrospective_4.json` | 1 | JSON metadata по dashboard exports. |
 | `data_dictionary` | `outputs/dashboards/monthly/dashboard_data_dictionary_month_cumulative_2026-05-01_retrospective_4.csv` | 16 | Словарь данных dashboard exports. |
-| `semantic_layer_fields` | `outputs/dashboards/semantic_layer/dashboard_semantic_layer_fields_month_cumulative_2026-05-01_retrospective_4.csv` | 53 | Каталог полей semantic layer: русские названия, technical names, units и правила расчета. |
+| `semantic_layer_fields` | `outputs/dashboards/semantic_layer/dashboard_semantic_layer_fields_month_cumulative_2026-05-01_retrospective_4.csv` | 56 | Каталог полей semantic layer: русские названия, technical names, units и правила расчета. |
 | `semantic_layer_metrics` | `outputs/dashboards/semantic_layer/dashboard_semantic_layer_metrics_month_cumulative_2026-05-01_retrospective_4.csv` | 10 | Каталог управленческих метрик semantic layer с формулами и ограничениями. |
 | `semantic_layer_dimensions` | `outputs/dashboards/semantic_layer/dashboard_semantic_layer_dimensions_month_cumulative_2026-05-01_retrospective_4.csv` | 8 | Каталог измерений, рекомендуемых фильтров и default sorting для dashboard. |
 | `semantic_layer_relationships` | `outputs/dashboards/semantic_layer/dashboard_semantic_layer_relationships_month_cumulative_2026-05-01_retrospective_4.csv` | 6 | Контракт связей между dashboard-ready таблицами. |
 | `semantic_layer_manifest` | `outputs/dashboards/semantic_layer/dashboard_semantic_layer_manifest_month_cumulative_2026-05-01_retrospective_4.json` | 1 | JSON manifest semantic layer с параметрами отчета и списком semantic exports. |
 | `monthly_metrics` | `outputs/dashboards/monthly/dashboard_monthly_metrics_month_cumulative_2026-05-01_retrospective_4.csv` | 20 | BI-ready помесячные показатели для объяснения накопленного итога. |
-| `monthly_data_dictionary` | `outputs/dashboards/monthly/dashboard_monthly_data_dictionary_month_cumulative_2026-05-01_retrospective_4.csv` | 37 | Словарь данных помесячного dashboard layer. |
+| `monthly_data_dictionary` | `outputs/dashboards/monthly/dashboard_monthly_data_dictionary_month_cumulative_2026-05-01_retrospective_4.csv` | 40 | Словарь данных помесячного dashboard layer. |
 
 ## Ключевые KPI
 

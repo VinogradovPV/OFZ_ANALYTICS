@@ -1,4 +1,4 @@
-# Отчет visual regression
+# Visual regression report
 
 Метка: `вторая модернизация`.
 
@@ -197,7 +197,7 @@
 | `monthly_placement_by_maturity_month_cumulative_2026-05-01_retrospective_4.html` | `format_terms_scatter_contract` | `ok` | Не format_terms_scatter. |
 | `monthly_placement_by_maturity_month_cumulative_2026-05-01_retrospective_4.html` | `format_terms_delta_by_format_contract` | `ok` | Не format_terms_delta_by_format. |
 | `monthly_weighted_avg_yield_month_cumulative_2026-05-01_retrospective_4.html` | `trace_types` | `ok` | scatter |
-| `monthly_weighted_avg_yield_month_cumulative_2026-05-01_retrospective_4.html` | `title` | `ok` | Помесячная средневзвешенная доходность ОФЗ |
+| `monthly_weighted_avg_yield_month_cumulative_2026-05-01_retrospective_4.html` | `title` | `ok` | Помесячная средневзвешенная доходность ОФЗ-ПД |
 | `monthly_weighted_avg_yield_month_cumulative_2026-05-01_retrospective_4.html` | `axis_titles` | `ok` | Русские подписи осей/измерений найдены. |
 | `monthly_weighted_avg_yield_month_cumulative_2026-05-01_retrospective_4.html` | `annotations` | `ok` | Найдены annotation/text entries: 9. |
 | `monthly_weighted_avg_yield_month_cumulative_2026-05-01_retrospective_4.html` | `legend` | `ok` | Legend/name metadata найдено. |
@@ -724,7 +724,7 @@
 | `discount_vs_demand_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `trace_types` | `ok` | scatter |
 | `discount_vs_demand_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `title` | `ok` | Дисконт к номиналу и спрос: выбросы |
 | `discount_vs_demand_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `axis_titles` | `ok` | Русские подписи осей/измерений найдены. |
-| `discount_vs_demand_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `annotations` | `ok` | Найдены annotation/text entries: 11. |
+| `discount_vs_demand_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `annotations` | `ok` | Найдены annotation/text entries: 12. |
 | `discount_vs_demand_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `legend` | `ok` | Legend/name metadata найдено. |
 | `discount_vs_demand_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `hovertemplate` | `ok` | hovertemplate найден. |
 | `discount_vs_demand_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `volume_scale` | `ok` | Не volume-график. |
@@ -787,7 +787,7 @@
 | `format_terms_scatter_month_cumulative_2026-05-01_retrospective_4.html` | `trace_types` | `ok` | scatter |
 | `format_terms_scatter_month_cumulative_2026-05-01_retrospective_4.html` | `title` | `ok` | Условия размещения ОФЗ по форматам<br><sup>Цвет — формат; форма — вид ОФЗ; размер — объем размещения по номиналу</sup> |
 | `format_terms_scatter_month_cumulative_2026-05-01_retrospective_4.html` | `axis_titles` | `ok` | Русские подписи осей/измерений найдены. |
-| `format_terms_scatter_month_cumulative_2026-05-01_retrospective_4.html` | `annotations` | `ok` | Найдены annotation/text entries: 8. |
+| `format_terms_scatter_month_cumulative_2026-05-01_retrospective_4.html` | `annotations` | `ok` | Найдены annotation/text entries: 7. |
 | `format_terms_scatter_month_cumulative_2026-05-01_retrospective_4.html` | `legend` | `ok` | Legend/name metadata найдено. |
 | `format_terms_scatter_month_cumulative_2026-05-01_retrospective_4.html` | `hovertemplate` | `ok` | hovertemplate найден. |
 | `format_terms_scatter_month_cumulative_2026-05-01_retrospective_4.html` | `volume_scale` | `ok` | Не volume-график. |
@@ -871,7 +871,7 @@
 | `yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `trace_types` | `ok` | scatter |
 | `yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `title` | `ok` | Квадрант риска: дисконт к номиналу и доходность — выбросы |
 | `yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `axis_titles` | `ok` | Русские подписи осей/измерений найдены. |
-| `yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `annotations` | `ok` | Найдены annotation/text entries: 17. |
+| `yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `annotations` | `ok` | Найдены annotation/text entries: 15. |
 | `yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `legend` | `ok` | Legend/name metadata найдено. |
 | `yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `hovertemplate` | `ok` | hovertemplate найден. |
 | `yield_vs_discount_outliers_month_cumulative_2026-05-01_retrospective_4.html` | `volume_scale` | `ok` | Не volume-график. |
@@ -1016,9 +1016,9 @@
 | `placement_volume_month_cumulative_2026-05-01_retrospective_4.html` | `format_terms_scatter_contract` | `ok` | Не format_terms_scatter. |
 | `placement_volume_month_cumulative_2026-05-01_retrospective_4.html` | `format_terms_delta_by_format_contract` | `ok` | Не format_terms_delta_by_format. |
 | `yield_boxplot_by_ofz_type_month_cumulative_2026-05-01_retrospective_4.html` | `trace_types` | `ok` | box, scatter |
-| `yield_boxplot_by_ofz_type_month_cumulative_2026-05-01_retrospective_4.html` | `title` | `ok` | Распределение доходности ОФЗ по видам бумаг |
+| `yield_boxplot_by_ofz_type_month_cumulative_2026-05-01_retrospective_4.html` | `title` | `ok` | Распределение доходности ОФЗ-ПД |
 | `yield_boxplot_by_ofz_type_month_cumulative_2026-05-01_retrospective_4.html` | `axis_titles` | `ok` | Русские подписи осей/измерений найдены. |
-| `yield_boxplot_by_ofz_type_month_cumulative_2026-05-01_retrospective_4.html` | `annotations` | `ok` | Найдены annotation/text entries: 15. |
+| `yield_boxplot_by_ofz_type_month_cumulative_2026-05-01_retrospective_4.html` | `annotations` | `ok` | Найдены annotation/text entries: 10. |
 | `yield_boxplot_by_ofz_type_month_cumulative_2026-05-01_retrospective_4.html` | `legend` | `ok` | Легенда отключена явно; статический fallback считает это допустимым. |
 | `yield_boxplot_by_ofz_type_month_cumulative_2026-05-01_retrospective_4.html` | `hovertemplate` | `ok` | hovertemplate найден. |
 | `yield_boxplot_by_ofz_type_month_cumulative_2026-05-01_retrospective_4.html` | `volume_scale` | `ok` | Не volume-график. |
@@ -1058,7 +1058,7 @@
 | `yield_boxplot_ofz_pd_month_cumulative_2026-05-01_retrospective_4.html` | `format_terms_scatter_contract` | `ok` | Не format_terms_scatter. |
 | `yield_boxplot_ofz_pd_month_cumulative_2026-05-01_retrospective_4.html` | `format_terms_delta_by_format_contract` | `ok` | Не format_terms_delta_by_format. |
 | `yield_by_type_month_cumulative_2026-05-01_retrospective_4.html` | `trace_types` | `ok` | scatter |
-| `yield_by_type_month_cumulative_2026-05-01_retrospective_4.html` | `title` | `ok` | Средневзвешенная доходность по видам ОФЗ |
+| `yield_by_type_month_cumulative_2026-05-01_retrospective_4.html` | `title` | `ok` | Средневзвешенная доходность ОФЗ-ПД |
 | `yield_by_type_month_cumulative_2026-05-01_retrospective_4.html` | `axis_titles` | `ok` | Русские подписи осей/измерений найдены. |
 | `yield_by_type_month_cumulative_2026-05-01_retrospective_4.html` | `annotations` | `ok` | Найдены annotation/text entries: 6. |
 | `yield_by_type_month_cumulative_2026-05-01_retrospective_4.html` | `legend` | `ok` | Legend/name metadata найдено. |
@@ -1079,7 +1079,7 @@
 | `yield_by_type_month_cumulative_2026-05-01_retrospective_4.html` | `format_terms_scatter_contract` | `ok` | Не format_terms_scatter. |
 | `yield_by_type_month_cumulative_2026-05-01_retrospective_4.html` | `format_terms_delta_by_format_contract` | `ok` | Не format_terms_delta_by_format. |
 
-## Скриншоты
+## Screenshots
 
 Папка для скриншотов: `outputs/reports/visual_regression/screenshots`.
 Если screenshot backend недоступен, папка создается, но изображения не формируются.
@@ -1090,7 +1090,7 @@
 - Проверка наложения подписей без screenshot backend является эвристической.
 - Полноценное сравнение контрольных зон будет доступно после подключения screenshot backend.
 
-## Screenshot-артефакты
+## Screenshot artifacts
 
 - Screenshot artifacts count: `0`
 - Screenshot manifest directory: `outputs/reports/visual_regression`

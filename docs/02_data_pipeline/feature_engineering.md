@@ -1,14 +1,14 @@
 # Отчет построения признаков
 
-Дата формирования: 2026-06-16 11:32:24
+Дата формирования: 2026-06-22 15:11:00
 
 ## Краткий вывод
 
 Источник: `data/processed/ofz_auctions_clean.csv`.
 Строк во входном dataset: 678.
 Строк в features dataset: 678.
-Колонок во входном dataset: 29.
-Колонок в features dataset: 72.
+Колонок во входном dataset: 32.
+Колонок в features dataset: 75.
 Добавлено признаков: 43.
 
 ## Добавленные признаки
@@ -22,13 +22,13 @@
 | `placement_volume` | 1 |
 | `demand_volume` | 79 |
 | `supply_volume` | 0 |
-| `weighted_avg_yield` | 106 |
-| `yield` | 106 |
+| `weighted_avg_yield` | 171 |
+| `yield` | 171 |
 | `cutoff_price` | 42 |
 | `weighted_avg_price` | 42 |
-| `cutoff_yield` | 106 |
+| `cutoff_yield` | 171 |
 | `discount_to_nominal` | 42 |
-| `cutoff_yield_spread` | 106 |
+| `cutoff_yield_spread` | 171 |
 | `bid_to_cover_ratio` | 79 |
 | `demand_to_placement_ratio` | 114 |
 | `ratio_basis` | 0 |
@@ -38,12 +38,12 @@
 | `maturity_bucket` | 0 |
 | `maturity_bucket_label` | 0 |
 | `ofz_type` | 0 |
-| `issue_year_weighted_avg_yield` | 55 |
-| `yield_yoy_change` | 367 |
+| `issue_year_weighted_avg_yield` | 148 |
+| `yield_yoy_change` | 399 |
 | `demand_pressure_indicator` | 0 |
-| `yield_zscore_in_year` | 106 |
+| `yield_zscore_in_year` | 171 |
 | `yield_pressure_indicator` | 0 |
-| `auction_efficiency_score` | 178 |
+| `auction_efficiency_score` | 243 |
 | `issue_year_placement_mln_rub` | 0 |
 | `issue_year_demand_mln_rub` | 0 |
 | `year_total_placement_mln_rub` | 0 |
@@ -53,10 +53,10 @@
 | `year_placement_hhi_by_issue` | 0 |
 | `year_demand_hhi_by_issue` | 0 |
 | `year_yield_volatility_std` | 0 |
-| `issue_yield_volatility_std` | 77 |
+| `issue_yield_volatility_std` | 148 |
 | `placement_deviation_from_average` | 1 |
 | `demand_deviation_from_average` | 79 |
-| `yield_deviation_from_average` | 106 |
+| `yield_deviation_from_average` | 171 |
 | `feature_processing_timestamp` | 0 |
 
 ## Пропущено / requires_review
@@ -73,14 +73,14 @@
 | `ratio_basis` | ok | 0 | методическая база расчета ratio-показателей |
 | `cutoff_price` | ok | 42 | цена отсечения |
 | `weighted_avg_price` | ok | 42 | средневзвешенная цена |
-| `cutoff_yield` | ok | 106 | доходность по цене отсечения |
+| `cutoff_yield` | ok | 171 | доходность по цене отсечения |
 | `discount_to_nominal` | ok | 42 | дисконт к номиналу |
-| `cutoff_yield_spread` | ok | 106 | спред доходности отсечения к средневзвешенной доходности |
+| `cutoff_yield_spread` | ok | 171 | спред доходности отсечения к средневзвешенной доходности |
 | `placement_volume` | ok | 1 | объем размещения |
 | `demand_volume` | ok | 79 | объем спроса |
 | `supply_volume` | ok | 0 | объем предложения |
-| `yield` | ok | 106 | основной alias доходности для табличных отчетов |
-| `weighted_avg_yield` | ok | 106 | средневзвешенная доходность |
+| `yield` | ok | 171 | основной alias доходности для табличных отчетов |
+| `weighted_avg_yield` | ok | 171 | средневзвешенная доходность |
 | `maturity_years` | ok | 0 | срок обращения в годах |
 | `maturity_bucket` | ok | 0 | категория срока обращения |
 | `maturity_bucket_label` | ok | 0 | человекочитаемая категория срока обращения |
@@ -90,7 +90,7 @@
 | `auction_month` | ok | 0 | месяц аукциона |
 | `demand_pressure_indicator` | ok | 0 | индикатор давления спроса |
 | `yield_pressure_indicator` | ok | 0 | индикатор давления доходности |
-| `auction_efficiency_score` | ok | 178 | интегральный показатель эффективности аукциона |
+| `auction_efficiency_score` | ok | 243 | интегральный показатель эффективности аукциона |
 
 ## Правило классификации сроков обращения
 
@@ -125,10 +125,10 @@
   - `not_applicable`: 79
   - `high`: 70
 - Распределение `yield_pressure_indicator`:
-  - `normal`: 471
-  - `not_applicable`: 106
-  - `low`: 71
-  - `high`: 30
+  - `normal`: 334
+  - `not_applicable`: 171
+  - `high`: 89
+  - `low`: 84
 
 ## Выходные артефакты
 

@@ -1,6 +1,6 @@
 # Помесячная аналитика ОФЗ
 
-Дата формирования: `2026-06-16 11:32:31`.
+Дата формирования: `2026-06-22 15:11:08`.
 
 ## Параметры
 
@@ -22,7 +22,7 @@
 - Накопленные поля считаются с января до текущего месяца включительно.
 - Для `month + cumulative + report_date=2026-05-01` слой должен содержать январь, февраль, март и апрель по каждому году ретроспективы.
 
-## Выходные файлы
+## Output
 
 - Processed dataset: `data/processed/ofz_monthly_metrics.csv`
 - CSV export: `outputs/exports/analytical_csv/monthly_metrics_month_cumulative_2026-05-01_retrospective_4.csv`
