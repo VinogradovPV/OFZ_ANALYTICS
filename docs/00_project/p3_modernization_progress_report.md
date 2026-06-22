@@ -1,5 +1,20 @@
 # Отчет о прогрессе модернизации P3
 
+## 2026-06-22 - Радикальная переработка desktop GUI launcher
+
+- Выполнен аудит старого PowerShell/WinForms launcher и референса Expense_Splitter.
+- Создан Python tkinter package `scripts/gui_launcher/` и entry point `ofz-gui`.
+- Добавлены девять сценарных вкладок: обзор, Минфин, pipeline, quality, reports, release, maintenance, журнал и справка.
+- Реализован allowlist из 29 actions без произвольной shell-команды.
+- Runner использует argument list, `shell=False`, background thread, live output, UTF-8 log, stop и запрет параллельных запусков.
+- Pipeline stage 0 выполняет Minfin dry-run/download, optional schema и pipeline последовательно; non-zero останавливает workflow.
+- Dangerous actions защищены tokens `DOWNLOAD_MINFIN_SOURCE`, `REPLACE_MINFIN_FINAL`, `IMPORT_MINFIN_FILE`, `BUILD_RELEASE_BUNDLE`, `BUILD_BI_PACKAGE`, `DELETE_OUTPUTS`.
+- Старый `ofz_launcher.ps1` заменен совместимым thin wrapper для `.venv\Scripts\ofz-gui.exe`/`dist\ofz-gui.exe`.
+- Созданы automated smoke tests, widget smoke и русская operator/manual документация.
+- Quality gate больше не требует generated `outputs/charts/index.md`; source-карта структуры остается в `docs/00_project/outputs_structure.md`.
+- Editable install, pip check, py_compile/compileall, entry point/wrapper help, 29-action contract smoke, streaming runner smoke, widget smoke, Minfin offline dry-run, UTF-8 gate и `quality-fast` прошли.
+- Live Minfin download, delete outputs, release build и BI build не выполнялись.
+
 ## 2026-06-22 - UTF-8 / Mojibake quality policy
 
 - Внедрен строгий scanner `scripts/qa/check_text_encoding.py` для source/docs/config/scripts и поддерживаемых текстовых расширений.

@@ -169,18 +169,21 @@ Pipeline telemetry:
 
 Each full pipeline run writes telemetry summaries to `outputs/reports/telemetry/telemetry_<run_id>.json` and `.md`. Telemetry records stage durations, artifact counts and sizes, cleanup mode, quality/schema status, Git commit/dirty flag and raw data hashes. These generated telemetry files are not committed and are included in release bundles when present.
 
-Windows UI launcher MVP:
+## Desktop GUI
+
+Python tkinter GUI является рекомендуемым интерфейсом для обычной локальной работы. CLI остается поддерживаемым интерфейсом для automation и продвинутых сценариев.
 
 ```powershell
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\ofz-gui.exe
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Gui
 ```
 
-The default launcher action is a safe smoke check. The GUI mode calls only approved CLI entry points, validates report parameters, writes logs to `outputs/reports/launcher/`, blocks delete cleanup without `DELETE_OUTPUTS`, and blocks release bundle creation without `BUILD_RELEASE_BUNDLE`. The GUI includes project root, report date, retrospective years, period type, aggregation mode, action, cleanup mode, release/cleanup confirmations, command preview and output/status fields.
+GUI содержит вкладки `Обзор`, `Исходные данные Минфина`, `Pipeline`, `Проверки качества`, `Отчеты и графики`, `Release и пакеты`, `Обслуживание`, `Журнал` и `Справка`. Он сам выполняет allowlisted команды, стримит output, пишет UTF-8 logs в `outputs/reports/launcher/`, останавливает sequence после non-zero exit code и блокирует dangerous actions без exact typed confirm.
 
-Русскоязычная UX-инструкция по полям, сценариям, Preview, run-pipeline и логам: [`tools/windows_launcher/README.md`](tools/windows_launcher/README.md).
+Минфин интегрирован отдельной вкладкой и optional stage 0 pipeline. По умолчанию stage 0 выполняет dry-run; download требует `DOWNLOAD_MINFIN_SOURCE`.
 
-UI launchers do not replace the CLI or quality gate. The supported production interface remains the CLI (`ofz-run`, `ofz-quality`, `ofz-schema`, `ofz-clean-outputs`, `ofz-build-release-bundle`). The PowerShell launcher is the recommended Windows UI MVP for operators who need a guided local launcher.
+Русская operator procedure: [`docs/07_operations/gui_launcher.md`](docs/07_operations/gui_launcher.md). Headless smoke: `.\.venv\Scripts\ofz-gui.exe --smoke`.
 
 Word VBA launcher source:
 

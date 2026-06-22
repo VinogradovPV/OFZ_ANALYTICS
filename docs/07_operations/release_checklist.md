@@ -50,14 +50,18 @@
 
 ## UI Launchers
 
-- [ ] CLI remains the main supported production interface.
-- [ ] PowerShell GUI launcher smoke OK: `powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1`.
-- [ ] PowerShell GUI launcher is treated as the recommended Windows UI MVP, not as a replacement for CLI.
+- [ ] Python desktop GUI smoke OK: `.\.venv\Scripts\ofz-gui.exe --smoke` и `--smoke-ui`.
+- [ ] Thin PowerShell wrapper smoke OK: `powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -GuiArgs --smoke`.
+- [ ] Python GUI является рекомендуемым локальным интерфейсом; CLI остается интерфейсом automation.
+- [ ] GUI содержит девять вкладок, live journal, exit code и log path.
+- [ ] Unknown/arbitrary actions отклоняются allowlist registry.
+- [ ] Minfin stage 0 прекращает sequence после non-zero exit code.
+- [ ] Dangerous actions disabled без exact typed confirm.
 - [ ] Word VBA launcher is optional.
 - [ ] `.ps1`, `.bas` and `.frm` files are treated as source artifacts.
 - [ ] `.docm` files are treated as release artifacts unless explicitly approved by artifact policy.
 - [ ] Launcher logs under `outputs/reports/launcher/` are treated as generated outputs.
-- [ ] UI launcher did not skip or replace required quality gate checks.
+- [ ] GUI launcher did not skip or replace required quality gate checks.
 - [ ] Word launcher source includes `OfzLauncher.bas` and `frmOfzLauncher.frm`.
 - [ ] Word `.docm` assembly follows `tools/word_launcher/word_docm_build_instructions.md`.
 - [ ] Word `.docm` is saved under `releases/ui_launcher/` or another external release location, not staged in Git.

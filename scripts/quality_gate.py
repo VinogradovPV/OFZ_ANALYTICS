@@ -341,7 +341,6 @@ def check_charts_structure(_context: GateContext) -> GateResult:
         config.CHARTS_REVENUE_DIR,
     ]
     required_files = [
-        config.CHARTS_DIR / "index.md",
         config.DOCS_PROJECT_DIR / "outputs_structure.md",
     ]
     missing_dirs = [path.relative_to(config.PROJECT_ROOT).as_posix() for path in required_dirs if not path.exists()]
@@ -360,7 +359,11 @@ def check_charts_structure(_context: GateContext) -> GateResult:
         if root_html:
             parts.append("HTML в корне outputs/charts/: " + ", ".join(root_html))
         return GateResult("charts_structure", "fail", "; ".join(parts))
-    return GateResult("charts_structure", "ok", "Карта графиков и ключевые категории outputs/charts/ найдены; HTML в корне нет.")
+    return GateResult(
+        "charts_structure",
+        "ok",
+        "Ключевые generated-категории outputs/charts/ и source-карта docs/00_project/outputs_structure.md найдены; HTML в корне нет.",
+    )
 
 
 def check_yield_vs_discount_outputs(context: GateContext) -> GateResult:

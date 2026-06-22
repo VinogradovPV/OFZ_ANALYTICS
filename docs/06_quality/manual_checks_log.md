@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-22 - Новый Python desktop GUI launcher
+
+| Дата | Изменение | Проверка | Результат | Ограничения |
+|---|---|---|---|---|
+| 2026-06-22 | PowerShell/WinForms launcher заменен Python tkinter GUI с девятью вкладками, allowlist runner, Minfin stage 0, typed confirms, live journal и thin wrapper. | `py_compile`; 29-action contract smoke; widget smoke; command runner streaming/parallel-block smoke; editable install; CLI/wrapper help; `compileall`; `pip check`; Minfin offline dry-run; encoding scanner; `quality-fast`. | Все automated GUI checks и quality-fast прошли. Gate приведен в соответствие с generated outputs policy: source-карта остается в docs, `outputs/charts/index.md` не требуется. | Dangerous mutations и live Minfin download не выполнялись; desktop layout требует финального ручного просмотра оператором. Visual regression в managed sandbox использует fallback. |
+
 ## 2026-06-22 - UTF-8 / Mojibake quality gate
 
 | Дата | Изменение | Проверка | Результат | Ограничения |

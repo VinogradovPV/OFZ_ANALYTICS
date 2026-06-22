@@ -30,6 +30,7 @@ ofz-clean-outputs = "scripts.maintenance.cleanup_outputs:main"
 ofz-schema = "scripts.schema_validation:main"
 ofz-build-release-bundle = "scripts.maintenance.build_release_bundle:main"
 ofz-fetch-minfin = "scripts.source_acquisition.minfin_fetch:main"
+ofz-gui = "scripts.gui_launcher.app:main"
 
 [tool.setuptools.packages.find]
 include = ["scripts", "scripts.*"]
