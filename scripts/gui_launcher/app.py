@@ -839,6 +839,7 @@ class OfzAnalyticsGui:
         return mode != "download" or self.pipeline_confirm_var.get() == "DOWNLOAD_MINFIN_SOURCE"
 
     def _ask_confirm_token(self, plan: ActionPlan) -> str:
+        token = plan.required_confirm
         messages = {
             "DOWNLOAD_MINFIN_SOURCE": (
                 "Операция изменит controlled raw storage Минфина. "
@@ -861,7 +862,6 @@ class OfzAnalyticsGui:
                 "Операция удалит generated outputs. Raw-данные не удаляются. "
                 "Журналы GUI сохраняются в .ofz_launcher/logs/ и не блокируют cleanup."
             )
-        token = plan.required_confirm
         prompt = (
             f"{messages.get(token, 'Операция требует явного подтверждения.')}\n\n"
             f"Будет выполнено:\n{format_plan(plan)}\n\n"

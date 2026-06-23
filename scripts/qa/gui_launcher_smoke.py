@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import inspect
 from pathlib import Path
 
 if __package__ in {None, ""}:
@@ -23,6 +24,7 @@ from scripts.gui_launcher.app import (
     STAGE_ZERO_LABEL_TO_MODE,
     TAB_INFO,
     TAB_TITLES,
+    OfzAnalyticsGui,
 )
 from scripts.gui_launcher.help_text import HELP_TEXT
 from scripts.gui_launcher.state import GuiState
@@ -144,6 +146,8 @@ def main() -> int:
     assert registry.build("encoding-mojibake", state).user_failure_hint
     assert "Папка результатов еще не создана" in NO_RESULT_POPUP_TEXT
     assert "Для action не задана отдельная папка результатов" != NO_RESULT_POPUP_TEXT
+    confirm_source = inspect.getsource(OfzAnalyticsGui._ask_confirm_token)
+    assert confirm_source.index("token = plan.required_confirm") < confirm_source.index('if token == "DELETE_OUTPUTS"')
     success = RunResult("smoke", 0, root / "smoke.log", "cmd")
     failed = RunResult("smoke", 1, root / "smoke.log", "cmd")
     assert success.exit_code == 0
