@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-23 - POSTP3.1 quality gate artifact policy
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-23 | Устранены активные противоречия вокруг `outputs/charts/index.md`: README, `docs/index.md`, `scripts/README.md` и production readiness wording переведены на policy `docs/00_project/outputs_structure.md` как source-карты generated outputs. Убран фактический `U+FFFD` из локального untracked prompt, ломавший scanner. Quality gate subprocess output закреплен через UTF-8 env. | OK: `py_compile scripts\quality_gate.py`; `compileall`; UTF-8 scanner; `ofz-run`; `ofz-schema` 16/16; `ofz-quality --fast`; `git diff --check`. | Исторические записи ниже не переписываются задним числом; они отражают состояние на дату выполнения. Generated outputs/raw local changes и untracked prompts не относятся к commit этого этапа. Screenshot backend в managed sandbox использует fallback. |
+
 ## 2026-06-22 - Новый Python desktop GUI launcher
 
 | Дата | Изменение | Проверка | Результат | Ограничения |

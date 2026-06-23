@@ -130,4 +130,4 @@ target_path = config.get_doc_path("quality_gate_report.md")
 html_dir = config.chart_html_dir_for_name(chart_name)
 ```
 
-Индекс графиков поддерживается в `outputs/charts/index.md`.
+Source-карта структуры generated outputs поддерживается в `docs/00_project/outputs_structure.md`. Generated `outputs/charts/index.md` не является обязательным source artifact и не требуется quality gate.

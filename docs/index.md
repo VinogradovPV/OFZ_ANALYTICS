@@ -62,7 +62,7 @@
 - [Monthly visualization strategy](04_visualization/monthly_visualization_strategy.md)
 - [Palette policy](04_visualization/palette_policy.md)
 - [Visualization strategy](04_visualization/visualization_strategy.md)
-- [HTML charts index](../outputs/charts/index.md)
+- [Outputs structure and chart folders](00_project/outputs_structure.md)
 
 ## 6. Dashboard
 

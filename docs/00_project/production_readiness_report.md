@@ -229,7 +229,7 @@ Scripts:
 Outputs:
 
 - generated outputs находятся в `outputs/`;
-- Git tracks только skeleton `.gitkeep` files и `outputs/charts/index.md`;
+- Git tracks только skeleton `.gitkeep` files; generated chart indexes не являются обязательными source artifacts;
 - generated HTML/CSV/reports/dashboard exports являются release artifacts, а не source commits.
 
 ## 13. Команда полной очистки outputs

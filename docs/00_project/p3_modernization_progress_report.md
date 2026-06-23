@@ -1,5 +1,13 @@
 # Отчет о прогрессе модернизации P3
 
+## 2026-06-23 - POSTP3.1 quality gate artifact policy
+
+- Противоречие вокруг `outputs/charts/index.md` закрыто для активной документации: source-карта структуры generated outputs находится в `docs/00_project/outputs_structure.md`.
+- `outputs/charts/index.md` не является обязательным source artifact и не требуется quality gate.
+- README, `docs/index.md`, `scripts/README.md` и production readiness wording обновлены на текущую policy.
+- Старые записи ниже про blocker из-за `outputs/charts/index.md` оставлены как исторический контекст соответствующего дня; актуальный статус определяется этой секцией и `post_p3_optimization_progress_report.md`.
+- UTF-8 blocker в локальном prompt устранен заменой literal replacement characters на текстовое описание `U+FFFD`.
+
 ## 2026-06-22 - Радикальная переработка desktop GUI launcher
 
 - Выполнен аудит старого PowerShell/WinForms launcher и референса Expense_Splitter.

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import py_compile
 import re
 import subprocess
@@ -53,6 +54,14 @@ KEY_SCRIPTS = (
     "palette.py",
     "scatter_chart_policy.py",
 )
+
+
+def subprocess_utf8_env() -> dict[str, str]:
+    """Return environment forcing UTF-8 for nested Python quality scripts."""
+    env = os.environ.copy()
+    env["PYTHONUTF8"] = "1"
+    env["PYTHONIOENCODING"] = "utf-8"
+    return env
 
 
 @dataclass(frozen=True)
@@ -182,7 +191,16 @@ def check_encoding_mojibake(_context: GateContext) -> GateResult:
     command_text = ".\\.venv\\Scripts\\python.exe scripts\\qa\\check_text_encoding.py"
     if not script_path.exists():
         return GateResult("encoding-mojibake", "fail", f"Обязательный скрипт отсутствует: {relative_path}", command_text)
-    result = subprocess.run(command, cwd=config.PROJECT_ROOT, text=True, capture_output=True, check=False)
+    result = subprocess.run(
+        command,
+        cwd=config.PROJECT_ROOT,
+        env=subprocess_utf8_env(),
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        check=False,
+    )
     output = compact_output(result.stdout, result.stderr)
     status = "ok" if result.returncode == 0 else "fail"
     return GateResult("encoding-mojibake", status, output or f"Код завершения: {result.returncode}", command_text)
@@ -215,7 +233,16 @@ def run_required_script(context: GateContext, script_name: str, args: Sequence[s
     command_text = command_for_report(script_name, args)
     if not script_path.exists():
         return GateResult(script_name, "fail", f"Обязательный скрипт отсутствует: scripts/{script_name}", command_text)
-    result = subprocess.run(command, cwd=config.PROJECT_ROOT, text=True, capture_output=True, check=False)
+    result = subprocess.run(
+        command,
+        cwd=config.PROJECT_ROOT,
+        env=subprocess_utf8_env(),
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        check=False,
+    )
     output = compact_output(result.stdout, result.stderr)
     status = "ok" if result.returncode == 0 else "fail"
     message = output or f"Код завершения: {result.returncode}"
