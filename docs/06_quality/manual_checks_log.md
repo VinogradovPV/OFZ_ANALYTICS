@@ -556,3 +556,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-06-23 | Общая UX-доработка GUI: описания всех вкладок, русские labels, Pipeline radio buttons, grouped quality/reports/release/maintenance tabs, технический preview, modal confirms, журнал выполнения и справка. | OK: выполнены `pip install -e .`, `pip check`, `compileall`, `gui_launcher_smoke.py`, `ofz-gui --help`, `ofz-gui --smoke`, `ofz-gui --smoke-ui`, `ofz-fetch-minfin --help`, `ofz-run --help`, `ofz-quality --help`. | Manual GUI smoke выполняется оператором в интерактивном окне. Dangerous actions не запускались. Generated outputs не коммитятся. |
+
+## 2026-06-23 - GUI user-friendly status/result navigation
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-23 | Исправлены понятные user summaries, отключение `Открыть результаты` для diagnostics, UTF-8 env runner, Minfin summary, Pipeline stage 0 descriptions и quality summary metadata. | OK: выполнены `py_compile`, `compileall`, `gui_launcher_smoke.py`, `gui_command_runner_smoke.py`, `ofz-gui --help`, `ofz-gui --smoke-ui`. | Manual GUI smoke выполняется оператором. Existing local raw/registry/versions changes не являются частью GUI UX исправления и не коммитились. |

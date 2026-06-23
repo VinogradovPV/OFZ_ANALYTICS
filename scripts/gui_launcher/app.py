@@ -60,6 +60,7 @@ STAGE_ZERO_LABEL_TO_MODE = {
 }
 STAGE_ZERO_MODE_TO_LABEL = {value: key for key, value in STAGE_ZERO_LABEL_TO_MODE.items()}
 PREVIEW_PLACEHOLDER = "Выберите действие на вкладке. Здесь появятся технические детали и команда запуска."
+NO_RESULT_POPUP_TEXT = "Папка результатов еще не создана. Сначала выполните действие."
 
 TAB_INFO = {
     "Обзор": (
@@ -77,7 +78,7 @@ TAB_INFO = {
     "Pipeline": (
         "Запускает основной расчетный pipeline.",
         "После проверки или обновления исходных данных Минфина.",
-        "Выберите режим этапа 0 Минфина и нажмите \"Запустить pipeline\".",
+        "Выберите, нужно ли перед расчетом проверять или обновлять данные Минфина, затем нажмите \"Запустить pipeline\".",
         "Создает generated outputs в outputs/. Raw меняется только при download этапа 0.",
     ),
     "Проверки качества": (
@@ -141,6 +142,7 @@ class OfzAnalyticsGui:
         self.button_gates: list[ButtonGate] = []
         self.last_log_path: Path | None = None
         self.last_exit_code: int | None = None
+        self.open_results_button: ttk.Button | None = None
 
         self.root.title("OFZ Analytics")
         self.root.geometry("1280x860")
@@ -150,6 +152,7 @@ class OfzAnalyticsGui:
         self.exit_code_var = tk.StringVar(value="Exit code: -")
         self.log_path_var = tk.StringVar(value="Log: -")
         self.run_status_var = tk.StringVar(value="Статус выполнения: ожидание")
+        self.user_summary_var = tk.StringVar(value="Итог операции: выберите действие и запустите его.")
         self.run_started_var = tk.StringVar(value="Время старта: -")
         self.run_finished_var = tk.StringVar(value="Время завершения: -")
         self._create_variables()
@@ -364,8 +367,16 @@ class OfzAnalyticsGui:
         options = ttk.LabelFrame(tab, text="Pipeline workflow")
         options.pack(fill="x", padx=10, pady=6)
         ttk.Label(options, text="Перед запуском pipeline:").pack(anchor="w", padx=8, pady=(6, 2))
-        for text in ("Не выполнять", "Только dry-run", "Download с подтверждением"):
-            ttk.Radiobutton(options, text=text, variable=self.stage_zero_var, value=text).pack(anchor="w", padx=18, pady=2)
+        stage_zero_descriptions = {
+            "Не выполнять": "pipeline запустится на уже имеющихся данных.",
+            "Только dry-run": "сайт Минфина будет проверен, но raw-данные не изменятся.",
+            "Download с подтверждением": "GUI скачает актуальный файл после ввода DOWNLOAD_MINFIN_SOURCE.",
+        }
+        for text, description in stage_zero_descriptions.items():
+            row = ttk.Frame(options)
+            row.pack(fill="x", padx=18, pady=2)
+            ttk.Radiobutton(row, text=text, variable=self.stage_zero_var, value=text).pack(side="left")
+            ttk.Label(row, text=f"- {description}", wraplength=820, justify="left").pack(side="left", padx=8)
         ttk.Checkbutton(options, text="Запустить schema validation перед pipeline", variable=self.schema_before_var).pack(anchor="w", padx=8, pady=(8, 2))
         ttk.Checkbutton(options, text="Открыть outputs после успешного запуска", variable=self.open_outputs_var).pack(anchor="w", padx=8, pady=2)
         actions_frame = ttk.LabelFrame(tab, text="Запуск")
@@ -504,6 +515,7 @@ class OfzAnalyticsGui:
         header = ttk.Frame(tab)
         header.pack(fill="x", padx=8, pady=6)
         ttk.Label(header, textvariable=self.run_status_var).pack(anchor="w")
+        ttk.Label(header, textvariable=self.user_summary_var, wraplength=1080, justify="left").pack(anchor="w")
         ttk.Label(header, textvariable=self.run_started_var).pack(anchor="w")
         ttk.Label(header, textvariable=self.run_finished_var).pack(anchor="w")
         ttk.Label(header, textvariable=self.last_command_var).pack(anchor="w")
@@ -533,10 +545,13 @@ class OfzAnalyticsGui:
         self.preview_text.configure(state="disabled")
         buttons = ttk.Frame(frame)
         buttons.pack(side="right", padx=6)
-        self.execute_button = ttk.Button(buttons, text="Запустить", command=self._execute_selected, state="disabled")
+        self.execute_button = ttk.Button(buttons, text="Повторить выбранное действие", command=self._execute_selected, state="disabled")
         self.execute_button.pack(fill="x", pady=2)
         ttk.Button(buttons, text="Копировать команду", command=self._copy_preview).pack(fill="x", pady=2)
-        ttk.Button(buttons, text="Открыть результаты", command=self._open_result_path).pack(fill="x", pady=2)
+        self.open_results_button = ttk.Button(buttons, text="Открыть результаты", command=self._open_result_path, state="disabled")
+        self.open_results_button.pack(fill="x", pady=2)
+        ttk.Button(buttons, text="Открыть log-файл", command=self._open_last_log).pack(fill="x", pady=2)
+        ttk.Button(buttons, text="Открыть папку logs", command=lambda: self._open_path(self.state.launcher_log_dir)).pack(fill="x", pady=2)
         self._set_preview(PREVIEW_PLACEHOLDER)
 
     def _action_row(
@@ -548,9 +563,14 @@ class OfzAnalyticsGui:
         confirm_var: tk.StringVar | None = None,
         condition: Callable[[], bool] | None = None,
     ) -> ttk.Button:
-        button = add_action_row(parent, title, description, lambda: self._prepare_action(action_id, confirm_var))
+        button = add_action_row(parent, title, description, lambda: self._run_action_from_row(action_id, confirm_var))
         self.button_gates.append(ButtonGate(button, action_id, confirm_var, condition))
         return button
+
+    def _run_action_from_row(self, action_id: str, confirm_var: tk.StringVar | None = None) -> None:
+        self._prepare_action(action_id, confirm_var)
+        if self.selected_action_id == action_id:
+            self._execute_selected()
 
     def _sync_state(self) -> None:
         self.state.project_root = Path(self.project_root_var.get()).expanduser().resolve()
@@ -585,6 +605,8 @@ class OfzAnalyticsGui:
         self.selected_plan = plan
         self._set_preview(self._format_preview_details(plan))
         self.execute_button.configure(state="normal" if not self.runner.is_running else "disabled")
+        self._refresh_result_button(plan)
+        self.user_summary_var.set(f"Итог операции: действие подготовлено. {plan.description}")
         self.status_var.set(f"Подготовлено: {action_id}")
 
     def _execute_selected(self) -> None:
@@ -608,6 +630,7 @@ class OfzAnalyticsGui:
             self.status_var.set(f"Выполняется: {plan.action_id}")
             started = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.run_status_var.set("Статус выполнения: выполняется")
+            self.user_summary_var.set(f"Итог операции: выполняется {plan.description}")
             self.run_started_var.set(f"Время старта: {started}")
             self.run_finished_var.set("Время завершения: -")
             self.notebook.select(self.log_text.master.master)
@@ -631,21 +654,25 @@ class OfzAnalyticsGui:
         self.last_exit_code = result.exit_code
         self.last_log_path = result.log_path
         self.run_finished_var.set(f"Время завершения: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        self.exit_code_var.set(f"Exit code: {result.exit_code}")
+        self.exit_code_var.set(f"Технический код завершения: {result.exit_code}")
         self.log_path_var.set(f"Log: {result.log_path}")
         self.last_command_var.set(f"Последняя команда: {result.last_command}")
+        plan = self.selected_plan
+        self.user_summary_var.set(self._build_user_summary(result, plan))
         if result.stopped:
             self.run_status_var.set("Статус выполнения: остановлено")
-            self.status_var.set("Команда остановлена")
+            self.status_var.set("Остановлено пользователем")
         elif result.exit_code == 0:
             self.run_status_var.set("Статус выполнения: успешно завершено")
-            self.status_var.set(f"Успешно: {result.action_id}")
+            self.status_var.set("Успешно завершено")
             if result.action_id in {"pipeline", "pipeline-stage-zero"} and self.open_outputs_var.get():
                 self._open_path(self.state.project_root / "outputs")
         else:
             self.run_status_var.set("Статус выполнения: завершено с ошибкой")
-            self.status_var.set(f"Ошибка: {result.action_id}, exit code {result.exit_code}")
+            self.status_var.set("Завершено с ошибкой")
         self.execute_button.configure(state="normal" if self.selected_action_id else "disabled")
+        if plan is not None:
+            self._refresh_result_button(plan)
         self._refresh_button_states()
 
     def _append_log(self, text: str) -> None:
@@ -668,7 +695,8 @@ class OfzAnalyticsGui:
             f"Изменяет ли файлы: {mutation}\n"
             f"Confirm: {confirm}\n"
             f"Log: {self.state.launcher_log_dir}\\gui_run_<timestamp>.log\n"
-            f"Ожидаемый результат: {result_paths}"
+            f"Ожидаемый результат: {result_paths}\n"
+            "Основной запуск выполняется кнопкой на вкладке; нижняя кнопка повторяет выбранное действие."
         )
 
     def _mutation_description(self, plan: ActionPlan) -> str:
@@ -685,6 +713,96 @@ class OfzAnalyticsGui:
         }
         return mutating_actions.get(plan.action_id, "нет, только проверка или открытие информации")
 
+    def _refresh_result_button(self, plan: ActionPlan | None = None) -> None:
+        if self.open_results_button is None:
+            return
+        active_plan = plan or self.selected_plan
+        if active_plan is None or not active_plan.has_results:
+            self.open_results_button.configure(state="disabled")
+            return
+        self.open_results_button.configure(state="normal" if not self.runner.is_running else "disabled")
+
+    def _build_user_summary(self, result: RunResult, plan: ActionPlan | None) -> str:
+        if plan is None:
+            return "Итог операции: технический результат получен. Подробности доступны в журнале."
+        if result.stopped:
+            return "Остановлено пользователем. Подробности доступны в журнале."
+        if result.saw_503:
+            return "Сайт Минфина временно недоступен; raw не изменен. Повторите проверку позже или используйте ручной импорт."
+        if result.exit_code != 0:
+            return f"Завершено с ошибкой. {plan.user_failure_hint}"
+        summary = self._success_summary_for_action(plan, result.output_tail)
+        if result.saw_replacement_char:
+            summary += "\nВ техническом журнале есть нечитаемые символы; проверьте UTF-8 настройки."
+        return summary
+
+    def _success_summary_for_action(self, plan: ActionPlan, output_tail: str) -> str:
+        if plan.action_id == "git-status":
+            dirty_hint = ""
+            if any(line.startswith((" M ", "?? ", "A ", "D ")) for line in output_tail.splitlines()):
+                dirty_hint = "\nЕсть локальные изменения. Проверьте список в журнале."
+            return "Git-статус получен. Это read-only проверка." + dirty_hint
+        if plan.action_id in {"minfin-monthly-live", "minfin-monthly-offline", "minfin-annual-dry", "minfin-manual-dry"}:
+            return self._minfin_dry_run_summary(plan, output_tail)
+        if plan.action_id in {"minfin-monthly-download", "minfin-annual-download", "minfin-final-replace", "minfin-manual-import"}:
+            return self._minfin_download_summary(plan)
+        if plan.action_id == "pipeline-stage-zero" and "Этап 0" in output_tail and "Exit code: 1" in output_tail:
+            return "Этап 0 Минфина завершился ошибкой. Pipeline не запускался."
+        return plan.user_success_message or "Успешно завершено. Подробности доступны в журнале."
+
+    def _minfin_dry_run_summary(self, plan: ActionPlan, output_tail: str) -> str:
+        candidate = self._extract_minfin_candidate_from_output(output_tail)
+        raw_line = "Raw-данные не изменялись."
+        if "Live network discovery is not implemented in P3.1 skeleton" in output_tail:
+            return (
+                "Live-поиск еще не реализован в текущей версии. "
+                "Используйте HTML fixture/manual import или завершите реализацию source acquisition.\n"
+                f"{raw_line}"
+            )
+        if candidate:
+            lines = [
+                "Проверка сайта Минфина завершена успешно.",
+                f"Найден файл: {candidate.get('file_name', '-')}",
+            ]
+            published = candidate.get("published_at") or candidate.get("modified_at") or candidate.get("as_of_date")
+            if published:
+                lines.append(f"Дата публикации/изменения: {published}")
+            lines.extend((raw_line, "Следующий шаг: при необходимости нажмите \"Обновить текущий год\"."))
+            return "\n".join(lines)
+        return (
+            "Проверка завершена, но файл не найден.\n"
+            f"{raw_line}\n"
+            "Проверьте сайт Минфина или используйте ручной импорт."
+        )
+
+    def _minfin_download_summary(self, plan: ActionPlan) -> str:
+        self._refresh_minfin_status(show_errors=False)
+        registry_path = self.state.project_root / "data/raw/minfin/ofz_auction_results/registry"
+        if plan.action_id == "minfin-monthly-download":
+            return (
+                "Обновление данных Минфина завершено успешно.\n"
+                "Файл скачан и зарегистрирован.\n"
+                f"Registry: {registry_path}\n"
+                "Следующий шаг: запустите pipeline."
+            )
+        if plan.action_id == "minfin-manual-import":
+            return f"Ручной импорт XLSX завершен успешно.\nRegistry: {registry_path}\nСледующий шаг: запустите pipeline."
+        return f"{plan.user_success_message}\nRegistry: {registry_path}"
+
+    def _extract_minfin_candidate_from_output(self, output_tail: str) -> dict:
+        try:
+            start = output_tail.find("{")
+            end = output_tail.rfind("}")
+            if start == -1 or end == -1 or end <= start:
+                return {}
+            payload = json.loads(output_tail[start : end + 1])
+            candidate = payload.get("selected_candidate") or payload.get("selected_record") or {}
+            if isinstance(candidate, dict):
+                return candidate
+        except Exception:
+            return {}
+        return {}
+
     def _refresh_button_states(self) -> None:
         for gate in self.button_gates:
             enabled = True
@@ -693,6 +811,7 @@ class OfzAnalyticsGui:
             gate.button.configure(state="normal" if enabled and not self.runner.is_running else "disabled")
         if hasattr(self, "manual_import_frame"):
             self._set_minfin_advanced_visibility()
+        self._refresh_result_button()
 
     def _manual_file_selected(self) -> bool:
         return bool(self.manual_file_var.get().strip())
@@ -836,10 +955,12 @@ class OfzAnalyticsGui:
         self._open_path(candidates[0])
 
     def _open_result_path(self) -> None:
-        if not self.selected_plan or not self.selected_plan.result_paths:
-            messagebox.showinfo("Результаты", "Для action не задана отдельная папка результатов.", parent=self.root)
+        if not self.selected_plan or not self.selected_plan.has_results:
             return
         existing = next((path for path in self.selected_plan.result_paths if path.exists()), self.selected_plan.result_paths[0])
+        if not existing.exists():
+            messagebox.showinfo("Результаты", NO_RESULT_POPUP_TEXT, parent=self.root)
+            return
         self._open_path(existing)
 
     def _copy_preview(self) -> None:

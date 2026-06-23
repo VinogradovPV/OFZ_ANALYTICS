@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 import threading
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -23,6 +24,9 @@ class RunResult:
     log_path: Path
     last_command: str
     stopped: bool = False
+    output_tail: str = ""
+    saw_replacement_char: bool = False
+    saw_503: bool = False
 
 
 def format_command(args: tuple[str, ...]) -> str:
@@ -78,6 +82,8 @@ class CommandRunner:
     ) -> None:
         exit_code = 0
         last_command = ""
+        output_lines: list[str] = []
+        saw_replacement_char = False
         try:
             self.log_dir.mkdir(parents=True, exist_ok=True)
             minfin_unavailable = False
@@ -89,7 +95,9 @@ class CommandRunner:
                         break
                     last_command = format_command(step.args)
                     self._emit(log_file, on_output, f"\n[{index}/{len(plan.steps)}] {step.label}\n$ {last_command}\n")
-                    exit_code, saw_503 = self._run_step(step, log_file, on_output)
+                    exit_code, saw_503, step_lines = self._run_step(step, log_file, on_output)
+                    output_lines.extend(step_lines)
+                    saw_replacement_char = saw_replacement_char or any("\ufffd" in line for line in step_lines)
                     minfin_unavailable = minfin_unavailable or saw_503
                     self._emit(log_file, on_output, f"Exit code: {exit_code}\n")
                     if exit_code != 0:
@@ -100,13 +108,28 @@ class CommandRunner:
         except Exception as exc:  # Ошибка runner должна вернуться в GUI, а не потеряться в thread.
             exit_code = 1
             on_output(f"Runner error: {exc}\n")
-        result = RunResult(plan.action_id, exit_code, log_path, last_command, self._stop_requested)
+            output_lines.append(f"Runner error: {exc}\n")
+        output_tail = "".join(output_lines[-200:])
+        result = RunResult(
+            plan.action_id,
+            exit_code,
+            log_path,
+            last_command,
+            self._stop_requested,
+            output_tail,
+            saw_replacement_char,
+            "503" in output_tail,
+        )
         on_complete(result)
 
-    def _run_step(self, step: CommandStep, log_file, on_output: OutputCallback) -> tuple[int, bool]:
+    def _run_step(self, step: CommandStep, log_file, on_output: OutputCallback) -> tuple[int, bool, list[str]]:
+        env = os.environ.copy()
+        env["PYTHONUTF8"] = "1"
+        env["PYTHONIOENCODING"] = "utf-8"
         process = subprocess.Popen(
             list(step.args),
             cwd=self.project_root,
+            env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -117,14 +140,16 @@ class CommandRunner:
         with self._lock:
             self._process = process
         saw_503 = False
+        output_lines: list[str] = []
         assert process.stdout is not None
         for line in process.stdout:
             saw_503 = saw_503 or "503" in line
+            output_lines.append(line)
             self._emit(log_file, on_output, line)
         exit_code = process.wait()
         with self._lock:
             self._process = None
-        return exit_code, saw_503
+        return exit_code, saw_503, output_lines
 
     @staticmethod
     def _emit(log_file, on_output: OutputCallback, text: str) -> None:

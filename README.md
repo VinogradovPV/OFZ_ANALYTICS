@@ -181,7 +181,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_l
 
 GUI содержит вкладки `Обзор`, `Исходные данные Минфина`, `Pipeline`, `Проверки качества`, `Отчеты и графики`, `Release и пакеты`, `Обслуживание`, `Журнал` и `Справка`. На каждой вкладке есть блок `Назначение / Когда использовать / Как запускать / Что изменяет`, чтобы оператор видел сценарий без отдельной CLI-инструкции.
 
-GUI сам выполняет allowlisted команды, стримит output, пишет UTF-8 logs в `outputs/reports/launcher/`, останавливает sequence после non-zero exit code и запрашивает dangerous actions через modal confirm dialog с exact token. Нижняя панель показывает технические детали выбранного действия, но копирование команды остается вспомогательной функцией.
+GUI сам выполняет allowlisted команды, стримит output, пишет UTF-8 logs в `outputs/reports/launcher/`, останавливает sequence после non-zero exit code и запрашивает dangerous actions через modal confirm dialog с exact token. Кнопки на вкладках запускают действия напрямую; нижняя панель показывает технические детали и кнопку `Повторить выбранное действие`.
+
+GUI отделяет пользовательский итог от технического журнала. Оператор видит понятный статус: успешно, ошибка, остановлено, что изменилось и следующий шаг. `Exit code`, stdout/stderr и JSON остаются в журнале как технические подробности. Кнопка `Открыть результаты` активна только у действий с реальной папкой результатов; для диагностик используются log controls.
 
 Минфин интегрирован отдельной вкладкой и optional stage 0 pipeline. Основной сценарий вкладки: проверить сайт, обновить текущий год, проверить/закрыть предыдущий год, проверить registry и открыть registry/reports. URL override, HTML fixture, no network, max pages, manual import и changed-final replacement вынесены в advanced/аварийные блоки. Stage 0 pipeline выбирается через radio buttons: не выполнять, dry-run или download с подтверждением `DOWNLOAD_MINFIN_SOURCE`.
 

@@ -27,7 +27,7 @@ def main() -> int:
                 (
                     sys.executable,
                     "-c",
-                    "import time; print('runner smoke'); time.sleep(0.2)",
+                    "import os, time; print('runner smoke'); print(os.environ.get('PYTHONUTF8')); print(os.environ.get('PYTHONIOENCODING')); time.sleep(0.2)",
                 ),
             ),
         ),
@@ -48,7 +48,11 @@ def main() -> int:
     if not event.wait(10):
         raise AssertionError("runner did not complete")
     assert completed[0].exit_code == 0, "".join(output)
-    assert "runner smoke" in "".join(output)
+    output_text = "".join(output)
+    assert "runner smoke" in output_text
+    assert "utf-8" in output_text
+    assert completed[0].output_tail
+    assert not completed[0].saw_replacement_char
     assert log_path.read_text(encoding="utf-8").find("runner smoke") >= 0
     try:
         log_path.unlink()
