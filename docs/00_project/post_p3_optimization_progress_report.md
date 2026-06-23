@@ -1,5 +1,51 @@
 # Post-P3 optimization progress report
 
+## POSTP3.2 - GUI real workflow validation and polish
+
+Дата: 2026-06-23.
+
+### Статус
+
+- Выполнена POSTP3.2 validation для Python desktop GUI launcher.
+- Пользователь подтвердил: ручные сценарии POSTP3.2 выполнены без ошибок.
+- Дополнительный runtime/polish patch не потребовался: automated и manual checks не выявили новых дефектов.
+- `.ofz_launcher/logs/` остается runtime/local state и не коммитится.
+
+### Изменения
+
+- `docs/00_project/post_p3_optimization_progress_report.md`
+- `docs/06_quality/manual_checks_log.md`
+
+### Проверки
+
+- `.\.venv\Scripts\python.exe scripts\qa\gui_launcher_smoke.py` - OK, 29 actions, 9 tabs.
+- `.\.venv\Scripts\python.exe scripts\qa\gui_command_runner_smoke.py` - OK.
+- `.\.venv\Scripts\ofz-gui.exe --smoke` - OK, 29 actions.
+- `.\.venv\Scripts\ofz-gui.exe --smoke-ui` - OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts` - OK.
+- Manual GUI scenarios - OK по подтверждению пользователя:
+  - overview/environment diagnostics;
+  - Minfin dry-run workflow;
+  - blocked dangerous actions without confirm;
+  - pipeline/quality navigation;
+  - reports/charts opening flow;
+  - release dry-run navigation;
+  - maintenance/artifact guard/log controls.
+
+### Пропущенные проверки и почему
+
+- Live Minfin download, delete outputs, release bundle build и BI build не выполнялись: POSTP3.2 проверяет GUI workflow, а dangerous actions остаются confirm-only и требуют отдельного решения.
+- Screenshot backend outside sandbox не запускался в рамках этого этапа; ручная GUI validation была выполнена оператором.
+
+### Риски
+
+- Рабочая копия до этапа уже содержала unrelated raw/output/report changes и untracked prompts; они не относятся к POSTP3.2 commit и не должны staged.
+- Release-candidate все еще требует отдельного final gate: source registry strict-readiness, quality-full, screenshot/release bundle decision.
+
+### Следующий этап
+
+Следующий рекомендуемый этап: `POSTP3.3 Source registry strict-readiness`.
+
 ## POSTP3.1 - Resolve quality-gate inconsistencies
 
 Дата: 2026-06-23.

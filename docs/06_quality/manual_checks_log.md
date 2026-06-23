@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-23 - POSTP3.2 GUI real workflow validation
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-23 | Выполнена validation GUI real workflows: automated smoke, command runner smoke, `ofz-gui --smoke`, `ofz-gui --smoke-ui`, compileall и ручные сценарии оператора. | OK: `gui_launcher_smoke.py` прошел с 29 actions и 9 tabs; `gui_command_runner_smoke.py` прошел; `ofz-gui --smoke` и `--smoke-ui` прошли; пользователь подтвердил, что ручные сценарии POSTP3.2 выполнены без ошибок. | Live Minfin download, delete outputs, release build и BI build не запускались. `.ofz_launcher/logs/` является runtime/local state и не коммитится. |
+
 ## 2026-06-23 - POSTP3.1 quality gate artifact policy
 
 | Дата | Что проверено | Результат | Ограничения |
