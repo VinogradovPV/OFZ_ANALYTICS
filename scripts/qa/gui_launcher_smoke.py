@@ -13,7 +13,14 @@ from scripts.gui_launcher.actions import (
     ConfirmationRequiredError,
     UnknownActionError,
 )
-from scripts.gui_launcher.app import MINFIN_ADVANCED_CONTROL_LABELS, MINFIN_BASIC_CONTROL_LABELS, TAB_TITLES
+from scripts.gui_launcher.app import (
+    MINFIN_ADVANCED_CONTROL_LABELS,
+    MINFIN_BASIC_CONTROL_LABELS,
+    PREVIEW_PLACEHOLDER,
+    STAGE_ZERO_LABEL_TO_MODE,
+    TAB_INFO,
+    TAB_TITLES,
+)
 from scripts.gui_launcher.help_text import HELP_TEXT
 from scripts.gui_launcher.state import GuiState
 
@@ -52,6 +59,15 @@ def main() -> int:
         "Журнал",
         "Справка",
     )
+    assert set(TAB_INFO) == set(TAB_TITLES)
+    for title, rows in TAB_INFO.items():
+        assert len(rows) == 4, f"description block is incomplete: {title}"
+        assert all(row.strip() for row in rows), f"description block has empty row: {title}"
+    assert "Не выполнять" in STAGE_ZERO_LABEL_TO_MODE
+    assert "Только dry-run" in STAGE_ZERO_LABEL_TO_MODE
+    assert "Download с подтверждением" in STAGE_ZERO_LABEL_TO_MODE
+    assert STAGE_ZERO_LABEL_TO_MODE["Только dry-run"] == "dry-run"
+    assert "Выберите действие на вкладке" in PREVIEW_PLACEHOLDER
     basic_controls = set(MINFIN_BASIC_CONTROL_LABELS)
     advanced_controls = set(MINFIN_ADVANCED_CONTROL_LABELS)
     assert "Проверить сайт Минфина" in basic_controls

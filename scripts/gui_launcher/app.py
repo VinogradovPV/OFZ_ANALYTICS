@@ -7,6 +7,7 @@ import json
 import sys
 import tkinter as tk
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from typing import Callable
@@ -16,7 +17,7 @@ from .actions import ActionPlan, ActionRegistry
 from .command_runner import CommandRunner, RunResult, format_plan
 from .help_text import HELP_TEXT
 from .state import GuiState
-from .widgets import add_action_row, add_intro, add_labeled_combo, add_labeled_entry, make_scrolled_text
+from .widgets import add_action_row, add_info_block, add_intro, add_labeled_combo, add_labeled_entry, make_scrolled_text
 
 
 TAB_TITLES = (
@@ -58,6 +59,64 @@ STAGE_ZERO_LABEL_TO_MODE = {
     "Download с подтверждением": "download",
 }
 STAGE_ZERO_MODE_TO_LABEL = {value: key for key, value in STAGE_ZERO_LABEL_TO_MODE.items()}
+PREVIEW_PLACEHOLDER = "Выберите действие на вкладке. Здесь появятся технические детали и команда запуска."
+
+TAB_INFO = {
+    "Обзор": (
+        "Задает общие параметры проекта.",
+        "Перед запуском pipeline, проверок качества и release bundle.",
+        "Выберите папку проекта, дату отчета и параметры расчета, затем нажмите \"Проверить окружение\".",
+        "Проверка окружения и Git-статуса ничего не меняет.",
+    ),
+    "Исходные данные Минфина": (
+        "Получает и проверяет исходные XLSX-файлы Минфина.",
+        "Перед pipeline, если нужно обновить текущий год или закрыть прошлый год.",
+        "Сначала нажмите \"Проверить сайт Минфина\", затем при необходимости \"Обновить текущий год\".",
+        "Dry-run ничего не меняет; download меняет controlled raw storage и требует подтверждения.",
+    ),
+    "Pipeline": (
+        "Запускает основной расчетный pipeline.",
+        "После проверки или обновления исходных данных Минфина.",
+        "Выберите режим этапа 0 Минфина и нажмите \"Запустить pipeline\".",
+        "Создает generated outputs в outputs/. Raw меняется только при download этапа 0.",
+    ),
+    "Проверки качества": (
+        "Запускает проверки качества проекта.",
+        "После изменений кода, данных, документации или перед release.",
+        "Для обычной проверки выполните UTF-8/Mojibake, Schema validation и Quality fast.",
+        "Проверки могут создавать отчеты в outputs/, но не меняют исходные данные.",
+    ),
+    "Отчеты и графики": (
+        "Открывает сформированные отчеты, таблицы и графики.",
+        "После успешного запуска pipeline.",
+        "Нажмите нужную кнопку для открытия папки или ключевого артефакта.",
+        "Ничего не меняет; открывает generated outputs, которые не коммитятся.",
+    ),
+    "Release и пакеты": (
+        "Готовит release bundle и BI package.",
+        "Перед публикацией результата или передачей артефактов.",
+        "Сначала выполните dry-run, проверьте план, затем при необходимости выполните build.",
+        "Build создает файлы в releases/. Эта папка не коммитится.",
+    ),
+    "Обслуживание": (
+        "Диагностика, проверка staged artifacts и обслуживание generated outputs.",
+        "Перед commit, после pipeline или при очистке локальных результатов.",
+        "Безопасные проверки можно запускать сразу; удаление outputs требует подтверждения.",
+        "Git status и artifact guard ничего не меняют; удаление outputs удаляет generated artifacts.",
+    ),
+    "Журнал": (
+        "Показывает журнал выполнения команд GUI.",
+        "Во время и после запуска действий.",
+        "Выберите действие на любой вкладке; вывод появится здесь автоматически.",
+        "Ничего не меняет; позволяет остановить выполняющуюся команду.",
+    ),
+    "Справка": (
+        "Объясняет основной workflow проекта и правила безопасной работы.",
+        "Когда нужно вспомнить порядок действий, смысл параметров или правила артефактов.",
+        "Читайте разделы справки или вернитесь к нужной вкладке.",
+        "Ничего не меняет.",
+    ),
+}
 
 
 @dataclass
@@ -90,6 +149,9 @@ class OfzAnalyticsGui:
         self.last_command_var = tk.StringVar(value="Команда еще не выполнялась")
         self.exit_code_var = tk.StringVar(value="Exit code: -")
         self.log_path_var = tk.StringVar(value="Log: -")
+        self.run_status_var = tk.StringVar(value="Статус выполнения: ожидание")
+        self.run_started_var = tk.StringVar(value="Время старта: -")
+        self.run_finished_var = tk.StringVar(value="Время завершения: -")
         self._create_variables()
         self._configure_style()
         self._build()
@@ -166,30 +228,37 @@ class OfzAnalyticsGui:
 
     def _build_overview_tab(self) -> None:
         tab = self._new_tab("Обзор")
-        add_intro(tab, "Здесь задаются общие параметры запуска. Они используются в pipeline, quality checks, chart QA и release bundle.")
+        add_info_block(tab, *TAB_INFO["Обзор"])
         form = ttk.LabelFrame(tab, text="Общие параметры")
         form.pack(fill="x", padx=10, pady=6)
         form.columnconfigure(1, weight=1)
-        add_labeled_entry(form, 0, "Project root", self.project_root_var, 72)
+        add_labeled_entry(form, 0, "Папка проекта", self.project_root_var, 72)
         ttk.Button(form, text="Выбрать папку", command=self._choose_project_root).grid(row=0, column=2, padx=5, pady=4)
-        add_labeled_entry(form, 1, "Report date", self.report_date_var)
-        add_labeled_entry(form, 1, "Retrospective years", self.years_var, 8, column=2)
-        add_labeled_combo(form, 2, "Period type", self.period_type_var, ("month", "quarter", "year"))
-        add_labeled_combo(form, 2, "Aggregation mode", self.aggregation_var, ("cumulative", "point"), column=2)
-        add_labeled_combo(form, 3, "Source registry mode", self.registry_mode_var, ("off", "warn", "strict"))
-        ttk.Checkbutton(form, text="Allow legacy raw", variable=self.allow_legacy_var).grid(row=3, column=2, columnspan=2, sticky="w", padx=5)
-        actions_frame = ttk.LabelFrame(tab, text="Диагностика")
+        add_labeled_entry(form, 1, "Дата отчета", self.report_date_var)
+        add_labeled_entry(form, 1, "Лет ретроспективы", self.years_var, 8, column=2)
+        add_labeled_combo(form, 2, "Период", self.period_type_var, ("month", "quarter", "year"))
+        add_labeled_combo(form, 2, "Режим агрегации", self.aggregation_var, ("cumulative", "point"), column=2)
+        add_labeled_combo(form, 3, "Режим проверки registry", self.registry_mode_var, ("off", "warn", "strict"))
+        ttk.Checkbutton(form, text="Разрешить legacy-данные", variable=self.allow_legacy_var).grid(row=3, column=2, columnspan=2, sticky="w", padx=5)
+        status_frame = ttk.LabelFrame(tab, text="Статус окружения")
+        status_frame.pack(fill="x", padx=10, pady=6)
+        for text in (
+            "Последняя проверка: смотрите вкладку Журнал после запуска.",
+            "Последний Git-статус: доступен через кнопку ниже.",
+            "Последний pipeline: смотрите exit code и log path во вкладке Журнал.",
+            "Последний quality-fast: смотрите exit code и log path во вкладке Журнал.",
+        ):
+            ttk.Label(status_frame, text=text, wraplength=980, justify="left").pack(anchor="w", padx=8, pady=2)
+        actions_frame = ttk.LabelFrame(tab, text="Стартовые действия")
         actions_frame.pack(fill="x", padx=10, pady=6)
-        self._action_row(actions_frame, "Проверить окружение", "Python version и pip check.", "check-environment")
-        self._action_row(actions_frame, "Проверить Git статус", "Fixed read-only git status, без destructive actions.", "git-status")
+        self._action_row(actions_frame, "Проверить окружение", "Проверяет Python и зависимости; ничего не меняет.", "check-environment")
+        self._action_row(actions_frame, "Проверить Git-статус", "Показывает read-only Git status.", "git-status")
+        ttk.Button(actions_frame, text="Открыть инструкцию проекта", command=lambda: self._open_path(self.state.project_root / "README.md")).pack(anchor="w", padx=10, pady=4)
+        ttk.Button(actions_frame, text="Перейти к Pipeline", command=lambda: self._select_tab("Pipeline")).pack(anchor="w", padx=10, pady=4)
 
     def _build_minfin_tab(self) -> None:
         tab = self._new_tab("Исходные данные Минфина")
-        add_intro(
-            tab,
-            "Основной сценарий: сначала проверить сайт Минфина, затем при необходимости подтвердить обновление. "
-            "Download меняет controlled raw storage; versions/ и отчеты source acquisition не коммитятся.",
-        )
+        add_info_block(tab, *TAB_INFO["Исходные данные Минфина"])
 
         status_frame = ttk.LabelFrame(tab, text="Статус источника")
         status_frame.pack(fill="x", padx=10, pady=6)
@@ -220,8 +289,8 @@ class OfzAnalyticsGui:
         self._action_row(actions_frame, "Проверить сайт Минфина", "Dry-run: сайт проверяется, raw не изменяется.", "minfin-monthly-live")
         self._action_row(
             actions_frame,
-            "Обновить данные текущего года",
-            "Сначала показывается command preview; запуск требует DOWNLOAD_MINFIN_SOURCE.",
+            "Обновить текущий год",
+            "Сначала показываются технические детали; запуск требует DOWNLOAD_MINFIN_SOURCE.",
             "minfin-monthly-download",
             self.minfin_confirm_var,
         )
@@ -291,111 +360,152 @@ class OfzAnalyticsGui:
 
     def _build_pipeline_tab(self) -> None:
         tab = self._new_tab("Pipeline")
-        add_intro(tab, "Pipeline выполняется напрямую из GUI. Этап 0 Минфина можно отключить, выполнить как dry-run или запустить как подтвержденное обновление.")
+        add_info_block(tab, *TAB_INFO["Pipeline"])
         options = ttk.LabelFrame(tab, text="Pipeline workflow")
         options.pack(fill="x", padx=10, pady=6)
-        add_labeled_combo(
-            options,
-            0,
-            "Перед запуском pipeline выполнить этап 0: обновление данных Минфина",
-            self.stage_zero_var,
-            tuple(STAGE_ZERO_LABEL_TO_MODE),
-            width=18,
-        )
-        ttk.Checkbutton(options, text="Run schema before pipeline", variable=self.schema_before_var).grid(row=1, column=0, columnspan=2, sticky="w", padx=5, pady=4)
-        ttk.Checkbutton(options, text="Open outputs after run", variable=self.open_outputs_var).grid(row=2, column=0, columnspan=2, sticky="w", padx=5, pady=4)
+        ttk.Label(options, text="Перед запуском pipeline:").pack(anchor="w", padx=8, pady=(6, 2))
+        for text in ("Не выполнять", "Только dry-run", "Download с подтверждением"):
+            ttk.Radiobutton(options, text=text, variable=self.stage_zero_var, value=text).pack(anchor="w", padx=18, pady=2)
+        ttk.Checkbutton(options, text="Запустить schema validation перед pipeline", variable=self.schema_before_var).pack(anchor="w", padx=8, pady=(8, 2))
+        ttk.Checkbutton(options, text="Открыть outputs после успешного запуска", variable=self.open_outputs_var).pack(anchor="w", padx=8, pady=2)
         actions_frame = ttk.LabelFrame(tab, text="Запуск")
         actions_frame.pack(fill="x", padx=10, pady=6)
-        self._action_row(actions_frame, "Запустить pipeline", "Без source acquisition stage 0.", "pipeline")
         self._action_row(
             actions_frame,
-            "Запустить pipeline с этапом 0",
-            "При non-zero stage 0/schema дальнейшие команды не запускаются.",
+            "Запустить pipeline",
+            "Учитывает выбранный этап 0. При ошибке stage 0/schema pipeline не запускается.",
             "pipeline-stage-zero",
             self.pipeline_confirm_var,
         )
 
     def _build_quality_tab(self) -> None:
         tab = self._new_tab("Проверки качества")
-        add_intro(tab, "Проверки выполняются последовательно: одновременно может работать только одна команда. Quality full является длительной pre-release проверкой.")
-        actions_frame = ttk.LabelFrame(tab, text="Quality и targeted QA")
-        actions_frame.pack(fill="both", expand=True, padx=10, pady=6)
-        rows = (
-            ("UTF-8 / Mojibake", "Strict encoding quality stage.", "encoding-mojibake"),
-            ("Schema validation", "Проверить generated schemas.", "schema"),
-            ("Quality fast", "Обычный быстрый gate.", "quality-fast"),
-            ("Quality full", "Длительная полная проверка.", "quality-full"),
-            ("Source acquisition tests", "Offline parser, selection и failure modes.", "source-acquisition-tests"),
-            ("Registry smoke", "CSV/JSON registry roundtrip и hash.", "registry-smoke"),
-            ("Data audit registry smoke", "off/warn/strict и legacy fallback.", "data-audit-registry-smoke"),
-            ("HTML chart QA", "HTML contracts и подписи.", "html-chart-qa"),
-            ("Visual regression auto", "Screenshot при доступности, иначе fallback.", "visual-auto"),
-            ("Visual regression screenshot", "Требует работающий browser backend.", "visual-screenshot"),
+        add_info_block(tab, *TAB_INFO["Проверки качества"])
+        order = ttk.LabelFrame(tab, text="Рекомендуемый порядок")
+        order.pack(fill="x", padx=10, pady=6)
+        ttk.Label(
+            order,
+            text="1. UTF-8 / Mojibake -> 2. Schema validation -> 3. Быстрая проверка качества -> "
+            "4. Полная проверка перед release -> 5. Visual regression после изменений графиков.",
+            wraplength=1080,
+            justify="left",
+        ).pack(anchor="w", padx=8, pady=6)
+        groups = (
+            (
+                "Базовые проверки",
+                (
+                    ("UTF-8 / Mojibake", "Проверяет кодировки и mojibake.", "encoding-mojibake"),
+                    ("Schema validation", "Проверяет схемы generated artifacts.", "schema"),
+                    ("Быстрая проверка качества", "Обычный быстрый quality gate.", "quality-fast"),
+                ),
+            ),
+            (
+                "Расширенные проверки",
+                (
+                    ("Полная проверка качества", "Длительная pre-release проверка.", "quality-full"),
+                    ("HTML chart QA", "Проверяет HTML contracts и подписи.", "html-chart-qa"),
+                    ("Visual regression auto", "Screenshot при доступности, иначе fallback.", "visual-auto"),
+                    ("Visual regression screenshot", "Требует работающий browser backend.", "visual-screenshot"),
+                ),
+            ),
+            (
+                "Проверки source acquisition",
+                (
+                    ("Source acquisition tests", "Offline parser, selection и failure modes.", "source-acquisition-tests"),
+                    ("Registry smoke", "CSV/JSON registry roundtrip и hash.", "registry-smoke"),
+                    ("Data audit registry smoke", "off/warn/strict и legacy fallback.", "data-audit-registry-smoke"),
+                ),
+            ),
         )
-        for title, description, action_id in rows:
-            self._action_row(actions_frame, title, description, action_id)
+        for group_title, rows in groups:
+            frame = ttk.LabelFrame(tab, text=group_title)
+            frame.pack(fill="x", padx=10, pady=6)
+            for title, description, action_id in rows:
+                self._action_row(frame, title, description, action_id)
 
     def _build_reports_tab(self) -> None:
         tab = self._new_tab("Отчеты и графики")
-        add_intro(tab, "Generated outputs не коммитятся. Quick links позволяют вручную проверить исправленные yield artifacts ОФЗ-ПД.")
-        frame = ttk.LabelFrame(tab, text="Открыть результаты")
-        frame.pack(fill="x", padx=10, pady=6)
-        buttons = (
-            ("Открыть charts", lambda: self._open_path(self.state.project_root / "outputs/charts")),
-            ("Открыть exports", lambda: self._open_path(self.state.project_root / "outputs/exports")),
-            ("Открыть reports", lambda: self._open_path(self.state.project_root / "outputs/reports")),
-            ("Monthly metrics XLSX", self._open_monthly_metrics),
-            ("Weighted yield ОФЗ-ПД", self._open_weighted_yield),
-            ("Yield min/median/max", self._open_weighted_yield),
-            ("Revenue charts", lambda: self._open_path(self.state.project_root / "outputs/charts/revenue")),
-            ("Telemetry reports", lambda: self._open_path(self.state.project_root / "outputs/reports/telemetry")),
-            ("Run manifest", self._open_run_manifest),
+        add_info_block(tab, *TAB_INFO["Отчеты и графики"])
+        add_intro(
+            tab,
+            "После исправления методологии доходности проверьте, что доходность ОФЗ-ПД не смешивается с ОФЗ-ПК. "
+            "В проблемном кейсе ноябрь 2025 не должен падать к 3.16%.",
         )
-        for index, (title, command) in enumerate(buttons):
-            ttk.Button(frame, text=title, command=command, width=30).grid(row=index // 3, column=index % 3, padx=8, pady=8, sticky="ew")
-        for column in range(3):
-            frame.columnconfigure(column, weight=1)
+        groups = (
+            (
+                "Основные результаты",
+                (
+                    ("Открыть графики", lambda: self._open_path(self.state.project_root / "outputs/charts")),
+                    ("Открыть exports", lambda: self._open_path(self.state.project_root / "outputs/exports")),
+                    ("Открыть reports", lambda: self._open_path(self.state.project_root / "outputs/reports")),
+                ),
+            ),
+            (
+                "Ключевые ручные проверки",
+                (
+                    ("Monthly metrics XLSX", self._open_monthly_metrics),
+                    ("Доходность ОФЗ-ПД", self._open_weighted_yield),
+                    ("Yield min/median/max", self._open_weighted_yield),
+                    ("Revenue charts", lambda: self._open_path(self.state.project_root / "outputs/charts/revenue")),
+                ),
+            ),
+            (
+                "Диагностика",
+                (
+                    ("Telemetry reports", lambda: self._open_path(self.state.project_root / "outputs/reports/telemetry")),
+                    ("Run manifest", self._open_run_manifest),
+                ),
+            ),
+        )
+        for group_title, buttons in groups:
+            frame = ttk.LabelFrame(tab, text=group_title)
+            frame.pack(fill="x", padx=10, pady=6)
+            for index, (title, command) in enumerate(buttons):
+                ttk.Button(frame, text=title, command=command, width=30).grid(row=0, column=index, padx=8, pady=8, sticky="ew")
+                frame.columnconfigure(index, weight=1)
 
     def _build_release_tab(self) -> None:
         tab = self._new_tab("Release и пакеты")
-        add_intro(tab, "Сначала используйте dry-run. Build пишет во внешний ignored releases/ и требует typed confirm.")
-        form = ttk.LabelFrame(tab, text="Подтверждение")
-        form.pack(fill="x", padx=10, pady=6)
-        add_labeled_entry(form, 0, "Typed confirm", self.release_confirm_var, 32)
-        actions_frame = ttk.LabelFrame(tab, text="Release actions")
-        actions_frame.pack(fill="x", padx=10, pady=6)
-        self._action_row(actions_frame, "Release bundle dry-run", "Проверить план bundle без записи.", "release-dry")
-        self._action_row(actions_frame, "Build release bundle", "Требует BUILD_RELEASE_BUNDLE.", "release-build", self.release_confirm_var)
-        self._action_row(actions_frame, "BI package dry-run", "Проверить BI handoff plan.", "bi-dry")
-        self._action_row(actions_frame, "Build BI package", "Требует BUILD_BI_PACKAGE.", "bi-build", self.release_confirm_var)
+        add_info_block(tab, *TAB_INFO["Release и пакеты"])
+        release_frame = ttk.LabelFrame(tab, text="Release bundle")
+        release_frame.pack(fill="x", padx=10, pady=6)
+        self._action_row(release_frame, "Проверить план release bundle", "Dry-run без записи в releases/.", "release-dry")
+        self._action_row(release_frame, "Собрать release bundle", "Создает ignored releases/; требует BUILD_RELEASE_BUNDLE.", "release-build", self.release_confirm_var)
+        bi_frame = ttk.LabelFrame(tab, text="BI package")
+        bi_frame.pack(fill="x", padx=10, pady=6)
+        self._action_row(bi_frame, "Проверить план BI package", "Dry-run без записи.", "bi-dry")
+        self._action_row(bi_frame, "Собрать BI package", "Создает ignored releases/bi/; требует BUILD_BI_PACKAGE.", "bi-build", self.release_confirm_var)
         ttk.Button(tab, text="Открыть releases", command=lambda: self._open_path(self.state.project_root / "releases")).pack(anchor="w", padx=12, pady=8)
 
     def _build_maintenance_tab(self) -> None:
         tab = self._new_tab("Обслуживание")
-        add_intro(tab, "Диагностика и cleanup. Artifact guard и Git status являются fixed read-only actions; произвольной shell-команды нет.")
-        form = ttk.LabelFrame(tab, text="Подтверждение удаления")
-        form.pack(fill="x", padx=10, pady=6)
-        add_labeled_entry(form, 0, "Typed confirm", self.maintenance_confirm_var, 32)
-        actions_frame = ttk.LabelFrame(tab, text="Actions")
-        actions_frame.pack(fill="x", padx=10, pady=6)
-        self._action_row(actions_frame, "Git status", "Read-only diagnostic.", "git-status")
-        self._action_row(actions_frame, "Artifact guard", "Проверить staged generated paths.", "artifact-guard")
-        self._action_row(actions_frame, "Cleanup keep / dry-run", "Показать план без удаления.", "cleanup-keep")
-        self._action_row(actions_frame, "Cleanup delete outputs", "Архивирование и удаление; требует DELETE_OUTPUTS.", "cleanup-delete", self.maintenance_confirm_var)
-        folders = ttk.Frame(tab)
-        folders.pack(fill="x", padx=10, pady=8)
+        add_info_block(tab, *TAB_INFO["Обслуживание"])
+        diagnostics = ttk.LabelFrame(tab, text="Безопасная диагностика")
+        diagnostics.pack(fill="x", padx=10, pady=6)
+        self._action_row(diagnostics, "Git status", "Read-only diagnostic.", "git-status")
+        self._action_row(diagnostics, "Artifact guard", "Проверить staged generated paths.", "artifact-guard")
+        folders = ttk.LabelFrame(tab, text="Открыть папки")
+        folders.pack(fill="x", padx=10, pady=6)
         for title, relative in (
-            ("Project root", "."),
+            ("Папка проекта", "."),
             ("data/raw", "data/raw"),
             ("outputs", "outputs"),
             ("logs", "logs"),
         ):
             ttk.Button(folders, text=f"Открыть {title}", command=lambda value=relative: self._open_path(self.state.project_root / value)).pack(side="left", padx=4)
+        cleanup = ttk.LabelFrame(tab, text="Очистка")
+        cleanup.pack(fill="x", padx=10, pady=6)
+        self._action_row(cleanup, "Cleanup dry-run", "Показать план без удаления.", "cleanup-keep")
+        self._action_row(cleanup, "Удалить outputs", "Удаляет generated artifacts; требует DELETE_OUTPUTS.", "cleanup-delete", self.maintenance_confirm_var)
 
     def _build_log_tab(self) -> None:
         tab = self._new_tab("Журнал")
+        add_info_block(tab, *TAB_INFO["Журнал"])
         header = ttk.Frame(tab)
         header.pack(fill="x", padx=8, pady=6)
+        ttk.Label(header, textvariable=self.run_status_var).pack(anchor="w")
+        ttk.Label(header, textvariable=self.run_started_var).pack(anchor="w")
+        ttk.Label(header, textvariable=self.run_finished_var).pack(anchor="w")
         ttk.Label(header, textvariable=self.last_command_var).pack(anchor="w")
         ttk.Label(header, textvariable=self.exit_code_var).pack(anchor="w")
         ttk.Label(header, textvariable=self.log_path_var).pack(anchor="w")
@@ -410,22 +520,24 @@ class OfzAnalyticsGui:
 
     def _build_help_tab(self) -> None:
         tab = self._new_tab("Справка")
+        add_info_block(tab, *TAB_INFO["Справка"])
         text = make_scrolled_text(tab, height=30)
         text.insert("1.0", HELP_TEXT)
         text.configure(state="disabled")
 
     def _build_command_bar(self) -> None:
-        frame = ttk.LabelFrame(self.root, text="Выбранное действие и command preview")
+        frame = ttk.LabelFrame(self.root, text="Технические детали выбранного действия")
         frame.pack(fill="x", padx=8, pady=4)
-        self.preview_text = tk.Text(frame, height=3, wrap="word")
+        self.preview_text = tk.Text(frame, height=5, wrap="word")
         self.preview_text.pack(side="left", fill="both", expand=True, padx=6, pady=5)
         self.preview_text.configure(state="disabled")
         buttons = ttk.Frame(frame)
         buttons.pack(side="right", padx=6)
-        self.execute_button = ttk.Button(buttons, text="Выполнить", command=self._execute_selected, state="disabled")
+        self.execute_button = ttk.Button(buttons, text="Запустить", command=self._execute_selected, state="disabled")
         self.execute_button.pack(fill="x", pady=2)
         ttk.Button(buttons, text="Копировать команду", command=self._copy_preview).pack(fill="x", pady=2)
         ttk.Button(buttons, text="Открыть результаты", command=self._open_result_path).pack(fill="x", pady=2)
+        self._set_preview(PREVIEW_PLACEHOLDER)
 
     def _action_row(
         self,
@@ -471,7 +583,7 @@ class OfzAnalyticsGui:
         self.selected_action_id = action_id
         self.selected_confirm_var = confirm_var
         self.selected_plan = plan
-        self._set_preview(f"{plan.description}\n{format_plan(plan)}")
+        self._set_preview(self._format_preview_details(plan))
         self.execute_button.configure(state="normal" if not self.runner.is_running else "disabled")
         self.status_var.set(f"Подготовлено: {action_id}")
 
@@ -494,6 +606,10 @@ class OfzAnalyticsGui:
             self.runner = CommandRunner(self.state.project_root, self.state.launcher_log_dir)
             self.execute_button.configure(state="disabled")
             self.status_var.set(f"Выполняется: {plan.action_id}")
+            started = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.run_status_var.set("Статус выполнения: выполняется")
+            self.run_started_var.set(f"Время старта: {started}")
+            self.run_finished_var.set("Время завершения: -")
             self.notebook.select(self.log_text.master.master)
             log_path = self.runner.start(plan, self._runner_output, self._runner_complete)
             self._refresh_button_states()
@@ -514,16 +630,20 @@ class OfzAnalyticsGui:
     def _finish_run(self, result: RunResult) -> None:
         self.last_exit_code = result.exit_code
         self.last_log_path = result.log_path
+        self.run_finished_var.set(f"Время завершения: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         self.exit_code_var.set(f"Exit code: {result.exit_code}")
         self.log_path_var.set(f"Log: {result.log_path}")
         self.last_command_var.set(f"Последняя команда: {result.last_command}")
         if result.stopped:
+            self.run_status_var.set("Статус выполнения: остановлено")
             self.status_var.set("Команда остановлена")
         elif result.exit_code == 0:
+            self.run_status_var.set("Статус выполнения: успешно завершено")
             self.status_var.set(f"Успешно: {result.action_id}")
             if result.action_id in {"pipeline", "pipeline-stage-zero"} and self.open_outputs_var.get():
                 self._open_path(self.state.project_root / "outputs")
         else:
+            self.run_status_var.set("Статус выполнения: завершено с ошибкой")
             self.status_var.set(f"Ошибка: {result.action_id}, exit code {result.exit_code}")
         self.execute_button.configure(state="normal" if self.selected_action_id else "disabled")
         self._refresh_button_states()
@@ -537,6 +657,33 @@ class OfzAnalyticsGui:
         self.preview_text.delete("1.0", "end")
         self.preview_text.insert("1.0", text)
         self.preview_text.configure(state="disabled")
+
+    def _format_preview_details(self, plan: ActionPlan) -> str:
+        mutation = self._mutation_description(plan)
+        confirm = plan.required_confirm or "не требуется"
+        result_paths = ", ".join(str(path) for path in plan.result_paths) if plan.result_paths else "смотрите журнал выполнения"
+        return (
+            f"Что будет выполнено: {plan.description}\n"
+            f"Команда:\n{format_plan(plan)}\n"
+            f"Изменяет ли файлы: {mutation}\n"
+            f"Confirm: {confirm}\n"
+            f"Log: {self.state.launcher_log_dir}\\gui_run_<timestamp>.log\n"
+            f"Ожидаемый результат: {result_paths}"
+        )
+
+    def _mutation_description(self, plan: ActionPlan) -> str:
+        mutating_actions = {
+            "minfin-monthly-download": "да, controlled raw storage Минфина",
+            "minfin-annual-download": "да, controlled raw storage Минфина",
+            "minfin-final-replace": "да, annual-final в controlled raw storage",
+            "minfin-manual-import": "да, controlled raw storage Минфина",
+            "pipeline": "да, generated outputs в outputs/",
+            "pipeline-stage-zero": "да, generated outputs; raw только если выбран download этапа 0",
+            "release-build": "да, releases/",
+            "bi-build": "да, releases/bi/",
+            "cleanup-delete": "да, удаляет generated outputs",
+        }
+        return mutating_actions.get(plan.action_id, "нет, только проверка или открытие информации")
 
     def _refresh_button_states(self) -> None:
         for gate in self.button_gates:
@@ -573,7 +720,11 @@ class OfzAnalyticsGui:
             "DELETE_OUTPUTS": "Операция удалит generated outputs после архивации/cleanup workflow.",
         }
         token = plan.required_confirm
-        prompt = f"{messages.get(token, 'Операция требует явного подтверждения.')}\n\nВведите exact token:\n{token}"
+        prompt = (
+            f"{messages.get(token, 'Операция требует явного подтверждения.')}\n\n"
+            f"Будет выполнено:\n{format_plan(plan)}\n\n"
+            f"Для подтверждения введите:\n{token}"
+        )
         answer = simpledialog.askstring("Подтверждение действия", prompt, parent=self.root)
         return answer.strip() if answer else ""
 
@@ -644,6 +795,12 @@ class OfzAnalyticsGui:
         selected = filedialog.askdirectory(initialdir=self.project_root_var.get(), parent=self.root)
         if selected:
             self.project_root_var.set(selected)
+
+    def _select_tab(self, title: str) -> None:
+        for index, tab_id in enumerate(self.notebook.tabs()):
+            if self.notebook.tab(tab_id, "text") == title:
+                self.notebook.select(index)
+                return
 
     def _choose_html(self) -> None:
         selected = filedialog.askopenfilename(filetypes=[("HTML", "*.html"), ("Все файлы", "*.*")], parent=self.root)

@@ -41,6 +41,29 @@ def add_intro(parent, text: str) -> ttk.Label:
     return label
 
 
+def add_info_block(
+    parent,
+    purpose: str,
+    when: str,
+    how: str,
+    safety: str,
+) -> ttk.LabelFrame:
+    """Добавить единый пользовательский блок описания вкладки."""
+    frame = ttk.LabelFrame(parent, text="Как пользоваться вкладкой")
+    frame.pack(fill="x", padx=10, pady=(10, 6))
+    rows = (
+        ("Назначение", purpose),
+        ("Когда использовать", when),
+        ("Как запускать", how),
+        ("Что изменяет / безопасность", safety),
+    )
+    for row, (label, value) in enumerate(rows):
+        ttk.Label(frame, text=f"{label}:", font=("", 9, "bold")).grid(row=row, column=0, sticky="nw", padx=6, pady=2)
+        ttk.Label(frame, text=value, wraplength=980, justify="left").grid(row=row, column=1, sticky="w", padx=6, pady=2)
+    frame.columnconfigure(1, weight=1)
+    return frame
+
+
 def add_action_row(parent, title: str, description: str, command) -> ttk.Button:
     row = ttk.Frame(parent)
     row.pack(fill="x", padx=10, pady=3)

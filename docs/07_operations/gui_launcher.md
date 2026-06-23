@@ -21,17 +21,19 @@ Wrapper содержит только поиск project root/entry point, UTF-8
 
 ## Вкладки
 
-1. `Обзор`: общие report parameters, environment check и read-only Git status.
-2. `Исходные данные Минфина`: простой сценарий проверки сайта, monthly update, annual-final, registry review и отдельные advanced-блоки для manual import/debug.
-3. `Pipeline`: обычный запуск, optional schema и Минфин stage 0.
-4. `Проверки качества`: encoding, schema, quality fast/full, targeted source QA, HTML QA и visual regression.
-5. `Отчеты и графики`: generated folders, monthly metrics и yield ОФЗ-ПД quick links.
-6. `Release и пакеты`: release bundle и BI package dry-run/build.
-7. `Обслуживание`: artifact guard, Git status, cleanup и рабочие каталоги.
-8. `Журнал`: live output, exit code, log path, stop/copy/open actions.
-9. `Справка`: русское объяснение workflow и параметров.
+На каждой вкладке есть верхний блок `Назначение / Когда использовать / Как запускать / Что изменяет`. Он нужен, чтобы оператор понимал сценарий без внешней инструкции.
 
-Выбранное действие показывает command preview в общей нижней панели. Кнопка `Выполнить` запускает команду; копировать ее в консоль не требуется.
+1. `Обзор`: папка проекта, дата отчета, параметры расчета, статус окружения, environment check и read-only Git status.
+2. `Исходные данные Минфина`: простой сценарий проверки сайта, monthly update, annual-final, registry review и отдельные advanced-блоки для manual import/debug.
+3. `Pipeline`: один основной запуск pipeline и понятный выбор этапа 0 Минфина через radio buttons.
+4. `Проверки качества`: базовые, расширенные и source acquisition проверки, сгруппированные по назначению.
+5. `Отчеты и графики`: основные результаты, ключевые ручные проверки и диагностические артефакты.
+6. `Release и пакеты`: отдельные карточки release bundle и BI package.
+7. `Обслуживание`: безопасная диагностика, открытие папок и отдельная зона очистки outputs.
+8. `Журнал`: live output, время старта/завершения, exit code, log path, stop/copy/open actions.
+9. `Справка`: русское объяснение workflow, параметров, confirm tokens и artifact policy.
+
+Выбранное действие показывает технические детали в общей нижней панели: что будет выполнено, команда, изменяет ли action файлы, нужен ли confirm, log path и ожидаемый результат. Кнопка `Запустить` выполняет действие; копировать команду в консоль не требуется.
 
 ## Безопасность
 
@@ -67,7 +69,29 @@ Typed confirm tokens:
 
 Сначала выполните проверку сайта. При HTTP 503 GUI пишет: `Сайт Минфина временно недоступен; raw не изменен.`
 
-Pipeline stage 0 показывает пользовательские варианты `Не выполнять`, `Только dry-run` и `Download с подтверждением`. Если stage 0 завершился с ошибкой, pipeline не запускается.
+Pipeline stage 0 показывает radio buttons:
+
+- `Не выполнять`;
+- `Только dry-run`;
+- `Download с подтверждением`.
+
+Если stage 0 или optional schema validation завершились с ошибкой, pipeline не запускается.
+
+## Проверки качества
+
+Вкладка качества сгруппирована:
+
+- `Базовые проверки`: UTF-8/Mojibake, Schema validation, Быстрая проверка качества.
+- `Расширенные проверки`: Полная проверка качества, HTML chart QA, Visual regression.
+- `Проверки source acquisition`: parser/source tests, registry smoke, data audit registry smoke.
+
+Рекомендуемый порядок: UTF-8/Mojibake -> Schema validation -> Quality fast -> Quality full перед release -> Visual regression после изменений графиков.
+
+## Отчеты, release и обслуживание
+
+Вкладка отчетов разделяет основные результаты, ключевые ручные проверки и диагностику. После исправления методологии доходности вручную проверяйте, что базовые yield artifacts показывают доходность ОФЗ-ПД и не смешивают ее с ОФЗ-ПК.
+
+Release build и BI build запускаются только после dry-run и modal confirm. Cleanup delete визуально отделен от безопасной диагностики и требует `DELETE_OUTPUTS`.
 
 ## Logs и artifacts
 

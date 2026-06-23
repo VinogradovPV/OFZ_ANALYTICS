@@ -550,3 +550,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-06-23 | Обновлена вкладка `Исходные данные Минфина`: basic-сценарий, modal confirm, advanced parser diagnostics, аварийный manual import, stage 0 labels. | OK: выполнены `py_compile`, `compileall`, `gui_launcher_smoke.py`, `ofz-fetch-minfin --help`, `ofz-gui --help`, `ofz-gui --smoke`, `ofz-gui --smoke-ui`. | Live GUI interactive smoke требует ручной проверки оператором. Real download/import/replacement не запускались без отдельного подтверждения. |
+
+## 2026-06-23 - GUI launcher UX.1-UX.6
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-23 | Общая UX-доработка GUI: описания всех вкладок, русские labels, Pipeline radio buttons, grouped quality/reports/release/maintenance tabs, технический preview, modal confirms, журнал выполнения и справка. | OK: выполнены `pip install -e .`, `pip check`, `compileall`, `gui_launcher_smoke.py`, `ofz-gui --help`, `ofz-gui --smoke`, `ofz-gui --smoke-ui`, `ofz-fetch-minfin --help`, `ofz-run --help`, `ofz-quality --help`. | Manual GUI smoke выполняется оператором в интерактивном окне. Dangerous actions не запускались. Generated outputs не коммитятся. |
