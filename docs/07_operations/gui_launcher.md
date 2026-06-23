@@ -22,7 +22,7 @@ Wrapper содержит только поиск project root/entry point, UTF-8
 ## Вкладки
 
 1. `Обзор`: общие report parameters, environment check и read-only Git status.
-2. `Исходные данные Минфина`: monthly, annual-final, manual-import, fixtures и registry/report folders.
+2. `Исходные данные Минфина`: простой сценарий проверки сайта, monthly update, annual-final, registry review и отдельные advanced-блоки для manual import/debug.
 3. `Pipeline`: обычный запуск, optional schema и Минфин stage 0.
 4. `Проверки качества`: encoding, schema, quality fast/full, targeted source QA, HTML QA и visual regression.
 5. `Отчеты и графики`: generated folders, monthly metrics и yield ОФЗ-ПД quick links.
@@ -54,9 +54,20 @@ Typed confirm tokens:
 
 ## Минфин и stage 0
 
-Сначала выполнить dry-run. При HTTP 503 GUI пишет: `Сайт Минфина временно недоступен; raw не изменен.`
+Основной сценарий вкладки Минфина:
 
-Pipeline stage 0 поддерживает `off`, `dry-run` и подтвержденный `download`. Если stage 0 завершился с ошибкой, pipeline не запускается.
+1. `Проверить сайт Минфина` - live dry-run без изменения `raw`.
+2. `Обновить данные текущего года` - monthly download после modal confirm `DOWNLOAD_MINFIN_SOURCE`.
+3. `Проверить закрытие предыдущего года` - annual-final dry-run.
+4. `Закрыть предыдущий год` - annual-final download после modal confirm `DOWNLOAD_MINFIN_SOURCE`.
+5. `Проверить registry` - smoke-проверка registry/data audit.
+6. `Открыть registry` и `Открыть отчеты source acquisition` - быстрые ссылки на рабочие папки.
+
+Поля `URL override`, `HTML fixture`, `No network`, `Max pages` и аварийная кнопка `Replace changed final` скрыты в блоке `Показать расширенную диагностику парсера`. Ручной импорт XLSX скрыт в блоке `Показать аварийный ручной импорт` и используется только при недоступности сайта Минфина или изменении верстки.
+
+Сначала выполните проверку сайта. При HTTP 503 GUI пишет: `Сайт Минфина временно недоступен; raw не изменен.`
+
+Pipeline stage 0 показывает пользовательские варианты `Не выполнять`, `Только dry-run` и `Download с подтверждением`. Если stage 0 завершился с ошибкой, pipeline не запускается.
 
 ## Logs и artifacts
 

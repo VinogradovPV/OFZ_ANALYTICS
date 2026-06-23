@@ -927,3 +927,9 @@ Date: 2026-06-17.
 ### Следующий этап
 
 Следующий этап: `P3.4 Annual finalization`.
+
+## 2026-06-23 - Улучшение GUI workflow вкладки Минфина
+
+| Дата | Изменение | Проверка | Результат | Ограничения |
+|---|---|---|---|---|
+| 2026-06-23 | Вкладка `Исходные данные Минфина` переведена из инженерной панели параметров в сценарный операторский workflow. В основном блоке оставлены статус источника, годы, проверка сайта, обновление текущего года, annual-final, проверка registry и открытие registry/reports. `URL override`, `HTML fixture`, `No network`, `Max pages`, `Replace changed final` и ручной импорт XLSX вынесены в раскрываемые advanced/аварийные блоки. Dangerous actions теперь показывают modal confirm dialog вместо молчаливого disabled-состояния. | `py_compile` для GUI modules; `compileall -q scripts`; `scripts\qa\gui_launcher_smoke.py`; `ofz-fetch-minfin --help`; `ofz-gui --help`; `ofz-gui --smoke`; `ofz-gui --smoke-ui`. | OK: basic controls не содержат debug-поля, advanced controls существуют, monthly live dry-run/monthly download/annual-final/manual-import/stage 0 команды строятся корректно, arbitrary shell action отклоняется. | Live download, changed-final replacement, manual import и delete/build actions не запускались. Generated outputs не должны коммититься. |

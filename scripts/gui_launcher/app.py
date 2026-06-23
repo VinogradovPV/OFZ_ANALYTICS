@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import tkinter as tk
 from dataclasses import dataclass
 from pathlib import Path
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
 from typing import Callable
 
 from . import actions
@@ -29,6 +30,34 @@ TAB_TITLES = (
     "Журнал",
     "Справка",
 )
+
+MINFIN_BASIC_CONTROL_LABELS = (
+    "Текущий год",
+    "Год финального закрытия",
+    "Проверить сайт Минфина",
+    "Обновить данные текущего года",
+    "Проверить закрытие предыдущего года",
+    "Закрыть предыдущий год",
+    "Проверить registry",
+    "Открыть registry",
+    "Открыть отчеты source acquisition",
+)
+
+MINFIN_ADVANCED_CONTROL_LABELS = (
+    "Manual XLSX",
+    "URL override",
+    "HTML fixture",
+    "No network",
+    "Max pages",
+    "Replace changed final",
+)
+
+STAGE_ZERO_LABEL_TO_MODE = {
+    "Не выполнять": "off",
+    "Только dry-run": "dry-run",
+    "Download с подтверждением": "download",
+}
+STAGE_ZERO_MODE_TO_LABEL = {value: key for key, value in STAGE_ZERO_LABEL_TO_MODE.items()}
 
 
 @dataclass
@@ -83,7 +112,9 @@ class OfzAnalyticsGui:
         self.html_file_var = tk.StringVar(value=self.state.html_file)
         self.manual_file_var = tk.StringVar(value=self.state.manual_file)
         self.minfin_confirm_var = tk.StringVar()
-        self.stage_zero_var = tk.StringVar(value=self.state.stage_zero_mode)
+        self.minfin_advanced_var = tk.BooleanVar(value=False)
+        self.manual_import_var = tk.BooleanVar(value=False)
+        self.stage_zero_var = tk.StringVar(value=STAGE_ZERO_MODE_TO_LABEL.get(self.state.stage_zero_mode, "Не выполнять"))
         self.schema_before_var = tk.BooleanVar(value=self.state.run_schema_before_pipeline)
         self.open_outputs_var = tk.BooleanVar(value=self.state.open_outputs_after_run)
         self.pipeline_confirm_var = tk.StringVar()
@@ -96,8 +127,16 @@ class OfzAnalyticsGui:
             self.release_confirm_var,
             self.maintenance_confirm_var,
             self.stage_zero_var,
+            self.minfin_advanced_var,
+            self.manual_import_var,
         ):
             variable.trace_add("write", lambda *_args: self._refresh_button_states())
+        self.minfin_status_var = tk.StringVar(value="Registry status: еще не проверялся")
+        self.minfin_candidate_var = tk.StringVar(value="Последний selected candidate: -")
+        self.minfin_dates_var = tk.StringVar(value="Публикация / изменение: -")
+        self.minfin_file_var = tk.StringVar(value="XLSX: -")
+        self.minfin_hash_var = tk.StringVar(value="SHA256: -")
+        self.minfin_paths_var = tk.StringVar(value="latest/final/registry: -")
 
     def _configure_style(self) -> None:
         style = ttk.Style(self.root)
@@ -146,45 +185,125 @@ class OfzAnalyticsGui:
 
     def _build_minfin_tab(self) -> None:
         tab = self._new_tab("Исходные данные Минфина")
-        add_intro(tab, "Эта вкладка получает исходные XLSX Минфина. Dry-run безопасен. Download меняет controlled raw storage. versions/ не коммитится.")
-        form = ttk.LabelFrame(tab, text="Параметры source acquisition")
-        form.pack(fill="x", padx=10, pady=6)
-        form.columnconfigure(1, weight=1)
-        add_labeled_entry(form, 0, "Year", self.minfin_year_var, 10)
-        add_labeled_entry(form, 0, "Final year", self.final_year_var, 10, column=2)
-        add_labeled_combo(form, 1, "Mode", self.minfin_mode_var, ("monthly", "annual-final", "manual-import"))
-        add_labeled_entry(form, 1, "Max pages", self.max_pages_var, 10, column=2)
-        add_labeled_entry(form, 2, "URL override", self.minfin_url_var, 68)
-        ttk.Checkbutton(form, text="No network", variable=self.no_network_var).grid(row=2, column=2, sticky="w", padx=5)
-        add_labeled_entry(form, 3, "HTML fixture", self.html_file_var, 68)
-        ttk.Button(form, text="Выбрать HTML", command=self._choose_html).grid(row=3, column=2, padx=5)
-        add_labeled_entry(form, 4, "Manual XLSX", self.manual_file_var, 68)
-        ttk.Button(form, text="Выбрать XLSX", command=self._choose_manual).grid(row=4, column=2, padx=5)
-        add_labeled_entry(form, 5, "Typed confirm", self.minfin_confirm_var, 32)
-        actions_frame = ttk.LabelFrame(tab, text="Действия")
-        actions_frame.pack(fill="both", expand=True, padx=10, pady=6)
-        self._action_row(actions_frame, "Monthly dry-run без сети", "Offline plan; можно использовать HTML fixture.", "minfin-monthly-offline")
-        self._action_row(actions_frame, "Monthly live dry-run", "Получить кандидатов с сайта без download.", "minfin-monthly-live")
-        self._action_row(actions_frame, "Monthly download", "Требует DOWNLOAD_MINFIN_SOURCE.", "minfin-monthly-download", self.minfin_confirm_var)
-        self._action_row(actions_frame, "Annual-final dry-run", "Проверить final candidate предыдущего года.", "minfin-annual-dry")
-        self._action_row(actions_frame, "Annual-final download", "Требует DOWNLOAD_MINFIN_SOURCE.", "minfin-annual-download", self.minfin_confirm_var)
-        self._action_row(actions_frame, "Replace changed final", "Требует REPLACE_MINFIN_FINAL после review.", "minfin-final-replace", self.minfin_confirm_var)
-        self._action_row(actions_frame, "Manual import dry-run", "Проверить выбранный XLSX.", "minfin-manual-dry", condition=self._manual_file_selected)
-        self._action_row(actions_frame, "Manual import", "Требует XLSX и IMPORT_MINFIN_FILE.", "minfin-manual-import", self.minfin_confirm_var, self._manual_file_selected)
+        add_intro(
+            tab,
+            "Основной сценарий: сначала проверить сайт Минфина, затем при необходимости подтвердить обновление. "
+            "Download меняет controlled raw storage; versions/ и отчеты source acquisition не коммитятся.",
+        )
+
+        status_frame = ttk.LabelFrame(tab, text="Статус источника")
+        status_frame.pack(fill="x", padx=10, pady=6)
+        status_frame.columnconfigure(1, weight=1)
+        add_labeled_entry(status_frame, 0, "Текущий год", self.minfin_year_var, 10)
+        add_labeled_entry(status_frame, 0, "Год финального закрытия", self.final_year_var, 10, column=2)
+        for row, variable in enumerate(
+            (
+                self.minfin_status_var,
+                self.minfin_candidate_var,
+                self.minfin_dates_var,
+                self.minfin_file_var,
+                self.minfin_hash_var,
+                self.minfin_paths_var,
+            ),
+            start=1,
+        ):
+            ttk.Label(status_frame, textvariable=variable, wraplength=1060, justify="left").grid(
+                row=row, column=0, columnspan=4, sticky="w", padx=5, pady=2
+            )
+        ttk.Button(status_frame, text="Обновить статус", command=self._refresh_minfin_status).grid(
+            row=7, column=0, sticky="w", padx=5, pady=5
+        )
+        self._refresh_minfin_status(show_errors=False)
+
+        actions_frame = ttk.LabelFrame(tab, text="Основные действия")
+        actions_frame.pack(fill="x", padx=10, pady=6)
+        self._action_row(actions_frame, "Проверить сайт Минфина", "Dry-run: сайт проверяется, raw не изменяется.", "minfin-monthly-live")
+        self._action_row(
+            actions_frame,
+            "Обновить данные текущего года",
+            "Сначала показывается command preview; запуск требует DOWNLOAD_MINFIN_SOURCE.",
+            "minfin-monthly-download",
+            self.minfin_confirm_var,
+        )
+        self._action_row(actions_frame, "Проверить закрытие предыдущего года", "Annual-final dry-run без изменения raw.", "minfin-annual-dry")
+        self._action_row(
+            actions_frame,
+            "Закрыть предыдущий год",
+            "Создать/подтвердить final-файл; запуск требует DOWNLOAD_MINFIN_SOURCE.",
+            "minfin-annual-download",
+            self.minfin_confirm_var,
+        )
+        self._action_row(actions_frame, "Проверить registry", "Проверить registry и связку data audit.", "data-audit-registry-smoke")
+
         toolbar = ttk.Frame(tab)
         toolbar.pack(fill="x", padx=10, pady=4)
         ttk.Button(toolbar, text="Открыть registry", command=lambda: self._open_path(self.state.project_root / "data/raw/minfin/ofz_auction_results/registry")).pack(side="left")
-        ttk.Button(toolbar, text="Открыть source reports", command=lambda: self._open_path(self.state.project_root / "outputs/reports/source_acquisition")).pack(side="left", padx=6)
+        ttk.Button(toolbar, text="Открыть отчеты source acquisition", command=lambda: self._open_path(self.state.project_root / "outputs/reports/source_acquisition")).pack(side="left", padx=6)
+
+        manual_toggle = ttk.Checkbutton(
+            tab,
+            text="Показать аварийный ручной импорт",
+            variable=self.manual_import_var,
+            command=self._set_minfin_advanced_visibility,
+        )
+        manual_toggle.pack(anchor="w", padx=12, pady=(8, 0))
+        self.manual_import_frame = ttk.LabelFrame(tab, text="Аварийный ручной импорт")
+        self.manual_import_frame.columnconfigure(1, weight=1)
+        add_labeled_entry(self.manual_import_frame, 0, "Manual XLSX", self.manual_file_var, 68)
+        ttk.Button(self.manual_import_frame, text="Выбрать XLSX", command=self._choose_manual).grid(row=0, column=2, padx=5)
+        manual_actions = ttk.Frame(self.manual_import_frame)
+        manual_actions.grid(row=1, column=0, columnspan=3, sticky="ew", padx=0, pady=4)
+        self._action_row(manual_actions, "Проверить выбранный XLSX", "Проверка файла без импорта.", "minfin-manual-dry", condition=self._manual_file_selected)
+        self._action_row(
+            manual_actions,
+            "Импортировать XLSX",
+            "Аварийный импорт требует IMPORT_MINFIN_FILE.",
+            "minfin-manual-import",
+            self.minfin_confirm_var,
+            self._manual_file_selected,
+        )
+
+        advanced_toggle = ttk.Checkbutton(
+            tab,
+            text="Показать расширенную диагностику парсера",
+            variable=self.minfin_advanced_var,
+            command=self._set_minfin_advanced_visibility,
+        )
+        advanced_toggle.pack(anchor="w", padx=12, pady=(8, 0))
+        self.minfin_advanced_frame = ttk.LabelFrame(tab, text="Диагностика парсера")
+        self.minfin_advanced_frame.columnconfigure(1, weight=1)
+        add_labeled_entry(self.minfin_advanced_frame, 0, "URL override", self.minfin_url_var, 68)
+        add_labeled_entry(self.minfin_advanced_frame, 1, "HTML fixture", self.html_file_var, 68)
+        ttk.Button(self.minfin_advanced_frame, text="Выбрать HTML", command=self._choose_html).grid(row=1, column=2, padx=5)
+        add_labeled_entry(self.minfin_advanced_frame, 2, "Max pages", self.max_pages_var, 10)
+        ttk.Checkbutton(self.minfin_advanced_frame, text="No network", variable=self.no_network_var).grid(row=2, column=2, sticky="w", padx=5)
+        advanced_actions = ttk.Frame(self.minfin_advanced_frame)
+        advanced_actions.grid(row=3, column=0, columnspan=3, sticky="ew", padx=0, pady=4)
+        self._action_row(advanced_actions, "Parser dry-run с fixture", "Offline plan; можно использовать HTML fixture.", "minfin-monthly-offline")
+        self._action_row(
+            advanced_actions,
+            "Replace changed final",
+            "Аварийная замена final после ручной проверки; требует REPLACE_MINFIN_FINAL.",
+            "minfin-final-replace",
+            self.minfin_confirm_var,
+        )
+        self._set_minfin_advanced_visibility()
 
     def _build_pipeline_tab(self) -> None:
         tab = self._new_tab("Pipeline")
-        add_intro(tab, "Pipeline выполняется напрямую из GUI. Stage 0 по умолчанию является dry-run; download требует explicit confirm.")
+        add_intro(tab, "Pipeline выполняется напрямую из GUI. Этап 0 Минфина можно отключить, выполнить как dry-run или запустить как подтвержденное обновление.")
         options = ttk.LabelFrame(tab, text="Pipeline workflow")
         options.pack(fill="x", padx=10, pady=6)
-        add_labeled_combo(options, 0, "Этап 0 Минфина", self.stage_zero_var, ("off", "dry-run", "download"))
+        add_labeled_combo(
+            options,
+            0,
+            "Перед запуском pipeline выполнить этап 0: обновление данных Минфина",
+            self.stage_zero_var,
+            tuple(STAGE_ZERO_LABEL_TO_MODE),
+            width=18,
+        )
         ttk.Checkbutton(options, text="Run schema before pipeline", variable=self.schema_before_var).grid(row=1, column=0, columnspan=2, sticky="w", padx=5, pady=4)
         ttk.Checkbutton(options, text="Open outputs after run", variable=self.open_outputs_var).grid(row=2, column=0, columnspan=2, sticky="w", padx=5, pady=4)
-        add_labeled_entry(options, 3, "Stage 0 typed confirm", self.pipeline_confirm_var, 32)
         actions_frame = ttk.LabelFrame(tab, text="Запуск")
         actions_frame.pack(fill="x", padx=10, pady=6)
         self._action_row(actions_frame, "Запустить pipeline", "Без source acquisition stage 0.", "pipeline")
@@ -194,7 +313,6 @@ class OfzAnalyticsGui:
             "При non-zero stage 0/schema дальнейшие команды не запускаются.",
             "pipeline-stage-zero",
             self.pipeline_confirm_var,
-            self._pipeline_stage_zero_ready,
         )
 
     def _build_quality_tab(self) -> None:
@@ -338,7 +456,7 @@ class OfzAnalyticsGui:
         self.state.no_network = self.no_network_var.get()
         self.state.html_file = self.html_file_var.get()
         self.state.manual_file = self.manual_file_var.get()
-        self.state.stage_zero_mode = self.stage_zero_var.get()
+        self.state.stage_zero_mode = STAGE_ZERO_LABEL_TO_MODE.get(self.stage_zero_var.get(), self.stage_zero_var.get())
         self.state.run_schema_before_pipeline = self.schema_before_var.get()
         self.state.open_outputs_after_run = self.open_outputs_var.get()
         self.state.validate()
@@ -363,7 +481,15 @@ class OfzAnalyticsGui:
             return
         try:
             self._sync_state()
+            preview_plan = self.registry.build(self.selected_action_id, self.state, validate_confirmation=False)
             confirm = self.selected_confirm_var.get() if self.selected_confirm_var is not None else ""
+            if preview_plan.required_confirm and confirm != preview_plan.required_confirm:
+                confirm = self._ask_confirm_token(preview_plan)
+                if not confirm:
+                    self.status_var.set("Операция отменена: token не введен")
+                    return
+                if self.selected_confirm_var is not None:
+                    self.selected_confirm_var.set(confirm)
             plan = self.registry.build(self.selected_action_id, self.state, confirm=confirm)
             self.runner = CommandRunner(self.state.project_root, self.state.launcher_log_dir)
             self.execute_button.configure(state="disabled")
@@ -414,20 +540,105 @@ class OfzAnalyticsGui:
 
     def _refresh_button_states(self) -> None:
         for gate in self.button_gates:
-            definition = self.registry.definition(gate.action_id)
             enabled = True
-            if definition.required_confirm:
-                enabled = gate.confirm_var is not None and gate.confirm_var.get() == definition.required_confirm
             if gate.condition is not None:
                 enabled = enabled and gate.condition()
             gate.button.configure(state="normal" if enabled and not self.runner.is_running else "disabled")
+        if hasattr(self, "manual_import_frame"):
+            self._set_minfin_advanced_visibility()
 
     def _manual_file_selected(self) -> bool:
         return bool(self.manual_file_var.get().strip())
 
     def _pipeline_stage_zero_ready(self) -> bool:
-        mode = self.stage_zero_var.get()
+        mode = STAGE_ZERO_LABEL_TO_MODE.get(self.stage_zero_var.get(), self.stage_zero_var.get())
         return mode != "download" or self.pipeline_confirm_var.get() == "DOWNLOAD_MINFIN_SOURCE"
+
+    def _ask_confirm_token(self, plan: ActionPlan) -> str:
+        messages = {
+            "DOWNLOAD_MINFIN_SOURCE": (
+                "Операция изменит controlled raw storage Минфина. "
+                "Перед запуском убедитесь, что command preview выбран правильно."
+            ),
+            "REPLACE_MINFIN_FINAL": (
+                "Операция заменяет annual-final файл после changed hash. "
+                "Запускайте ее только после ручной проверки."
+            ),
+            "IMPORT_MINFIN_FILE": (
+                "Операция импортирует локальный XLSX в controlled raw storage. "
+                "Проверьте год, имя файла и источник."
+            ),
+            "BUILD_RELEASE_BUNDLE": "Операция создаст внешний release bundle в ignored releases/.",
+            "BUILD_BI_PACKAGE": "Операция создаст внешний BI package в ignored releases/bi/.",
+            "DELETE_OUTPUTS": "Операция удалит generated outputs после архивации/cleanup workflow.",
+        }
+        token = plan.required_confirm
+        prompt = f"{messages.get(token, 'Операция требует явного подтверждения.')}\n\nВведите exact token:\n{token}"
+        answer = simpledialog.askstring("Подтверждение действия", prompt, parent=self.root)
+        return answer.strip() if answer else ""
+
+    def _set_minfin_advanced_visibility(self) -> None:
+        if not hasattr(self, "manual_import_frame") or not hasattr(self, "minfin_advanced_frame"):
+            return
+        if self.manual_import_var.get():
+            self.manual_import_frame.pack(fill="x", padx=10, pady=6)
+        else:
+            self.manual_import_frame.pack_forget()
+        if self.minfin_advanced_var.get():
+            self.minfin_advanced_frame.pack(fill="x", padx=10, pady=6)
+        else:
+            self.minfin_advanced_frame.pack_forget()
+
+    def _refresh_minfin_status(self, show_errors: bool = True) -> None:
+        try:
+            self._sync_state()
+            registry_root = self.state.project_root / "data/raw/minfin/ofz_auction_results"
+            latest_json = registry_root / "registry/minfin_ofz_auction_sources_latest.json"
+            latest_path = registry_root / "latest" / f"INTERNET_Auction_Results_rus_{self.state.minfin_year}_latest.xlsx"
+            final_path = registry_root / "final" / f"INTERNET_Auction_Results_rus_{self.state.final_year}_final.xlsx"
+            if not latest_json.exists():
+                self.minfin_status_var.set("Registry status: latest JSON отсутствует")
+                self.minfin_candidate_var.set("Последний selected candidate: -")
+                self.minfin_dates_var.set("Публикация / изменение: -")
+                self.minfin_file_var.set("XLSX: -")
+                self.minfin_hash_var.set("SHA256: -")
+            else:
+                payload = json.loads(latest_json.read_text(encoding="utf-8"))
+                records = payload.get("records", [])
+                record = self._select_minfin_status_record(records)
+                if record:
+                    self.minfin_status_var.set(
+                        f"Registry status: active {record.get('storage_role', '-')} для {record.get('year', '-')}"
+                    )
+                    self.minfin_candidate_var.set(f"Последний selected candidate: {record.get('document_title') or record.get('file_title') or '-'}")
+                    self.minfin_dates_var.set(
+                        f"Публикация / изменение: {record.get('published_at') or '-'} / {record.get('modified_at') or '-'}"
+                    )
+                    self.minfin_file_var.set(f"XLSX: {record.get('file_name') or '-'}")
+                    sha256 = str(record.get("sha256") or "")
+                    self.minfin_hash_var.set(f"SHA256: {sha256[:12] if sha256 else '-'}")
+                else:
+                    self.minfin_status_var.set("Registry status: active latest/final для выбранных лет не найден")
+                    self.minfin_candidate_var.set("Последний selected candidate: -")
+                    self.minfin_dates_var.set("Публикация / изменение: -")
+                    self.minfin_file_var.set("XLSX: -")
+                    self.minfin_hash_var.set("SHA256: -")
+            self.minfin_paths_var.set(f"latest: {latest_path} | final: {final_path} | registry: {latest_json.parent}")
+        except Exception as exc:
+            self.minfin_status_var.set("Registry status: не удалось прочитать")
+            if show_errors:
+                self._show_error(exc)
+
+    def _select_minfin_status_record(self, records: list[dict]) -> dict | None:
+        preferred = (
+            (self.state.minfin_year, "latest"),
+            (self.state.final_year, "final"),
+        )
+        for year, role in preferred:
+            for record in records:
+                if record.get("year") == year and record.get("storage_role") == role and record.get("is_active_for_pipeline"):
+                    return record
+        return records[0] if records else None
 
     def _choose_project_root(self) -> None:
         selected = filedialog.askdirectory(initialdir=self.project_root_var.get(), parent=self.root)

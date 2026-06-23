@@ -544,3 +544,9 @@
 | Дата | Изменение | Проверка | Результат | Ограничения |
 |---|---|---|---|---|
 | 2026-06-17 | Реализован `annual-final` workflow для Минфина: выбор final candidate без требования `YYYY1231`, блокировка changed final hash без `REPLACE_MINFIN_FINAL`, registry row `storage_role=final`. | `.\.venv\Scripts\python.exe -m py_compile scripts\source_acquisition\minfin_fetch.py scripts\source_acquisition\source_registry.py`; `.\.venv\Scripts\python.exe -m py_compile scripts\qa\minfin_annual_final_smoke.py`; `.\.venv\Scripts\python.exe scripts\qa\minfin_annual_final_smoke.py`; `.\.venv\Scripts\python.exe -m compileall -q scripts`; `.\.venv\Scripts\ofz-fetch-minfin.exe --year 2025 --mode annual-final --dry-run --no-network`. | OK: temp smoke проверяет no final, same hash, different hash blocked и replacement with confirm; dry-run без сети не мутирует raw. | Реальный live download не выполнялся без отдельного разрешения пользователя; GitHub Actions runs не проверяются по инструкции пользователя. |
+
+## 2026-06-23 - GUI вкладка Минфина: упрощенный операторский workflow
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-23 | Обновлена вкладка `Исходные данные Минфина`: basic-сценарий, modal confirm, advanced parser diagnostics, аварийный manual import, stage 0 labels. | OK: выполнены `py_compile`, `compileall`, `gui_launcher_smoke.py`, `ofz-fetch-minfin --help`, `ofz-gui --help`, `ofz-gui --smoke`, `ofz-gui --smoke-ui`. | Live GUI interactive smoke требует ручной проверки оператором. Real download/import/replacement не запускались без отдельного подтверждения. |

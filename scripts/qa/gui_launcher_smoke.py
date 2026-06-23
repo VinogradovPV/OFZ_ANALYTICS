@@ -13,7 +13,7 @@ from scripts.gui_launcher.actions import (
     ConfirmationRequiredError,
     UnknownActionError,
 )
-from scripts.gui_launcher.app import TAB_TITLES
+from scripts.gui_launcher.app import MINFIN_ADVANCED_CONTROL_LABELS, MINFIN_BASIC_CONTROL_LABELS, TAB_TITLES
 from scripts.gui_launcher.help_text import HELP_TEXT
 from scripts.gui_launcher.state import GuiState
 
@@ -52,9 +52,27 @@ def main() -> int:
         "Журнал",
         "Справка",
     )
+    basic_controls = set(MINFIN_BASIC_CONTROL_LABELS)
+    advanced_controls = set(MINFIN_ADVANCED_CONTROL_LABELS)
+    assert "Проверить сайт Минфина" in basic_controls
+    assert "Обновить данные текущего года" in basic_controls
+    assert "Закрыть предыдущий год" in basic_controls
+    assert "URL override" not in basic_controls
+    assert "HTML fixture" not in basic_controls
+    assert "No network" not in basic_controls
+    assert "Max pages" not in basic_controls
+    assert "Manual XLSX" in advanced_controls
+    assert "URL override" in advanced_controls
+    assert "HTML fixture" in advanced_controls
+    assert "No network" in advanced_controls
+    assert "Max pages" in advanced_controls
+    assert "Replace changed final" in advanced_controls
 
     monthly = registry.build("minfin-monthly-offline", state)
     assert "--no-network" in monthly.steps[0].args
+    live = registry.build("minfin-monthly-live", state)
+    assert "--dry-run" in live.steps[0].args
+    assert "--no-network" not in live.steps[0].args
     expect_error(
         ConfirmationRequiredError,
         lambda: registry.build("minfin-monthly-download", state),
@@ -72,6 +90,10 @@ def main() -> int:
     assert len(stage_zero.steps) == 2
     assert "ofz-fetch-minfin.exe" in stage_zero.steps[0].args[0]
     assert "ofz-run.exe" in stage_zero.steps[-1].args[0]
+    state.stage_zero_mode = "dry-run"
+    stage_zero_dry = registry.build("pipeline-stage-zero", state)
+    assert "--dry-run" in stage_zero_dry.steps[0].args
+    assert "--download" not in stage_zero_dry.steps[0].args
 
     expect_error(
         ValueError,
