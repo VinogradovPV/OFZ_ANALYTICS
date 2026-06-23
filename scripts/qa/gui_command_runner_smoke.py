@@ -32,7 +32,8 @@ def main() -> int:
             ),
         ),
     )
-    runner = CommandRunner(root, root / "outputs" / "reports" / "launcher")
+    log_dir = root / ".ofz_launcher" / "logs"
+    runner = CommandRunner(root, log_dir)
 
     def complete(result: RunResult) -> None:
         completed.append(result)
@@ -54,6 +55,7 @@ def main() -> int:
     assert completed[0].output_tail
     assert not completed[0].saw_replacement_char
     assert log_path.read_text(encoding="utf-8").find("runner smoke") >= 0
+    assert log_path.is_relative_to(log_dir)
     try:
         log_path.unlink()
     except OSError:

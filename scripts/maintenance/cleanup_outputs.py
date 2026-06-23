@@ -21,6 +21,10 @@ OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 ARCHIVE_DIR = OUTPUTS_DIR / "archive"
 CLEANUP_REPORTS_DIR = OUTPUTS_DIR / "reports" / "cleanup"
 CONFIRM_TOKEN = "DELETE_OUTPUTS"
+OPEN_FILE_HINT = (
+    "Не удалось удалить часть файлов: они открыты другой программой. "
+    "Закройте открытые отчеты/графики/таблицы и повторите cleanup."
+)
 
 SKELETON_DIRS = [
     OUTPUTS_DIR,
@@ -306,40 +310,45 @@ def main(argv: Sequence[str] | None = None) -> int:
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     mode = mode_name(args)
 
-    archive_root: Path | None = None
-    if args.archive_all:
-        archive_root = archive_outputs(run_id, candidates)
+    try:
+        archive_root: Path | None = None
+        if args.archive_all:
+            archive_root = archive_outputs(run_id, candidates)
 
-    if args.delete_all:
-        manifest_dir = archive_root if archive_root is not None else ARCHIVE_DIR / f"cleanup_{run_id}"
-        pre_delete_manifest = build_manifest(
-            run_id=run_id,
-            mode=f"{mode}-pre-delete",
-            candidates=candidates,
-            archive_root=archive_root if archive_root is not None else manifest_dir,
-            deleted=False,
-        )
-        write_manifest(pre_delete_manifest, manifest_dir)
-        delete_working_outputs(candidates)
-        post_candidates = collect_candidates()
-        post_delete_manifest = build_manifest(
-            run_id=run_id,
-            mode=f"{mode}-post-delete",
-            candidates=post_candidates,
-            archive_root=archive_root if archive_root is not None else manifest_dir,
-            deleted=True,
-        )
-        json_path, md_path = write_manifest(post_delete_manifest, manifest_dir)
-    else:
-        report_dir = archive_root if archive_root is not None else CLEANUP_REPORTS_DIR
-        manifest = build_manifest(
-            run_id=run_id,
-            mode=mode,
-            candidates=candidates,
-            archive_root=archive_root,
-            deleted=False,
-        )
-        json_path, md_path = write_manifest(manifest, report_dir)
+        if args.delete_all:
+            manifest_dir = archive_root if archive_root is not None else ARCHIVE_DIR / f"cleanup_{run_id}"
+            pre_delete_manifest = build_manifest(
+                run_id=run_id,
+                mode=f"{mode}-pre-delete",
+                candidates=candidates,
+                archive_root=archive_root if archive_root is not None else manifest_dir,
+                deleted=False,
+            )
+            write_manifest(pre_delete_manifest, manifest_dir)
+            delete_working_outputs(candidates)
+            post_candidates = collect_candidates()
+            post_delete_manifest = build_manifest(
+                run_id=run_id,
+                mode=f"{mode}-post-delete",
+                candidates=post_candidates,
+                archive_root=archive_root if archive_root is not None else manifest_dir,
+                deleted=True,
+            )
+            json_path, md_path = write_manifest(post_delete_manifest, manifest_dir)
+        else:
+            report_dir = archive_root if archive_root is not None else CLEANUP_REPORTS_DIR
+            manifest = build_manifest(
+                run_id=run_id,
+                mode=mode,
+                candidates=candidates,
+                archive_root=archive_root,
+                deleted=False,
+            )
+            json_path, md_path = write_manifest(manifest, report_dir)
+    except PermissionError as exc:
+        print(f"ERROR: {OPEN_FILE_HINT}")
+        print(f"technical_error={exc}")
+        return 1
 
     print(f"mode={mode}")
     print(f"candidates={len(candidates)}")

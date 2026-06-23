@@ -61,13 +61,19 @@ STAGE_ZERO_LABEL_TO_MODE = {
 STAGE_ZERO_MODE_TO_LABEL = {value: key for key, value in STAGE_ZERO_LABEL_TO_MODE.items()}
 PREVIEW_PLACEHOLDER = "Выберите действие на вкладке. Здесь появятся технические детали и команда запуска."
 NO_RESULT_POPUP_TEXT = "Папка результатов еще не создана. Сначала выполните действие."
+REGISTRY_MODE_LABEL_TO_VALUE = {
+    "Не проверять registry": "off",
+    "Проверять и предупреждать": "warn",
+    "Требовать корректный registry": "strict",
+}
+REGISTRY_MODE_VALUE_TO_LABEL = {value: key for key, value in REGISTRY_MODE_LABEL_TO_VALUE.items()}
 
 TAB_INFO = {
     "Обзор": (
         "Задает общие параметры проекта.",
         "Перед запуском pipeline, проверок качества и release bundle.",
         "Выберите папку проекта, дату отчета и параметры расчета, затем нажмите \"Проверить окружение\".",
-        "Проверка окружения и Git-статуса ничего не меняет.",
+        "Registry - это журнал контролируемых исходных файлов Минфина. Проверка окружения и Git-статуса ничего не меняет.",
     ),
     "Исходные данные Минфина": (
         "Получает и проверяет исходные XLSX-файлы Минфина.",
@@ -145,8 +151,8 @@ class OfzAnalyticsGui:
         self.open_results_button: ttk.Button | None = None
 
         self.root.title("OFZ Analytics")
-        self.root.geometry("1280x860")
-        self.root.minsize(1060, 720)
+        self.root.geometry("1360x920")
+        self.root.minsize(1180, 820)
         self.status_var = tk.StringVar(value="Готово")
         self.last_command_var = tk.StringVar(value="Команда еще не выполнялась")
         self.exit_code_var = tk.StringVar(value="Exit code: -")
@@ -166,7 +172,7 @@ class OfzAnalyticsGui:
         self.years_var = tk.StringVar(value=str(self.state.retrospective_years))
         self.period_type_var = tk.StringVar(value=self.state.period_type)
         self.aggregation_var = tk.StringVar(value=self.state.aggregation_mode)
-        self.registry_mode_var = tk.StringVar(value=self.state.source_registry_mode)
+        self.registry_mode_var = tk.StringVar(value=REGISTRY_MODE_VALUE_TO_LABEL.get(self.state.source_registry_mode, "Проверять и предупреждать"))
         self.allow_legacy_var = tk.BooleanVar(value=self.state.allow_legacy_raw)
         self.minfin_year_var = tk.StringVar(value=str(self.state.minfin_year))
         self.final_year_var = tk.StringVar(value=str(self.state.final_year))
@@ -241,8 +247,14 @@ class OfzAnalyticsGui:
         add_labeled_entry(form, 1, "Лет ретроспективы", self.years_var, 8, column=2)
         add_labeled_combo(form, 2, "Период", self.period_type_var, ("month", "quarter", "year"))
         add_labeled_combo(form, 2, "Режим агрегации", self.aggregation_var, ("cumulative", "point"), column=2)
-        add_labeled_combo(form, 3, "Режим проверки registry", self.registry_mode_var, ("off", "warn", "strict"))
+        add_labeled_combo(form, 3, "Режим проверки registry", self.registry_mode_var, tuple(REGISTRY_MODE_LABEL_TO_VALUE), width=34)
         ttk.Checkbutton(form, text="Разрешить legacy-данные", variable=self.allow_legacy_var).grid(row=3, column=2, columnspan=2, sticky="w", padx=5)
+        ttk.Label(
+            form,
+            text='Рекомендуется: "Проверять и предупреждать". Строгий режим используйте после полного перехода на controlled source registry.',
+            wraplength=980,
+            justify="left",
+        ).grid(row=4, column=0, columnspan=4, sticky="w", padx=5, pady=(0, 6))
         status_frame = ttk.LabelFrame(tab, text="Статус окружения")
         status_frame.pack(fill="x", padx=10, pady=6)
         for text in (
@@ -546,12 +558,14 @@ class OfzAnalyticsGui:
         buttons = ttk.Frame(frame)
         buttons.pack(side="right", padx=6)
         self.execute_button = ttk.Button(buttons, text="Повторить выбранное действие", command=self._execute_selected, state="disabled")
-        self.execute_button.pack(fill="x", pady=2)
-        ttk.Button(buttons, text="Копировать команду", command=self._copy_preview).pack(fill="x", pady=2)
+        self.execute_button.grid(row=0, column=0, columnspan=2, sticky="ew", pady=2)
+        ttk.Button(buttons, text="Копировать команду", command=self._copy_preview).grid(row=1, column=0, sticky="ew", padx=(0, 3), pady=2)
         self.open_results_button = ttk.Button(buttons, text="Открыть результаты", command=self._open_result_path, state="disabled")
-        self.open_results_button.pack(fill="x", pady=2)
-        ttk.Button(buttons, text="Открыть log-файл", command=self._open_last_log).pack(fill="x", pady=2)
-        ttk.Button(buttons, text="Открыть папку logs", command=lambda: self._open_path(self.state.launcher_log_dir)).pack(fill="x", pady=2)
+        self.open_results_button.grid(row=1, column=1, sticky="ew", padx=(3, 0), pady=2)
+        ttk.Button(buttons, text="Открыть log-файл", command=self._open_last_log).grid(row=2, column=0, sticky="ew", padx=(0, 3), pady=2)
+        ttk.Button(buttons, text="Открыть папку logs", command=lambda: self._open_path(self.state.launcher_log_dir)).grid(row=2, column=1, sticky="ew", padx=(3, 0), pady=2)
+        buttons.columnconfigure(0, weight=1)
+        buttons.columnconfigure(1, weight=1)
         self._set_preview(PREVIEW_PLACEHOLDER)
 
     def _action_row(
@@ -578,7 +592,7 @@ class OfzAnalyticsGui:
         self.state.retrospective_years = int(self.years_var.get())
         self.state.period_type = self.period_type_var.get()
         self.state.aggregation_mode = self.aggregation_var.get()
-        self.state.source_registry_mode = self.registry_mode_var.get()
+        self.state.source_registry_mode = REGISTRY_MODE_LABEL_TO_VALUE.get(self.registry_mode_var.get(), self.registry_mode_var.get())
         self.state.allow_legacy_raw = self.allow_legacy_var.get()
         self.state.minfin_year = int(self.minfin_year_var.get())
         self.state.final_year = int(self.final_year_var.get())
@@ -748,6 +762,10 @@ class OfzAnalyticsGui:
             return self._minfin_download_summary(plan)
         if plan.action_id == "pipeline-stage-zero" and "Этап 0" in output_tail and "Exit code: 1" in output_tail:
             return "Этап 0 Минфина завершился ошибкой. Pipeline не запускался."
+        if plan.action_id == "cleanup-keep":
+            return "План очистки сформирован. Файлы не удалялись."
+        if plan.action_id == "cleanup-delete":
+            return "Generated outputs удалены. Исходные данные не изменялись. Журналы GUI сохранены в .ofz_launcher/logs/."
         return plan.user_success_message or "Успешно завершено. Подробности доступны в журнале."
 
     def _minfin_dry_run_summary(self, plan: ActionPlan, output_tail: str) -> str:
@@ -838,6 +856,11 @@ class OfzAnalyticsGui:
             "BUILD_BI_PACKAGE": "Операция создаст внешний BI package в ignored releases/bi/.",
             "DELETE_OUTPUTS": "Операция удалит generated outputs после архивации/cleanup workflow.",
         }
+        if token == "DELETE_OUTPUTS":
+            messages[token] = (
+                "Операция удалит generated outputs. Raw-данные не удаляются. "
+                "Журналы GUI сохраняются в .ofz_launcher/logs/ и не блокируют cleanup."
+            )
         token = plan.required_confirm
         prompt = (
             f"{messages.get(token, 'Операция требует явного подтверждения.')}\n\n"

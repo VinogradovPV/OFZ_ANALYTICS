@@ -16,6 +16,7 @@ FORBIDDEN_PARTS = (
     "outputs/cache",
     "data/processed",
     "logs",
+    ".ofz_launcher",
     "releases",
     "docm",
     "crdownload",

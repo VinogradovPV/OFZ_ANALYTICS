@@ -13,6 +13,6 @@
 9. Запустить artifact guard и проверить отсутствие staged generated paths.
 10. На вкладке `Журнал` проверить live output, exit code, log path, copy/open и stop.
 11. Проверить сообщение при simulated/live HTTP 503: raw не изменен.
-12. Закрыть GUI и убедиться, что logs остались только под ignored `outputs/reports/launcher/`.
+12. Закрыть GUI и убедиться, что runtime logs остались под ignored `.ofz_launcher/logs/`.
 
 Manual live download, delete outputs, release build и BI build не выполнять без отдельной операционной необходимости.

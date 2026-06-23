@@ -18,6 +18,8 @@ from scripts.gui_launcher.app import (
     MINFIN_BASIC_CONTROL_LABELS,
     NO_RESULT_POPUP_TEXT,
     PREVIEW_PLACEHOLDER,
+    REGISTRY_MODE_LABEL_TO_VALUE,
+    REGISTRY_MODE_VALUE_TO_LABEL,
     STAGE_ZERO_LABEL_TO_MODE,
     TAB_INFO,
     TAB_TITLES,
@@ -69,6 +71,9 @@ def main() -> int:
     assert "Только dry-run" in STAGE_ZERO_LABEL_TO_MODE
     assert "Download с подтверждением" in STAGE_ZERO_LABEL_TO_MODE
     assert STAGE_ZERO_LABEL_TO_MODE["Только dry-run"] == "dry-run"
+    assert REGISTRY_MODE_LABEL_TO_VALUE["Проверять и предупреждать"] == "warn"
+    assert REGISTRY_MODE_VALUE_TO_LABEL[state.source_registry_mode] == "Проверять и предупреждать"
+    assert state.launcher_log_dir == root / ".ofz_launcher" / "logs"
     assert "Выберите действие на вкладке" in PREVIEW_PLACEHOLDER
     basic_controls = set(MINFIN_BASIC_CONTROL_LABELS)
     advanced_controls = set(MINFIN_ADVANCED_CONTROL_LABELS)

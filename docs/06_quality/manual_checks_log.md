@@ -562,3 +562,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-06-23 | Исправлены понятные user summaries, отключение `Открыть результаты` для diagnostics, UTF-8 env runner, Minfin summary, Pipeline stage 0 descriptions и quality summary metadata. | OK: выполнены `py_compile`, `compileall`, `gui_launcher_smoke.py`, `gui_command_runner_smoke.py`, `ofz-gui --help`, `ofz-gui --smoke-ui`. | Manual GUI smoke выполняется оператором. Existing local raw/registry/versions changes не являются частью GUI UX исправления и не коммитились. |
+
+## 2026-06-23 - GUI registry labels/layout/cleanup logs runtime fix
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-23 | Registry mode labels, нижний action panel layout, новый runtime log root `.ofz_launcher/logs/`, cleanup PermissionError handling, artifact guard для `.ofz_launcher/`. | OK: выполнены `py_compile`, `compileall`, `gui_launcher_smoke.py`, `gui_command_runner_smoke.py`, `ofz-gui --help`, `ofz-gui --smoke-ui`, `ofz-clean-outputs --help`. | Manual resize и destructive cleanup delete выполняются оператором. Existing local raw/output changes не относятся к этапу и не коммитятся. |

@@ -8,6 +8,7 @@ __pycache__/
 .ruff_cache/
 
 # Logs and local env
+.ofz_launcher/
 logs/
 *.log
 .env

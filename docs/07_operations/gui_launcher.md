@@ -106,13 +106,31 @@ Release build и BI build запускаются только после dry-run
 
 ## Logs и artifacts
 
-Launcher пишет объединенный stdout/stderr в:
+Python GUI launcher пишет объединенный stdout/stderr в runtime-папку вне `outputs/`:
 
 ```text
-outputs/reports/launcher/gui_run_<timestamp>.log
+.ofz_launcher/logs/gui_run_<timestamp>.log
 ```
 
-Не коммитить `outputs/`, `releases/`, `logs/`, `data/processed/`, source acquisition reports и `data/raw/minfin/ofz_auction_results/versions/`.
+Эта папка не является generated analytical outputs. Cleanup outputs не трогает `.ofz_launcher/logs/`, поэтому активный GUI log не блокирует удаление `outputs/`. Generated reports остаются в `outputs/reports/`.
+
+Не коммитить `outputs/`, `releases/`, `logs/`, `.ofz_launcher/`, `data/processed/`, source acquisition reports и `data/raw/minfin/ofz_auction_results/versions/`.
+
+## Режим проверки registry
+
+В интерфейсе режимы registry показываются пользовательскими названиями:
+
+- `Не проверять registry` -> internal `off`;
+- `Проверять и предупреждать` -> internal `warn`;
+- `Требовать корректный registry` -> internal `strict`.
+
+В CLI и command builder всегда передается internal value `off|warn|strict`. Рекомендуемый режим для обычной работы: `Проверять и предупреждать`. Строгий режим включайте после полного перехода на controlled source registry.
+
+## Cleanup outputs
+
+`Cleanup dry-run` только строит план очистки и ничего не удаляет. `Удалить outputs` требует `DELETE_OUTPUTS`, удаляет generated outputs и не меняет raw-данные. GUI logs сохраняются в `.ofz_launcher/logs/`.
+
+Если cleanup сообщает PermissionError, вероятно, один из HTML/XLSX/report-файлов открыт браузером, Excel или другой программой. Закройте открытые отчеты/графики и повторите cleanup; технические подробности останутся в журнале.
 
 ## Диагностика
 

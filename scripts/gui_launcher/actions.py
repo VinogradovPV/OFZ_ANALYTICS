@@ -344,15 +344,15 @@ def registry() -> dict[str, ActionDefinition]:
             "cleanup-keep",
             "Показать cleanup plan без удаления.",
             lambda state: (cli_step(state, "Cleanup dry-run", "ofz-clean-outputs.exe", "--dry-run"),),
-            user_success_message="Cleanup dry-run завершен. Outputs не удалялись.",
+            user_success_message="План очистки сформирован. Файлы не удалялись.",
         ),
         "cleanup-delete": ActionDefinition(
             "cleanup-delete",
             "Архивировать и удалить generated outputs.",
             lambda state: (cli_step(state, "Cleanup delete", "ofz-clean-outputs.exe", "--archive-all", "--delete-all", "--confirm", "DELETE_OUTPUTS"),),
             "DELETE_OUTPUTS",
-            user_success_message="Generated outputs очищены по подтвержденному cleanup workflow.",
-            user_failure_hint="Cleanup delete завершился ошибкой. Проверьте журнал.",
+            user_success_message="Generated outputs удалены. Исходные данные не изменялись. Журналы GUI сохранены.",
+            user_failure_hint="Очистка завершилась ошибкой. Вероятно, один из файлов открыт другой программой. Закройте открытые отчеты/графики и повторите. Подробности в журнале.",
             mutation_summary="Удаляет generated outputs.",
         ),
     }

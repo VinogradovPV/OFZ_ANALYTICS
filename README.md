@@ -181,13 +181,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_l
 
 GUI содержит вкладки `Обзор`, `Исходные данные Минфина`, `Pipeline`, `Проверки качества`, `Отчеты и графики`, `Release и пакеты`, `Обслуживание`, `Журнал` и `Справка`. На каждой вкладке есть блок `Назначение / Когда использовать / Как запускать / Что изменяет`, чтобы оператор видел сценарий без отдельной CLI-инструкции.
 
-GUI сам выполняет allowlisted команды, стримит output, пишет UTF-8 logs в `outputs/reports/launcher/`, останавливает sequence после non-zero exit code и запрашивает dangerous actions через modal confirm dialog с exact token. Кнопки на вкладках запускают действия напрямую; нижняя панель показывает технические детали и кнопку `Повторить выбранное действие`.
+GUI сам выполняет allowlisted команды, стримит output, пишет UTF-8 runtime logs в `.ofz_launcher/logs/`, останавливает sequence после non-zero exit code и запрашивает dangerous actions через modal confirm dialog с exact token. Кнопки на вкладках запускают действия напрямую; нижняя панель показывает технические детали и кнопку `Повторить выбранное действие`.
 
 GUI отделяет пользовательский итог от технического журнала. Оператор видит понятный статус: успешно, ошибка, остановлено, что изменилось и следующий шаг. `Exit code`, stdout/stderr и JSON остаются в журнале как технические подробности. Кнопка `Открыть результаты` активна только у действий с реальной папкой результатов; для диагностик используются log controls.
 
 Минфин интегрирован отдельной вкладкой и optional stage 0 pipeline. Основной сценарий вкладки: проверить сайт, обновить текущий год, проверить/закрыть предыдущий год, проверить registry и открыть registry/reports. URL override, HTML fixture, no network, max pages, manual import и changed-final replacement вынесены в advanced/аварийные блоки. Stage 0 pipeline выбирается через radio buttons: не выполнять, dry-run или download с подтверждением `DOWNLOAD_MINFIN_SOURCE`.
 
-Проверки качества сгруппированы на базовые, расширенные и source acquisition checks. Вкладки отчетов, release и обслуживания разделяют безопасные действия и операции, которые создают или удаляют generated artifacts.
+Проверки качества сгруппированы на базовые, расширенные и source acquisition checks. Вкладки отчетов, release и обслуживания разделяют безопасные действия и операции, которые создают или удаляют generated artifacts. Cleanup outputs удаляет `outputs/`, но не удаляет GUI runtime logs из `.ofz_launcher/logs/`.
 
 Русская operator procedure: [`docs/07_operations/gui_launcher.md`](docs/07_operations/gui_launcher.md). Headless smoke: `.\.venv\Scripts\ofz-gui.exe --smoke`.
 
@@ -201,7 +201,7 @@ docs/07_operations/word_vba_launcher_spec.md
 
 The `.bas` source can be committed. A future `.docm` file is a release artifact, not a source artifact, and must not be committed without a separate artifact policy decision. The VBA launcher calls only whitelisted CLI entry points and applies the same `DELETE_OUTPUTS` and `BUILD_RELEASE_BUNDLE` confirmation gates.
 
-Word VBA is optional. Text source files (`.bas`, `.frm`) are source artifacts; `.docm` packages are release artifacts unless explicitly approved by artifact policy. Launcher logs under `outputs/reports/launcher/` are generated outputs and are excluded from Git. Release bundles remain external artifacts under ignored `releases/`.
+Word VBA is optional. Text source files (`.bas`, `.frm`) are source artifacts; `.docm` packages are release artifacts unless explicitly approved by artifact policy. Python GUI runtime logs live under ignored `.ofz_launcher/logs/`; legacy launcher logs under `outputs/reports/launcher/` remain generated outputs. Release bundles remain external artifacts under ignored `releases/`.
 
 Interactive cleanup pre-flight:
 

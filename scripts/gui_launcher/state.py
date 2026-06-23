@@ -75,7 +75,7 @@ class GuiState:
 
     @property
     def launcher_log_dir(self) -> Path:
-        return self.project_root / "outputs" / "reports" / "launcher"
+        return self.project_root / ".ofz_launcher" / "logs"
 
     @property
     def output_suffix(self) -> str:
