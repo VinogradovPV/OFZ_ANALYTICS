@@ -129,3 +129,73 @@ Planned staging scope for this step:
 - `docs/00_project/post_p3_worktree_cleanup_report.md`
 
 No generated outputs, processed data, logs, release artifacts, `.ofz_launcher` files, source acquisition reports or raw versions are staged.
+
+## CLEAN.1-CLEAN.5 follow-up
+
+Дата: 2026-06-24.
+
+### CLEAN.1 - generated outputs cleanup
+
+Повторный dry-run после первичной очистки:
+
+```powershell
+git clean -nd -- outputs data/processed logs releases .ofz_launcher
+git clean -nd -- outputs/reports/source_acquisition outputs/reports/visual_regression
+git clean -nd -- data/raw/minfin/ofz_auction_results/versions
+```
+
+Результат: cleanup candidates не показаны, потому что generated/local директории уже удалены, а raw version snapshot оставлен физически и скрыт через local `.git/info/exclude` по предыдущей команде пользователя "не удалять физически".
+
+### CLEAN.2 - raw/registry decision
+
+Controlled raw/latest/registry files не были подтверждены как operator-approved source update и не были откатаны. Вместо этого они оставлены физически и скрыты из обычного `git status` через local `skip-worktree`.
+
+Список локально скрытых controlled raw/registry paths:
+
+- `data/raw/minfin/ofz_auction_results/latest/INTERNET_Auction_Results_rus_2026_latest.xlsx`
+- `data/raw/minfin/ofz_auction_results/registry/minfin_ofz_auction_sources.csv`
+- `data/raw/minfin/ofz_auction_results/registry/minfin_ofz_auction_sources_latest.json`
+
+Это не означает approval для commit. Перед любым source update commit нужно отдельно снять `skip-worktree`, просмотреть diff/hash/registry и получить operator decision.
+
+### CLEAN.3 - prompt/instruction cleanup
+
+Корневые `ofz_*.md` prompt/instruction files не найдены.
+
+Untracked instruction files under `prompts/` оставлены физически и скрыты через local `.git/info/exclude`:
+
+- `prompts/ofz_gui_launcher_user_friendly_status_and_navigation_fix_ru.md`
+- `prompts/ofz_gui_launcher_ux_improvement_instruction_ru.md`
+- `prompts/ofz_post_p3_optimization_step_by_step.md`
+- `prompts/ofz_post_p3_optimization_system_prompt.md`
+- `prompts/ofz_post_p3_worktree_cleanup_and_next_work_instruction.md`
+
+### CLEAN.4 - staging
+
+Обычный `git status --short --branch` после локального hide показывает clean working tree:
+
+```text
+## main...origin/main
+```
+
+На этом follow-up шаге новых файлов в staging не добавлялось, потому что пользователь запросил убрать остатки working tree без физического удаления. Изменения `.git/info/exclude` и `skip-worktree` являются локальной Git-метаданной и не коммитятся.
+
+### CLEAN.5 - checks
+
+Проверки выполнены после follow-up cleanup:
+
+- `.\.venv\Scripts\python.exe scripts\qa\check_text_encoding.py`
+- `git diff --check`
+
+Ожидаемый результат: OK, потому что source files не менялись; local inventory `.txt` уже перекодированы в UTF-8 на предыдущем CLEAN.1 step.
+
+### Как вернуть видимость скрытых остатков
+
+Для tracked files:
+
+```powershell
+git ls-files -v | Select-String '^S '
+git update-index --no-skip-worktree -- <path>
+```
+
+Для untracked files: удалить соответствующие строки из `.git/info/exclude`.

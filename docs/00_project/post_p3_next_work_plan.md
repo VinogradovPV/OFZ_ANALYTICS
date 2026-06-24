@@ -1,0 +1,130 @@
+# Post-P3 next work plan after cleanup
+
+Дата: 2026-06-24.
+
+## Назначение
+
+Документ фиксирует baseline после Post-P3 cleanup и скрытое локальное состояние, которое не видно в обычном `git status`.
+
+Важно: `skip-worktree` и `.git/info/exclude` являются локальной Git-метаданной. Они не коммитятся и не являются approval для raw/source update.
+
+## Текущий git status
+
+Команды выполнены outside sandbox из корня проекта.
+
+```text
+## main...origin/main
+M  docs/00_project/post_p3_worktree_cleanup_report.md
+```
+
+`docs/00_project/post_p3_worktree_cleanup_report.md` еще содержит follow-up CLEAN.1-CLEAN.5 update и должен быть закоммичен вместе с этим планом.
+
+## Последние коммиты
+
+- `4bdac2f Clean post-P3 working tree state`
+- `dc4176d Document post-P3 release candidate gate`
+- `d28641c Plan chart and QA module decomposition`
+- `7abf48e Assess post-P3 pipeline optimization opportunities`
+- `f92c799 Harden Minfin live dry-run acquisition`
+
+## Skip-worktree paths
+
+### Controlled raw/registry files
+
+Эти файлы физически остаются в рабочем каталоге, но скрыты из обычного `git status`:
+
+- `data/raw/minfin/ofz_auction_results/latest/INTERNET_Auction_Results_rus_2026_latest.xlsx`
+- `data/raw/minfin/ofz_auction_results/registry/minfin_ofz_auction_sources.csv`
+- `data/raw/minfin/ofz_auction_results/registry/minfin_ofz_auction_sources_latest.json`
+
+Перед любым source update commit нельзя забыть:
+
+1. Снять `skip-worktree` с этих путей.
+2. Проверить hash, registry CSV/JSON и соответствие controlled source acquisition workflow.
+3. Отдельно получить operator approval на source update.
+4. Не stage `data/raw/minfin/ofz_auction_results/versions/` без отдельного решения.
+
+### Generated/report docs hidden from status
+
+Эти tracked docs отражают локальные pipeline/QA report updates и скрыты через `skip-worktree`:
+
+- `docs/01_methodology/kpi_map.md`
+- `docs/01_methodology/period_selection_report.md`
+- `docs/02_data_pipeline/data_audit.md`
+- `docs/02_data_pipeline/data_cleaning_report.md`
+- `docs/02_data_pipeline/feature_engineering.md`
+- `docs/03_analytics/analytical_tables_limitations.md`
+- `docs/03_analytics/analytical_tables_report.md`
+- `docs/03_analytics/executive_summary_report.md`
+- `docs/03_analytics/monthly_analytics_report.md`
+- `docs/03_analytics/revenue_analytics_report.md`
+- `docs/03_analytics/revenue_charts_report.md`
+- `docs/04_visualization/chart_build_limitations.md`
+- `docs/04_visualization/monthly_visualization_strategy.md`
+- `docs/04_visualization/visualization_strategy.md`
+- `docs/05_dashboard/dashboard_exports_limitations.md`
+- `docs/05_dashboard/dashboard_exports_report.md`
+- `docs/05_dashboard/dashboard_semantic_model_v2.md`
+- `docs/06_quality/quality_gate_report.md`
+- `docs/06_quality/run_manifest_report.md`
+- `docs/06_quality/visual_regression_report.md`
+- `docs/90_archive/deprecated/bid_to_cover_outliers.md`
+- `docs/90_archive/old_reproducibility/reproducibility_review_stages_1_3.md`
+
+Перед docs/report refresh commit нужно снять `skip-worktree` только с релевантных файлов и отдельно решить, являются ли эти report docs expected generated documentation update или локальным шумом.
+
+## Local exclude paths
+
+`.git/info/exclude` содержит локальные untracked leftovers, оставленные физически, но скрытые из обычного status:
+
+- `data/raw/minfin/ofz_auction_results/versions/2026/INTERNET_Auction_Results_rus_2026_20260618_3e748e88be0e.xlsx`
+- `post_p3_ignored_files_before_cleanup.txt`
+- `post_p3_modified_files_before_cleanup.txt`
+- `post_p3_untracked_files_before_cleanup.txt`
+- `post_p3_worktree_status_before_cleanup.txt`
+- `prompts/ofz_gui_launcher_user_friendly_status_and_navigation_fix_ru.md`
+- `prompts/ofz_gui_launcher_ux_improvement_instruction_ru.md`
+- `prompts/ofz_post_p3_optimization_step_by_step.md`
+- `prompts/ofz_post_p3_optimization_system_prompt.md`
+- `prompts/ofz_post_p3_worktree_cleanup_and_next_work_instruction.md`
+- `prompts/ofz_post_p3_next_work_after_cleanup_instruction.md`
+
+Эти excludes не должны скрывать future source changes. Если какой-либо prompt должен стать частью проекта, его нужно вынести из `.git/info/exclude`, проверить содержание и stage точечно.
+
+## Source update caveat
+
+Текущее состояние raw/source update не approved.
+
+Clean ordinary status не означает, что raw/latest/registry уже подтверждены. Перед любым коммитом raw/source update нужно явно вернуться к controlled raw paths, снять локальную маскировку и провести review.
+
+## Выбранный следующий этап
+
+Рекомендуемый следующий этап: `NEXT.1 Screenshot backend validation outside sandbox`.
+
+Причина: POSTP3.7 release-candidate gate прошел автоматизированные проверки, но screenshot backend был заблокирован в Codex managed environment. Перед stable release нужно выполнить validation из обычного project PowerShell или оформить явный waiver.
+
+Команда для NEXT.1:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\visual_regression.py --mode screenshot --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+## Запреты до отдельного approval
+
+Не выполнять без отдельного явного разрешения пользователя:
+
+- stable release;
+- git tag;
+- GitHub release create/upload;
+- release bundle build;
+- BI package build;
+- live Minfin download/import/replacement;
+- destructive cleanup;
+- commit raw/source update.
+
+## Проверки NEXT.0
+
+- `.\.venv\Scripts\python.exe scripts\qa\check_text_encoding.py`
+- `git diff --check`
+
+Artifact guard должен оставаться пустым для staged scope.
