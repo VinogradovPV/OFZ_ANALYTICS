@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-24 - POSTP3.5 Pipeline and data audit optimization
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-24 | Pipeline baseline, schema validation, quality-fast и telemetry review для `2026-05-01 / month / cumulative / retrospective 4`. | OK: `ofz-run`, `ofz-schema` и `ofz-quality --fast` прошли успешно. Свежая telemetry: total `12.445` sec, самый медленный stage `8` / построение графиков `4.0` sec. Повторные чтения raw Excel и report scope зафиксированы как optimization candidates. | Code/cache не менялись. `quality-full`, release build, BI build и dangerous Minfin actions не выполнялись. Проверки создали/обновили generated outputs, `data/processed`, run manifests и telemetry; они не предназначены для staging. |
+
 ## 2026-06-24 - POSTP3.4 Minfin live acquisition hardening
 
 | Дата | Что проверено | Результат | Ограничения |

@@ -1,5 +1,51 @@
 # Post-P3 optimization progress report
 
+## POSTP3.5 - Pipeline and data audit optimization
+
+Дата: 2026-06-24.
+
+### Статус
+
+- Выполнен assessment-first этап POSTP3.5.
+- Создан отчет `docs/00_project/post_p3_pipeline_optimization_report.md`.
+- Pipeline, schema validation и quality-fast прошли успешно на параметрах `2026-05-01 / month / cumulative / retrospective 4`.
+- Код не менялся: безопасные low-risk fixes выделены в отдельные кандидаты, потому что cache/skip и telemetry counters требуют отдельного regression scope.
+
+### Изменения
+
+- `docs/00_project/post_p3_pipeline_optimization_report.md`
+- `docs/00_project/post_p3_optimization_progress_report.md`
+- `docs/06_quality/manual_checks_log.md`
+
+### Проверки
+
+- `.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+- `.\.venv\Scripts\ofz-schema.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK, 16 checks passed.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+
+### Наблюдения
+
+- Свежая telemetry: `outputs/reports/telemetry/telemetry_20260624_075557_3344c61e.json`.
+- Total pipeline duration: `12.445` sec.
+- Самый медленный stage: `8` / построение графиков, `4.0` sec.
+- Следующие заметные stages: data audit, data cleaning, report scope, analytical tables, revenue charts, monthly analytics, monthly charts и semantic model, около `1.0` sec каждый.
+- Повторные чтения есть прежде всего вокруг raw Excel на stages 1/2 и `ofz_auctions_report_scope.csv` в downstream scripts.
+- Telemetry сейчас считает весь `data/raw` и весь `outputs/archive`, поэтому raw/artifact counters полезны для inventory, но шумят для оценки текущего run.
+
+### Пропущенные проверки и почему
+
+- `quality-full`, release bundle build, BI package build и live Minfin download не выполнялись: POSTP3.5 анализирует pipeline/data audit и не требует dangerous actions или full release gate.
+- Manifest-based cache/skip не внедрялся: нужен отдельный opt-in design с fingerprint и regression checks.
+
+### Риски
+
+- Без уточнения telemetry counters оператор может неверно читать `raw_files` и generated artifact totals после P3, потому что registry/latest/versions и archive snapshots смешиваются с текущими pipeline inputs/outputs.
+- Stage durations имеют секундную точность; для тонкой оптимизации нужна perf-counter based per-stage telemetry.
+
+### Следующий этап
+
+Следующий рекомендуемый этап: `POSTP3.6 Chart/QA monolith decomposition planning`.
+
 ## POSTP3.4 - Minfin live acquisition hardening
 
 Дата: 2026-06-24.
