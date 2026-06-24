@@ -1,5 +1,49 @@
 # Post-P3 optimization progress report
 
+## POSTP3.3 - Source registry strict-readiness
+
+Дата: 2026-06-24.
+
+### Статус
+
+- Выполнена assessment-only проверка controlled Minfin source registry.
+- Создан отчет `docs/00_project/source_registry_strict_readiness_report.md`.
+- Real-project registry validation проходит в режимах `warn` и `strict`; active file hash/size совпадают.
+- Default менять на `strict` сейчас не рекомендуется: controlled source остается validation-only, legacy pipeline compatibility сохраняется.
+
+### Изменения
+
+- `docs/00_project/source_registry_strict_readiness_report.md`
+- `docs/00_project/post_p3_optimization_progress_report.md`
+- `docs/06_quality/manual_checks_log.md`
+
+### Проверки
+
+- `.\.venv\Scripts\python.exe scripts\qa\minfin_data_audit_registry_smoke.py` - OK.
+- `.\.venv\Scripts\python.exe scripts\qa\minfin_source_acquisition_tests.py` - OK.
+- Direct validation helper check for `off|warn|strict` - OK.
+- Active file hash/size verification for 2025 `final` and 2026 `latest` - OK.
+- `.\.venv\Scripts\python.exe scripts\01_data_audit.py --source-registry-mode off` - OK.
+- `.\.venv\Scripts\python.exe scripts\01_data_audit.py --source-registry-mode warn --allow-legacy-raw` - OK.
+- `.\.venv\Scripts\python.exe scripts\01_data_audit.py --source-registry-mode strict` - OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts` - OK.
+
+### Пропущенные проверки и почему
+
+- Live Minfin download/manual import не выполнялись: POSTP3.3 проверяет registry readiness и не должен мутировать raw.
+- Default `source-registry-mode` не менялся: strict-by-default требует отдельного migration decision.
+- Raw/registry local changes не staging: они требуют отдельного operator review.
+
+### Риски
+
+- В рабочей копии есть modified controlled latest/registry files и untracked 2026 version snapshot.
+- Текущая policy говорит `versions/` не коммитить, но один старый version snapshot уже tracked; это нужно решить отдельно перед strict release-candidate.
+- Strict validation passes, but controlled source is still validation-only and does not replace legacy pipeline input selection.
+
+### Следующий этап
+
+Следующий рекомендуемый этап: `POSTP3.4 Minfin live acquisition hardening`.
+
 ## POSTP3.2 - GUI real workflow validation and polish
 
 Дата: 2026-06-23.

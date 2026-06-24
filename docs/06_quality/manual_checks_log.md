@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-24 - POSTP3.3 Source registry strict-readiness
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-24 | Controlled Minfin registry readiness: registry rows, active latest/final, duplicate active rows, active file hash/size, `off|warn|strict` validation, data audit modes, source acquisition QA. | OK: registry has 4 rows and 2 active rows; 2025 `final` and 2026 `latest` files exist with matching size/SHA-256; `warn` and `strict` validation pass; data audit `off`, `warn`, `strict` exit 0; `minfin_data_audit_registry_smoke.py`, `minfin_source_acquisition_tests.py`, `compileall` pass. | Default remains `warn + allow-legacy-raw`; controlled source is validation-only. Existing modified raw/registry files and untracked 2026 version snapshot require separate operator decision and are not staged. One older `versions/2026` snapshot is already tracked despite current no-versions policy; resolve before strict release-candidate. |
+
 ## 2026-06-23 - POSTP3.2 GUI real workflow validation
 
 | Дата | Что проверено | Результат | Ограничения |
