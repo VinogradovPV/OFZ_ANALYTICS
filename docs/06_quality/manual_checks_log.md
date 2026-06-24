@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-24 - NEXT.5 Telemetry hardening
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-24 | Уточнены telemetry counters и stage timing после release `v0.1.0`: active raw vs versions/registry, current generated outputs vs archive/tmp/cache, precise per-stage durations. | OK: baseline run подтвердил неоднозначность `raw_files=14` и broad `generated_artifacts_count`; после hardening новая telemetry `outputs/reports/telemetry/telemetry_20260624_151147_e980bc2b.json` содержит `raw_file_scope_counts`, `generated_file_scope_counts`, `raw_active_files_count`, `raw_versions_files_count`, `generated_current_files_count`, `generated_archive_files_count`, `generated_tmp_cache_files_count` и `stage_duration_seconds_precise`. Проверки прошли: `py_compile`, `compileall`, `ofz-run`, `telemetry_summary_smoke.py`, `ofz-schema`, `ofz-quality --fast`. | Финансовая методология, output paths, chart semantics, source acquisition policy, release assets и raw storage не менялись. Pipeline/checks создали generated outputs, telemetry и run manifests; они не входят в staging scope. |
+
 ## 2026-06-24 - NEXT.4 Stable release/tag gate
 
 | Дата | Что проверено | Результат | Ограничения |

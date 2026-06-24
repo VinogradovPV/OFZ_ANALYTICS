@@ -271,6 +271,18 @@ ofz-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --a
 
 Telemetry outputs являются generated artifacts и не коммитятся.
 
+Telemetry counters after NEXT.5:
+
+- `raw_active_files_count` - active raw/source files excluding `registry/` and `versions/`;
+- `raw_versions_files_count` - files under controlled raw `versions/`;
+- `raw_file_scope_counts.registry` - source registry CSV/JSON files;
+- `generated_current_files_count` - current generated outputs, excluding `outputs/archive`, `outputs/tmp` and `outputs/cache`;
+- `generated_archive_files_count` - files under `outputs/archive`;
+- `generated_tmp_cache_files_count` - files under `outputs/tmp` and `outputs/cache`;
+- `stage_duration_seconds_precise` - per-stage duration from `perf_counter`.
+
+Old broad counters such as `generated_artifacts_count` and `input_row_counts.raw_files` remain for backward compatibility, but operator performance review should prefer the scoped counters above.
+
 ## 17. Релизный пакет
 
 Generated outputs не коммитятся. Для аудита конкретного запуска собрать release bundle / external artifact:

@@ -167,7 +167,7 @@ Pipeline telemetry:
 .\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-Each full pipeline run writes telemetry summaries to `outputs/reports/telemetry/telemetry_<run_id>.json` and `.md`. Telemetry records stage durations, artifact counts and sizes, cleanup mode, quality/schema status, Git commit/dirty flag and raw data hashes. These generated telemetry files are not committed and are included in release bundles when present.
+Each full pipeline run writes telemetry summaries to `outputs/reports/telemetry/telemetry_<run_id>.json` and `.md`. Telemetry records stage durations, artifact counts and sizes, cleanup mode, quality/schema status, Git commit/dirty flag and raw data hashes. Current telemetry also separates active raw files from raw versions/registry files, separates current generated outputs from `outputs/archive` and `outputs/tmp|cache`, and includes precise per-stage `perf_counter` durations. These generated telemetry files are not committed and are included in release bundles when present.
 
 ## Desktop GUI
 

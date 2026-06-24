@@ -187,6 +187,34 @@ Safe skip возможен, но не должен внедряться всле
 
 Результат: все три проверки прошли успешно.
 
+## NEXT.5 telemetry hardening result
+
+Дата: 2026-06-24.
+
+Кандидаты 1-3 из этого отчета реализованы отдельным small-scope этапом NEXT.5 без изменения методологии, output paths, chart semantics и source acquisition policy.
+
+Добавлено в telemetry:
+
+- `raw_file_scope_counts`;
+- `generated_file_scope_counts`;
+- `raw_active_files_count`;
+- `raw_versions_files_count`;
+- `generated_current_files_count`;
+- `generated_archive_files_count`;
+- `generated_tmp_cache_files_count`;
+- `stage_duration_seconds_precise` для каждой stage row.
+
+Свежая telemetry после hardening:
+
+- file: `outputs/reports/telemetry/telemetry_20260624_151147_e980bc2b.json`;
+- `raw_file_scope_counts`: `active=10`, `versions=2`, `registry=2`, `latest=1`, `final=1`, `other=8`, `total=14`;
+- `generated_file_scope_counts`: `current=212`, `archive=1`, `tmp_cache=0`;
+- slowest stage: `8` / построение графиков, `3.315637` sec precise duration.
+
+Проверки: `py_compile`, `compileall`, full `ofz-run`, `telemetry_summary_smoke.py`, `ofz-schema`, `ofz-quality --fast`.
+
+Осталось на будущие этапы: read audit для repeated CSV/Excel reads и opt-in manifest-based skip RFC. Cache/skip не внедрялся.
+
 ## Рекомендация
 
 Не внедрять cache/skip в POSTP3.5. Следующий безопасный шаг - отдельный маленький этап telemetry hardening:

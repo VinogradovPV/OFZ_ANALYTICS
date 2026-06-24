@@ -27,9 +27,11 @@ class StageTelemetry:
     started_at: str
     finished_at: str = ""
     duration_seconds: float = 0.0
+    stage_duration_seconds_precise: float = 0.0
     status: str = "running"
     returncode: int | None = None
     error: str = ""
+    _start_perf: float = field(default_factory=perf_counter, repr=False)
 
 
 @dataclass
@@ -100,9 +102,8 @@ def finish_stage(stage: StageTelemetry, status: str, error: str = "", returncode
     stage.status = status
     stage.error = error
     stage.returncode = returncode
-    start = datetime.fromisoformat(stage.started_at.replace("Z", "+00:00"))
-    finish = datetime.fromisoformat(stage.finished_at.replace("Z", "+00:00"))
-    stage.duration_seconds = round((finish - start).total_seconds(), 3)
+    stage.stage_duration_seconds_precise = round(perf_counter() - stage._start_perf, 6)
+    stage.duration_seconds = round(stage.stage_duration_seconds_precise, 3)
 
 
 def write_pipeline_telemetry(
@@ -122,6 +123,8 @@ def write_pipeline_telemetry(
         run.errors.extend(str(item) for item in extra_errors)
 
     artifacts = collect_artifacts(config.OUTPUTS_DIR)
+    raw_scope_counts = raw_file_scope_counts()
+    generated_scope_counts = generated_file_scope_counts(artifacts)
     data = {
         "schema_version": "pipeline_telemetry_v1",
         "run_id": run.run_id,
@@ -129,9 +132,16 @@ def write_pipeline_telemetry(
         "started_at": run.started_at,
         "finished_at": finished_at,
         "duration_seconds": round(perf_counter() - run._start_perf, 3),
-        "stage_durations": [stage.__dict__ for stage in run.stage_durations],
+        "stage_durations": [stage_record(stage) for stage in run.stage_durations],
         "input_row_counts": input_row_counts(),
         "output_file_counts": output_file_counts(),
+        "raw_file_scope_counts": raw_scope_counts,
+        "generated_file_scope_counts": generated_scope_counts,
+        "raw_active_files_count": raw_scope_counts["active"],
+        "raw_versions_files_count": raw_scope_counts["versions"],
+        "generated_current_files_count": generated_scope_counts["current"],
+        "generated_archive_files_count": generated_scope_counts["archive"],
+        "generated_tmp_cache_files_count": generated_scope_counts["tmp_cache"],
         "generated_artifacts_count": len(artifacts),
         "artifacts_total_size": sum(int(item["size_bytes"]) for item in artifacts),
         "artifacts_total_size_bytes": sum(int(item["size_bytes"]) for item in artifacts),
@@ -157,6 +167,21 @@ def write_pipeline_telemetry(
     json_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     md_path.write_text(render_markdown(data), encoding="utf-8")
     return TelemetryPaths(json_path=json_path, markdown_path=md_path)
+
+
+def stage_record(stage: StageTelemetry) -> dict[str, Any]:
+    """Return JSON-safe public stage telemetry fields."""
+    return {
+        "code": stage.code,
+        "name": stage.name,
+        "started_at": stage.started_at,
+        "finished_at": stage.finished_at,
+        "duration_seconds": stage.duration_seconds,
+        "stage_duration_seconds_precise": stage.stage_duration_seconds_precise,
+        "status": stage.status,
+        "returncode": stage.returncode,
+        "error": stage.error,
+    }
 
 
 def collect_artifacts(root: Path) -> list[dict[str, Any]]:
@@ -186,6 +211,20 @@ def output_file_counts() -> dict[str, int]:
         "archive": config.ARCHIVE_DIR,
     }
     return {name: count_files(path) for name, path in areas.items()}
+
+
+def generated_file_scope_counts(artifacts: Sequence[dict[str, Any]]) -> dict[str, int]:
+    """Split outputs inventory into current, archive and tmp/cache scopes."""
+    counts = {"current": 0, "archive": 0, "tmp_cache": 0}
+    for item in artifacts:
+        path = str(item.get("path", "")).replace("\\", "/")
+        if path.startswith("outputs/archive/"):
+            counts["archive"] += 1
+        elif path.startswith(("outputs/tmp/", "outputs/cache/")):
+            counts["tmp_cache"] += 1
+        else:
+            counts["current"] += 1
+    return counts
 
 
 def input_row_counts() -> dict[str, int | None]:
@@ -220,6 +259,38 @@ def count_files(path: Path) -> int:
     if not path.exists():
         return 0
     return sum(1 for item in path.rglob("*") if item.is_file() and item.name != ".gitkeep")
+
+
+def raw_file_scope_counts() -> dict[str, int]:
+    """Split data/raw files into active source, versions and registry scopes."""
+    counts = {
+        "active": 0,
+        "versions": 0,
+        "registry": 0,
+        "latest": 0,
+        "final": 0,
+        "other": 0,
+        "total": 0,
+    }
+    if not config.RAW_DATA_DIR.exists():
+        return counts
+
+    for path in sorted(item for item in config.RAW_DATA_DIR.rglob("*") if item.is_file() and item.name != ".gitkeep"):
+        parts = path.relative_to(config.RAW_DATA_DIR).parts
+        counts["total"] += 1
+        if "versions" in parts:
+            counts["versions"] += 1
+        elif "registry" in parts:
+            counts["registry"] += 1
+        else:
+            counts["active"] += 1
+            if "latest" in parts:
+                counts["latest"] += 1
+            elif "final" in parts:
+                counts["final"] += 1
+            else:
+                counts["other"] += 1
+    return counts
 
 
 def raw_data_hashes() -> list[dict[str, Any]]:
@@ -266,6 +337,11 @@ def render_markdown(data: dict[str, Any]) -> str:
         f"- `git_commit`: `{data['git_commit']}`",
         f"- `git_dirty_flag`: `{data['git_dirty_flag']}`",
         f"- `cleanup_mode`: `{data['cleanup_mode']}`",
+        f"- `raw_active_files_count`: `{data.get('raw_active_files_count', '')}`",
+        f"- `raw_versions_files_count`: `{data.get('raw_versions_files_count', '')}`",
+        f"- `generated_current_files_count`: `{data.get('generated_current_files_count', '')}`",
+        f"- `generated_archive_files_count`: `{data.get('generated_archive_files_count', '')}`",
+        f"- `generated_tmp_cache_files_count`: `{data.get('generated_tmp_cache_files_count', '')}`",
         f"- `generated_artifacts_count`: `{data['generated_artifacts_count']}`",
         f"- `artifacts_total_size_bytes`: `{data['artifacts_total_size_bytes']}`",
         f"- `warnings_count`: `{data['warnings_count']}`",
@@ -273,11 +349,22 @@ def render_markdown(data: dict[str, Any]) -> str:
         "",
         "## Stage durations",
         "",
-        "| Stage | Status | Duration, sec |",
-        "| --- | --- | ---: |",
+        "| Stage | Status | Duration, sec | Precise duration, sec |",
+        "| --- | --- | ---: | ---: |",
     ]
     for stage in data.get("stage_durations", []):
-        lines.append(f"| `{stage['code']}` {stage['name']} | `{stage['status']}` | {stage['duration_seconds']} |")
+        lines.append(
+            f"| `{stage['code']}` {stage['name']} | `{stage['status']}` | "
+            f"{stage['duration_seconds']} | {stage.get('stage_duration_seconds_precise', '')} |"
+        )
+
+    lines.extend(["", "## Raw file scope counts", "", "| Scope | Files |", "| --- | ---: |"])
+    for scope, count in sorted((data.get("raw_file_scope_counts") or {}).items()):
+        lines.append(f"| `{scope}` | {count} |")
+
+    lines.extend(["", "## Generated file scope counts", "", "| Scope | Files |", "| --- | ---: |"])
+    for scope, count in sorted((data.get("generated_file_scope_counts") or {}).items()):
+        lines.append(f"| `{scope}` | {count} |")
 
     lines.extend(["", "## Output file counts", "", "| Area | Files |", "| --- | ---: |"])
     for area, count in sorted((data.get("output_file_counts") or {}).items()):
