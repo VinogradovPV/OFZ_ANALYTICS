@@ -41,6 +41,20 @@
 - [x] Stable release, git tag, GitHub release, release bundle build, BI build, live Minfin operations and raw/source update were not performed.
 - [ ] Operator decision for hidden controlled raw/latest/registry state is still required before stable release.
 
+## NEXT.3 raw/latest/registry decision snapshot
+
+Дата: 2026-06-24.
+
+- [x] Operator selected `Variant A - approve source update`.
+- [x] Approved latest XLSX: `INTERNET_Auction_Results_rus_2026_20260618.xlsx`.
+- [x] Approved latest SHA256: `3e748e88be0e5ff26171d6f36916949de83c50c918749e57454aeb1e73e3829b`.
+- [x] Approved latest size: `20131` bytes.
+- [x] Registry active rows reviewed: `2025 final` and `2026 latest`.
+- [x] Controlled paths approved for staging: `latest/INTERNET_Auction_Results_rus_2026_latest.xlsx`, registry CSV and registry latest JSON.
+- [x] `data/raw/minfin/ofz_auction_results/versions/` remains not staged.
+- [x] Source acquisition reports and generated outputs remain not staged.
+- [ ] Stable release/tag/GitHub release still require separate explicit approval.
+
 ## Stable Release Procedure
 
 - [ ] Stable release procedure reviewed: `docs/07_operations/stable_release_procedure.md`.

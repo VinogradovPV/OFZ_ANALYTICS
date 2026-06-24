@@ -157,6 +157,38 @@ NEXT.2 считается закрытым.
 
 Следующий рекомендуемый этап: `NEXT.3 Operator decision по raw/latest/registry`.
 
+## NEXT.3 result - Operator decision по raw/latest/registry
+
+Дата: 2026-06-24.
+
+Пользователь выбрал `Вариант A — approve source update`.
+
+Approved controlled paths:
+
+- `data/raw/minfin/ofz_auction_results/latest/INTERNET_Auction_Results_rus_2026_latest.xlsx`
+- `data/raw/minfin/ofz_auction_results/registry/minfin_ofz_auction_sources.csv`
+- `data/raw/minfin/ofz_auction_results/registry/minfin_ofz_auction_sources_latest.json`
+
+Not staged:
+
+- `data/raw/minfin/ofz_auction_results/versions/`
+- `outputs/reports/source_acquisition/`
+- generated outputs, processed data, logs and release artifacts.
+
+Validated source state:
+
+- new 2026 latest candidate: `INTERNET_Auction_Results_rus_2026_20260618.xlsx`;
+- as-of date: `18.06.2026`;
+- latest SHA256: `3e748e88be0e5ff26171d6f36916949de83c50c918749e57454aeb1e73e3829b`;
+- latest size: `20131` bytes;
+- active registry rows: `2025 final` and `2026 latest`.
+
+Details are recorded in `docs/00_project/minfin_source_update_decision_report.md`.
+
+NEXT.3 is complete.
+
+Next recommended stage: `NEXT.4 Stable release/tag gate`, only after explicit user approval for release build, tag and GitHub release actions.
+
 ## Запреты до отдельного approval
 
 Не выполнять без отдельного явного разрешения пользователя:

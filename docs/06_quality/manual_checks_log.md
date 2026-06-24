@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-24 - NEXT.3 Operator decision по raw/latest/registry
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-24 | Пользователь выбрал `Вариант A — approve source update` для controlled Minfin latest/registry. Проверены `git status`, registry diff, SHA256/size latest XLSX и active registry rows. | OK: approved latest `INTERNET_Auction_Results_rus_2026_20260618.xlsx`, SHA256 `3e748e88be0e5ff26171d6f36916949de83c50c918749e57454aeb1e73e3829b`, size `20131`; active registry rows: `2025 final` и `2026 latest`. | `data/raw/minfin/ofz_auction_results/versions/` не staged; generated outputs/source acquisition reports не staged. Stable release/tag/GitHub release не выполнялись. |
+
 ## 2026-06-24 - NEXT.2 Quality-full stable-release precheck
 
 | Дата | Что проверено | Результат | Ограничения |
