@@ -189,6 +189,31 @@ NEXT.3 is complete.
 
 Next recommended stage: `NEXT.4 Stable release/tag gate`, only after explicit user approval for release build, tag and GitHub release actions.
 
+## NEXT.4 result - Stable release/tag gate
+
+Дата: 2026-06-24.
+
+Выполнен stable release gate:
+
+- release bundle dry-run - OK;
+- release bundle build with `--include-outputs --confirm BUILD_RELEASE_BUNDLE` - OK;
+- release bundle created: `releases\ofz_analytics_2026-05-01_month_cumulative_retrospective_4_20260624_165519`;
+- release manifest git commit: `a863bbdb108fdfb349e7c07d6ebfd8b654225f97`;
+- release manifest dirty flag: `false`;
+- stable tag `v0.1.0` confirmed on GitHub and points to `a863bbdb108fdfb349e7c07d6ebfd8b654225f97`;
+- GitHub Release created after separate explicit user approval: `https://github.com/VinogradovPV/OFZ_ANALYTICS/releases/tag/v0.1.0`;
+- release asset uploaded: `ofz_analytics_2026-05-01_month_cumulative_retrospective_4_20260624_165519.zip`.
+
+`git push origin v0.1.0` reported that the remote reference already exists. Remote inspection confirmed that the existing tag points to the intended release commit, so no force push or tag move was performed.
+
+Not performed:
+
+- BI package build.
+
+Details are recorded in `docs/00_project/stable_release_gate_report.md`.
+
+Next recommended stage: `NEXT.5 Telemetry hardening`.
+
 ## Запреты до отдельного approval
 
 Не выполнять без отдельного явного разрешения пользователя:

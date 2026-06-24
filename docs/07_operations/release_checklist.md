@@ -1,6 +1,17 @@
 # Release checklist
 
-## POSTP3.7 current gate snapshot
+## Current stable release publication snapshot
+
+Дата: 2026-06-24.
+
+- [x] Stable Release `v0.1.0` опубликован на GitHub: `https://github.com/VinogradovPV/OFZ_ANALYTICS/releases/tag/v0.1.0`.
+- [x] Tag `v0.1.0` указывает на release commit `a863bbdb108fdfb349e7c07d6ebfd8b654225f97`.
+- [x] Release asset uploaded: `ofz_analytics_2026-05-01_month_cumulative_retrospective_4_20260624_165519.zip`.
+- [x] Release asset digest: `sha256:faa5f898317c6ec7ea4bb3e15f42ba1de48ff9077e5121330124420b0fb85711`.
+- [x] Release bundle and zip remain generated external artifacts under ignored `releases/` and are not staged.
+- [ ] Optional BI package was not built.
+
+## POSTP3.7 historical gate snapshot
 
 Дата: 2026-06-24.
 
@@ -54,6 +65,22 @@
 - [x] `data/raw/minfin/ofz_auction_results/versions/` remains not staged.
 - [x] Source acquisition reports and generated outputs remain not staged.
 - [ ] Stable release/tag/GitHub release still require separate explicit approval.
+
+## NEXT.4 stable release gate snapshot
+
+Дата: 2026-06-24.
+
+- [x] Release bundle dry-run reviewed.
+- [x] Release bundle build completed with `BUILD_RELEASE_BUNDLE`.
+- [x] Release bundle created under ignored `releases/`: `releases\ofz_analytics_2026-05-01_month_cumulative_retrospective_4_20260624_165519`.
+- [x] Release manifest commit hash: `a863bbdb108fdfb349e7c07d6ebfd8b654225f97`.
+- [x] Release manifest dirty flag: `false`.
+- [x] Stable tag `v0.1.0` exists on GitHub and points to `a863bbdb108fdfb349e7c07d6ebfd8b654225f97`.
+- [x] No force push or tag move was performed.
+- [x] Release bundle remains external generated artifact and is not staged.
+- [x] GitHub Release created after separate explicit approval: `https://github.com/VinogradovPV/OFZ_ANALYTICS/releases/tag/v0.1.0`.
+- [x] Release asset uploaded: `ofz_analytics_2026-05-01_month_cumulative_retrospective_4_20260624_165519.zip`, size `73956359` bytes.
+- [x] Uploaded asset digest: `sha256:faa5f898317c6ec7ea4bb3e15f42ba1de48ff9077e5121330124420b0fb85711`.
 
 ## Stable Release Procedure
 

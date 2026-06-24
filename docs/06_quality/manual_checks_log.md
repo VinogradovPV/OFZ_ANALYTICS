@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-24 - NEXT.4 Stable release/tag gate
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-24 | Stable release gate and publication: release bundle dry-run, release bundle build with `BUILD_RELEASE_BUNDLE`, stable tag check/push attempt, `gh release create`, `gh release upload`. | OK: release bundle created at `releases\ofz_analytics_2026-05-01_month_cumulative_retrospective_4_20260624_165519`; manifest commit `a863bbdb108fdfb349e7c07d6ebfd8b654225f97`, dirty flag `false`; remote `v0.1.0` already existed and points to the same commit; GitHub Release published at `https://github.com/VinogradovPV/OFZ_ANALYTICS/releases/tag/v0.1.0`; asset `ofz_analytics_2026-05-01_month_cumulative_retrospective_4_20260624_165519.zip` uploaded, size `73956359` bytes, digest `sha256:faa5f898317c6ec7ea4bb3e15f42ba1de48ff9077e5121330124420b0fb85711`. | Release bundle and zip remain ignored external artifacts and are not staged. The first `gh release create` attempt timed out and left a broken draft without asset; that draft was deleted without changing tag `v0.1.0`, then release/create upload completed successfully after explicit user approval. |
+
 ## 2026-06-24 - NEXT.3 Operator decision по raw/latest/registry
 
 | Дата | Что проверено | Результат | Ограничения |
