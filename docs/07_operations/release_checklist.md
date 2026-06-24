@@ -1,5 +1,18 @@
 # Release checklist
 
+## POSTP3.7 current gate snapshot
+
+Дата: 2026-06-24.
+
+- [x] Automated release-candidate gate passed for `2026-05-01 / month / cumulative / retrospective 4`.
+- [x] Editable install, dependency check, compileall, UTF-8/mojibake scanner, pipeline, schema, quality-fast, release bundle dry-run, GUI smoke, Minfin live dry-run and OFZ-PD yield regression completed.
+- [x] Release bundle command was dry-run only; no release files were written.
+- [x] Dangerous actions were not executed: live download/import/replacement, delete outputs, release build, BI build, git tag and GitHub release.
+- [x] Generated outputs, `.ofz_launcher`, raw versions, source acquisition reports and release artifacts must remain outside staging unless separately approved.
+- [ ] Screenshot backend must be run from ordinary project PowerShell or explicitly waived before stable release, because Codex managed environment blocks the browser screenshot backend.
+- [ ] Local raw/generated working tree state must be reviewed before stable release decision.
+- [ ] Stable release tag and `gh release create/upload` require separate explicit user permission.
+
 ## Stable Release Procedure
 
 - [ ] Stable release procedure reviewed: `docs/07_operations/stable_release_procedure.md`.

@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-24 - POSTP3.7 Release-candidate gate
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-24 | Release-candidate gate после P3/Post-P3: editable install, `pip check`, `compileall`, UTF-8/mojibake scanner, pipeline, schema, quality-fast, release bundle dry-run, GUI smoke, Minfin live dry-run, OFZ-PD yield regression и попытка screenshot validation. | OK для автоматизированного gate. Minfin dry-run выбрал `INTERNET_Auction_Results_rus_2026_20260618.xlsx` без raw mutation. Release bundle запускался только в dry-run. Generated outputs, `.ofz_launcher`, raw versions и release artifacts не входят в staging scope. | Screenshot backend недоступен в Codex managed environment; требуется повторный запуск `visual_regression.py --mode screenshot` из обычного project PowerShell или явный waiver. `ofz-quality --full`, stable release/tag/GitHub release, live download/import/replacement, release build, BI build и delete outputs не выполнялись. |
+
 ## 2026-06-24 - POSTP3.5 Pipeline and data audit optimization
 
 | Дата | Что проверено | Результат | Ограничения |

@@ -1,5 +1,54 @@
 # Post-P3 optimization progress report
 
+## POSTP3.7 - Release-candidate gate
+
+Дата: 2026-06-24.
+
+### Статус
+
+- Выполнен POSTP3.7 release-candidate gate для текущего состояния после P3/Post-P3.
+- Создан отчет `docs/00_project/post_p3_release_candidate_report.md`.
+- Автоматизированный gate пройден: editable install, dependency check, compileall, UTF-8/mojibake scanner, pipeline, schema, quality-fast, release bundle dry-run, GUI smoke, Minfin live dry-run и OFZ-PD yield regression завершились успешно.
+- Stable release, git tag, GitHub release, live download/import/replacement, release bundle build, BI build и destructive cleanup не выполнялись.
+
+### Изменения
+
+- `docs/00_project/post_p3_release_candidate_report.md`
+- `docs/00_project/post_p3_optimization_progress_report.md`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/07_operations/release_checklist.md`
+
+### Проверки
+
+- `.\.venv\Scripts\python.exe -m pip install -e .` - OK.
+- `.\.venv\Scripts\python.exe -m pip check` - OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts` - OK.
+- `.\.venv\Scripts\python.exe scripts\qa\check_text_encoding.py` - OK.
+- `.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+- `.\.venv\Scripts\ofz-schema.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+- `.\.venv\Scripts\ofz-build-release-bundle.exe --dry-run --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK, dry-run only.
+- `.\.venv\Scripts\ofz-gui.exe --smoke` - OK.
+- `.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode monthly --dry-run --timeout-seconds 20 --retries 1` - OK; selected `INTERNET_Auction_Results_rus_2026_20260618.xlsx`; raw unchanged.
+- `.\.venv\Scripts\python.exe scripts\qa\ofz_pd_yield_metrics_regression.py` - OK.
+- `.\.venv\Scripts\python.exe scripts\visual_regression.py --mode screenshot --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - attempted; browser screenshot backend unavailable in Codex managed environment, so the remaining screenshot validation must be run from ordinary project PowerShell or explicitly waived.
+
+### Пропущенные/отложенные проверки
+
+- `ofz-quality --full` не запускался: он остается обязательным перед stable release, но не был нужен для текущего RC gate commit.
+- Stable release/tag/GitHub release не выполнялись без отдельного разрешения пользователя.
+- Release bundle build, BI build, live Minfin download/import/replacement и delete outputs не выполнялись как dangerous actions.
+
+### Риски и условия stable release
+
+- В рабочем дереве остаются локальные raw/generated изменения от операторских и pipeline запусков; они не входят в staging scope POSTP3.7.
+- Screenshot backend должен быть проверен из обычного PowerShell вне Codex managed environment или явно зафиксирован как accepted limitation.
+- Текущий RC gate подтверждает готовность автоматизированного контура, но stable release решение требует финального операторского review raw/generated state.
+
+### Следующий этап
+
+Рекомендуемый следующий шаг: запустить screenshot validation из обычного PowerShell, затем принять отдельное решение по stable release/tag либо перейти к малым refactor-этапам chart/QA decomposition.
+
 ## POSTP3.6 - Chart/QA monolith decomposition planning
 
 Дата: 2026-06-24.
