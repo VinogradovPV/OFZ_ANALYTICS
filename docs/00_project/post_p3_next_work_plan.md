@@ -109,6 +109,30 @@ Clean ordinary status не означает, что raw/latest/registry уже �
 .\.venv\Scripts\python.exe scripts\visual_regression.py --mode screenshot --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
+## NEXT.1 result - Screenshot backend validation outside sandbox
+
+Дата: 2026-06-24.
+
+Пользователь вручную выполнил команду из обычного project PowerShell:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\visual_regression.py --mode screenshot --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
+```
+
+Результат зафиксирован в `docs/06_quality/visual_regression_report.md`.
+
+Фактический результат:
+
+- screenshot backend отработал outside sandbox;
+- сформировано `50` screenshot artifacts;
+- screenshot run id/path содержит `visual_regression_20260624_160024_month_cumulative_2026-05-01_r4`;
+- baseline screenshots отсутствуют, поэтому diff report фиксирует `missing_baseline`, а не failure;
+- generated screenshot PNG, manifest и diff report files остаются generated outputs и не должны коммититься.
+
+NEXT.1 считается закрытым как backend validation. Перед stable release остается операторский visual review/waiver по содержанию скриншотов и решение по baseline policy.
+
+Следующий рекомендуемый этап: `NEXT.2 quality-full stable-release precheck`.
+
 ## Запреты до отдельного approval
 
 Не выполнять без отдельного явного разрешения пользователя:

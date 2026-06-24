@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-24 - NEXT.1 Screenshot backend validation outside sandbox
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-24 | Пользователь вручную запустил `.\.venv\Scripts\python.exe scripts\visual_regression.py --mode screenshot --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` из обычного project PowerShell. | OK: результат зафиксирован в `docs/06_quality/visual_regression_report.md`; screenshot backend сформировал `50` screenshot artifacts в `outputs/reports/visual_regression/screenshots/visual_regression_20260624_160024_month_cumulative_2026-05-01_r4`. | Baseline screenshots отсутствуют, поэтому diff report показывает `missing_baseline` вместо failure. Screenshot PNG, manifest и diff report являются generated outputs и не коммитятся. Перед stable release нужен операторский visual review/waiver по содержанию скриншотов и baseline policy. |
+
 ## 2026-06-24 - POSTP3.7 Release-candidate gate
 
 | Дата | Что проверено | Результат | Ограничения |

@@ -13,6 +13,17 @@
 - [ ] Local raw/generated working tree state must be reviewed before stable release decision.
 - [ ] Stable release tag and `gh release create/upload` require separate explicit user permission.
 
+## NEXT.1 screenshot backend snapshot
+
+Дата: 2026-06-24.
+
+- [x] Screenshot backend command was run manually from ordinary project PowerShell.
+- [x] Result is recorded in `docs/06_quality/visual_regression_report.md`.
+- [x] Screenshot backend produced `50` screenshot artifacts under `outputs/reports/visual_regression/screenshots/visual_regression_20260624_160024_month_cumulative_2026-05-01_r4`.
+- [x] Missing screenshot baselines are recorded as `missing_baseline`, not as command failure.
+- [x] Screenshot PNG, manifest and diff report files remain generated outputs and must not be staged.
+- [ ] Operator visual review/waiver for screenshot content and baseline policy is still required before stable release.
+
 ## Stable Release Procedure
 
 - [ ] Stable release procedure reviewed: `docs/07_operations/stable_release_procedure.md`.
