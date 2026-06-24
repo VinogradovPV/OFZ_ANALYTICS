@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-24 - NEXT.2 Quality-full stable-release precheck
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-24 | Stable-release precheck без release build/tag/GitHub release: editable install, `pip check`, `compileall`, UTF-8/mojibake scanner, pipeline, schema, `ofz-quality --fast`, `ofz-quality --full` и release bundle dry-run на параметрах `2026-05-01 / month / cumulative / retrospective 4`. | OK: `quality-full` прошел; release bundle dry-run показал target `releases\ofz_analytics_2026-05-01_month_cumulative_retrospective_4_20260624_163039` и не записывал release files. Подробности в `docs/00_project/stable_release_precheck_report.md`. | Anomaly warnings сохранены как operator-review observations, не как gate failure. Stable release, tag, GitHub release, release build, BI build, live Minfin operations и raw/source update не выполнялись. |
+
 ## 2026-06-24 - NEXT.1 Screenshot backend validation outside sandbox
 
 | Дата | Что проверено | Результат | Ограничения |

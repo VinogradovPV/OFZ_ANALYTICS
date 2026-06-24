@@ -133,6 +133,30 @@ NEXT.1 считается закрытым как backend validation. Перед
 
 Следующий рекомендуемый этап: `NEXT.2 quality-full stable-release precheck`.
 
+## NEXT.2 result - Quality-full stable-release precheck
+
+Дата: 2026-06-24.
+
+Выполнен stable-release precheck без release build/tag/GitHub release:
+
+- editable install - OK;
+- `pip check` - OK;
+- `compileall` - OK;
+- UTF-8/mojibake scanner - OK;
+- pipeline for `2026-05-01 / month / cumulative / retrospective 4` - OK;
+- schema validation - OK, `16` checks;
+- `ofz-quality --fast` - OK;
+- `ofz-quality --full` - OK;
+- release bundle dry-run - OK, dry-run only.
+
+Подробности зафиксированы в `docs/00_project/stable_release_precheck_report.md`.
+
+`ofz-quality --full` содержит expected anomaly warnings, но gate завершился успешно. Release bundle dry-run показал target `releases\ofz_analytics_2026-05-01_month_cumulative_retrospective_4_20260624_163039` и не записывал release files.
+
+NEXT.2 считается закрытым.
+
+Следующий рекомендуемый этап: `NEXT.3 Operator decision по raw/latest/registry`.
+
 ## Запреты до отдельного approval
 
 Не выполнять без отдельного явного разрешения пользователя:

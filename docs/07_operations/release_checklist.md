@@ -24,6 +24,23 @@
 - [x] Screenshot PNG, manifest and diff report files remain generated outputs and must not be staged.
 - [ ] Operator visual review/waiver for screenshot content and baseline policy is still required before stable release.
 
+## NEXT.2 quality-full precheck snapshot
+
+Дата: 2026-06-24.
+
+- [x] Editable install completed.
+- [x] `pip check` completed.
+- [x] `compileall` completed.
+- [x] UTF-8/mojibake scanner completed.
+- [x] Pipeline completed for `2026-05-01 / month / cumulative / retrospective 4`.
+- [x] Schema validation completed with `16` checks.
+- [x] `ofz-quality --fast` completed.
+- [x] `ofz-quality --full` completed.
+- [x] Release bundle dry-run completed.
+- [x] Release bundle dry-run did not write release files.
+- [x] Stable release, git tag, GitHub release, release bundle build, BI build, live Minfin operations and raw/source update were not performed.
+- [ ] Operator decision for hidden controlled raw/latest/registry state is still required before stable release.
+
 ## Stable Release Procedure
 
 - [ ] Stable release procedure reviewed: `docs/07_operations/stable_release_procedure.md`.
