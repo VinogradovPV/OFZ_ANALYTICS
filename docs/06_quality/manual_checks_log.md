@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-24 - POSTP3.4 Minfin live acquisition hardening
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-24 | `ofz-fetch-minfin` live dry-run discovery, no-network dry-run, manual-import dry-run, download confirm blocking, parser QA and compileall. | OK: monthly live dry-run selected `INTERNET_Auction_Results_rus_2026_20260618.xlsx`; annual-final live dry-run selected `INTERNET_Auction_Results_rus_2025_20251231.xlsx`; no-network dry-run returned non-mutating warning; manual-import dry-run showed hash/size/planned role; `--download` without confirm returned non-zero before mutation; source acquisition tests and compileall passed. | Live download/import/replacement were not executed. Raw/latest/final/registry/versions and generated source acquisition reports were not staged. Existing local raw/generated changes predate this stage. |
+
 ## 2026-06-24 - POSTP3.3 Source registry strict-readiness
 
 | Дата | Что проверено | Результат | Ограничения |

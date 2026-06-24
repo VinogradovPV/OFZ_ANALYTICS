@@ -53,7 +53,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--year", type=int, required=True)
     parser.add_argument("--mode", choices=["monthly", "annual-final", "manual-import"], required=True)
     parser.add_argument("--dry-run", action="store_true", help="Build a plan without mutating raw storage.")
-    parser.add_argument("--download", action="store_true", help="Reserved for later P3 stages.")
+    parser.add_argument("--download", action="store_true", help="Perform controlled acquisition/import with confirm token.")
     parser.add_argument("--url", default=DEFAULT_SOURCE_URL)
     parser.add_argument("--output-root", default=".")
     parser.add_argument("--manual-file")
@@ -603,6 +603,11 @@ def build_acquisition_plan(
     html: str | None = None,
     manual_file: str | None = None,
     no_network: bool = False,
+    timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
+    retries: int = DEFAULT_RETRIES,
+    user_agent: str = DEFAULT_USER_AGENT,
+    max_pages: int = DEFAULT_MAX_PAGES,
+    page_fetcher=fetch_page,
 ) -> tuple[AcquisitionPlan, list[SourceDocumentRecord], dict[str, object] | None]:
     warnings: list[str] = []
     records: list[SourceDocumentRecord] = []
@@ -645,7 +650,22 @@ def build_acquisition_plan(
         if no_network:
             warnings.append("No HTML file supplied and --no-network is set; discovery skipped.")
         else:
-            warnings.append("Live network discovery is not implemented in P3.1 skeleton.")
+            try:
+                records, pagination = _discover_records(
+                    source_url=source_url,
+                    year=year,
+                    timeout_seconds=timeout_seconds,
+                    retries=retries,
+                    user_agent=user_agent,
+                    max_pages=max_pages,
+                    page_fetcher=page_fetcher,
+                )
+                selected_record = select_candidate(records, year, mode)
+                selected = selected_record.to_dict() if selected_record else None
+                if selected is None:
+                    warnings.append("No matching candidate found during live discovery.")
+            except HttpClientError as exc:
+                warnings.append(f"Live discovery failed; raw unchanged: {exc}")
 
     paths = build_storage_paths(output_root, year).to_dict()
     plan = AcquisitionPlan(
@@ -738,6 +758,10 @@ def main(argv: list[str] | None = None) -> int:
             html=html,
             manual_file=args.manual_file,
             no_network=args.no_network,
+            timeout_seconds=args.timeout_seconds,
+            retries=args.retries,
+            user_agent=args.user_agent,
+            max_pages=args.max_pages,
         )
     except (FileNotFoundError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

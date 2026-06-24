@@ -1,5 +1,50 @@
 # Post-P3 optimization progress report
 
+## POSTP3.4 - Minfin live acquisition hardening
+
+Дата: 2026-06-24.
+
+### Статус
+
+- Выполнен POSTP3.4 hardening для `ofz-fetch-minfin`.
+- Исправлен live dry-run gap: `--dry-run` теперь выполняет live discovery, если не используется `--html-file` или `--no-network`.
+- Реальный download/import не выполнялся.
+- Raw storage, registry, versions и source acquisition reports не мутировались этим этапом.
+
+### Изменения
+
+- `scripts/source_acquisition/minfin_fetch.py`
+- `docs/07_operations/minfin_source_acquisition.md`
+- `docs/07_operations/minfin_monthly_update_procedure.md`
+- `docs/00_project/post_p3_optimization_progress_report.md`
+- `docs/06_quality/manual_checks_log.md`
+
+### Проверки
+
+- `.\.venv\Scripts\ofz-fetch-minfin.exe --help` - OK.
+- `.\.venv\Scripts\python.exe -m py_compile scripts\source_acquisition\minfin_fetch.py` - OK.
+- `.\.venv\Scripts\python.exe scripts\qa\minfin_source_acquisition_tests.py` - OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts` - OK.
+- `.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode monthly --dry-run --timeout-seconds 20 --retries 1` - OK; selected live candidate `INTERNET_Auction_Results_rus_2026_20260618.xlsx`.
+- `.\.venv\Scripts\ofz-fetch-minfin.exe --year 2025 --mode annual-final --dry-run --timeout-seconds 20 --retries 1` - OK; selected live candidate `INTERNET_Auction_Results_rus_2025_20251231.xlsx`.
+- `.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode monthly --dry-run --no-network` - OK; non-mutating warning.
+- `manual-import --dry-run` на temp XLSX - OK; hash/size/planned role shown, raw unchanged.
+- `.\.venv\Scripts\ofz-fetch-minfin.exe --year 2026 --mode monthly --download` - expected non-zero; blocked without `DOWNLOAD_MINFIN_SOURCE` before mutation.
+
+### Пропущенные проверки и почему
+
+- `--download --confirm DOWNLOAD_MINFIN_SOURCE`, `REPLACE_MINFIN_FINAL` и `IMPORT_MINFIN_FILE` не выполнялись: POSTP3.4 hardening проверяет dry-run/live discovery и confirm blocking, но не дает разрешения на raw mutation.
+- GitHub release/release bundle/BI build не относятся к этапу.
+
+### Риски
+
+- Live discovery зависит от доступности `minfin.gov.ru`; при 503/timeout dry-run должен повторяться позже или переводиться в manual fallback.
+- В рабочей копии до этапа уже были unrelated raw/generated/report changes; они не относятся к POSTP3.4 commit и не должны staged.
+
+### Следующий этап
+
+Следующий рекомендуемый этап: `POSTP3.5 Pipeline and data audit optimization`.
+
 ## POSTP3.3 - Source registry strict-readiness
 
 Дата: 2026-06-24.

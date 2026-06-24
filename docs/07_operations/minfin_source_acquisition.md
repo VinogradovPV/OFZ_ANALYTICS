@@ -1,5 +1,21 @@
 # Операционный дизайн source acquisition Минфина
 
+## POSTP3.4 - live dry-run hardening
+
+Дата обновления: 2026-06-24.
+
+`ofz-fetch-minfin --dry-run` теперь выполняет live discovery, если не переданы `--html-file` и `--no-network`.
+
+Проверенное поведение:
+
+- monthly dry-run для 2026 читает section `id_66`, pagination `page_66`, выбирает current monthly XLSX `INTERNET_Auction_Results_rus_2026_20260618.xlsx` по максимальной `as_of_date`;
+- annual-final dry-run для 2025 выбирает `INTERNET_Auction_Results_rus_2025_20251231.xlsx`, не требуя суффикс `YYYY1231`;
+- `--no-network` dry-run не делает сетевых запросов и возвращает non-mutating plan с warning;
+- `manual-import --dry-run` валидирует локальный XLSX, считает hash/size и показывает planned role/path без записи raw;
+- `--download` остается заблокирован без exact confirm token.
+
+Live dry-run не скачивает Excel-файл, не пишет `latest/`, `final/`, `registry/`, `versions/` и не создает source acquisition reports. При сетевой ошибке dry-run возвращает warning `Live discovery failed; raw unchanged: ...`; operator должен повторить dry-run позже или использовать manual fallback.
+
 ## P3.8 - операторская процедура
 
 Русскоязычная операционная инструкция для monthly update, январского annual-final, changed final hash и manual fallback находится в:
@@ -341,7 +357,7 @@ Parser contract:
 - monthly selection prefers title with `на DD.MM.YYYY`;
 - annual-final selection does not require file suffix `YYYY1231`.
 
-P3.1 deliberately blocks `--download` and `--save-html-snapshot`. Live network discovery is not implemented in this stage; `--no-network` dry-run returns a non-mutating plan with warning when no local `--html-file` is supplied.
+Historical P3.1 note: the initial skeleton deliberately blocked `--download` and `--save-html-snapshot`, and live network discovery was not implemented in that stage. POSTP3.4 supersedes this for dry-run discovery: live dry-run now parses the site without downloading Excel bytes or mutating raw storage. `--no-network` still returns a non-mutating plan with warning when no local `--html-file` is supplied.
 
 ## P3.3 - monthly acquisition implementation
 
