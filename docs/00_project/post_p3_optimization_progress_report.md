@@ -1,5 +1,49 @@
 # Post-P3 optimization progress report
 
+## POSTP3.6 - Chart/QA monolith decomposition planning
+
+Дата: 2026-06-24.
+
+### Статус
+
+- Выполнен planning-only этап POSTP3.6.
+- Создан план `docs/00_project/chart_qa_decomposition_plan.md`.
+- Физическая декомпозиция chart/QA scripts не выполнялась.
+- Финансовая методология, OFZ-PD yield scope, output filenames и quality gate semantics не менялись.
+
+### Изменения
+
+- `docs/00_project/chart_qa_decomposition_plan.md`
+- `docs/00_project/post_p3_optimization_progress_report.md`
+
+### Наблюдения
+
+- `scripts/06_build_charts.py`: около 7162 строк, 175 top-level functions; крупнейшие группы `yield`, `format`, `boxplot`, `scatter`, `sankey`, `risk`.
+- `scripts/10_build_monthly_charts.py`: около 1890 строк, 54 top-level functions; основные группы monthly charts, heatmaps, revenue helpers.
+- `scripts/html_chart_qa.py`: около 2269 строк, 63 top-level functions; 36 check functions и 20 contract-related functions.
+- `scripts/visual_regression.py`: около 1406 строк, 57 top-level functions; screenshot backend, static fallback checks и report rendering находятся в одном файле.
+- Существующий пакет `scripts/charts/` уже содержит `common.py` и заготовки family modules; план рекомендует развивать его, а не создавать параллельную архитектуру.
+
+### Проверки
+
+- `git diff --name-only` - reviewed.
+- `.\.venv\Scripts\python.exe scripts\qa\check_text_encoding.py` - OK.
+- `git diff --check` - OK.
+
+### Пропущенные проверки и почему
+
+- `compileall`, `ofz-run`, `ofz-schema`, `ofz-quality --fast/full` не запускались: POSTP3.6 изменяет только docs и не меняет Python source.
+- Visual/screenshot checks не запускались: декомпозиция не выполнялась, generated charts не менялись.
+
+### Риски
+
+- Будущая декомпозиция должна быть move-only по одному семейству за commit, иначе высок риск незаметно изменить output paths, QA contracts или yield methodology.
+- Yield/boxplot family переносить только с отдельной OFZ-PD regression и ручной проверкой ноября 2025.
+
+### Следующий этап
+
+Следующий рекомендуемый этап: `POSTP3.7 Release-candidate gate` или отдельный маленький foundation refactor для chart result/path helpers, если пользователь решит продолжить декомпозицию до release gate.
+
 ## POSTP3.5 - Pipeline and data audit optimization
 
 Дата: 2026-06-24.
