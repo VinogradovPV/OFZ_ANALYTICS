@@ -1,4 +1,27 @@
-# Операционный дизайн source acquisition Минфина
+﻿# Операционный дизайн source acquisition Минфина
+
+## NEXT.7 - strict migration status
+
+Дата актуализации: 2026-06-25.
+
+Текущий registry прошел фактическую проверку:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\01_data_audit.py --source-registry-mode strict --no-allow-legacy-raw
+```
+
+Default остается совместимым:
+
+```text
+source-registry-mode=warn
+allow-legacy-raw=true
+```
+
+Причина: canonical pipeline entry point `ofz-run.exe` пока не принимает `--source-registry-mode` и `--no-allow-legacy-raw`, поэтому full pipeline strict/no-legacy gate требует отдельной доработки `run_pipeline.py` и отдельного approval на switch default.
+
+План миграции зафиксирован в `docs/00_project/source_registry_strict_migration_plan.md`.
+
+До отдельного approval запрещено менять default на `strict`, отключать legacy fallback по умолчанию, считать ручное добавление XLSX в raw штатным source update и коммитить `data/raw/minfin/ofz_auction_results/versions/` snapshots без отдельного operator decision.
 
 ## POSTP3.4 - live dry-run hardening
 

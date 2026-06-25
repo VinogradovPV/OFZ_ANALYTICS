@@ -1,4 +1,14 @@
-# Операционная инструкция: ежемесячное обновление данных Минфина
+﻿# Операционная инструкция: ежемесячное обновление данных Минфина
+
+## NEXT.7 - strict registry migration note
+
+Дата актуализации: 2026-06-25.
+
+Ежемесячный workflow пока остается в совместимом режиме `warn + allow-legacy-raw`. Проверка `strict --no-allow-legacy-raw` проходит на уровне `scripts/01_data_audit.py`, но `ofz-run.exe` еще не поддерживает передачу этих параметров в полный pipeline.
+
+До отдельного approval оператор не должен включать strict mode как default, отключать legacy fallback по умолчанию, обходить `ofz-fetch-minfin` ручным копированием XLSX в raw или коммитить файлы из `data/raw/minfin/ofz_auction_results/versions/`.
+
+Подробный план перехода: `docs/00_project/source_registry_strict_migration_plan.md`.
 
 Дата актуализации: 2026-06-17.
 

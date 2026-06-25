@@ -1,5 +1,47 @@
 # Post-P3 optimization progress report
 
+## NEXT.7 - Source registry strict migration plan
+
+Дата: 2026-06-25.
+
+### Статус
+
+- Выполнен NEXT.7: подготовлен план миграции controlled Minfin source registry к strict mode.
+- Создан `docs/00_project/source_registry_strict_migration_plan.md`.
+- Data audit strict validation фактически проходит на текущем registry.
+- Default не изменен: `warn + allow-legacy-raw` остается действующим режимом до отдельного approval.
+- Выявлен blocker для full pipeline strict gate: `ofz-run.exe` пока не принимает `--source-registry-mode` и `--no-allow-legacy-raw`.
+
+### Изменения
+
+- `docs/00_project/source_registry_strict_migration_plan.md`
+- `docs/00_project/post_p3_optimization_progress_report.md`
+- `docs/06_quality/manual_checks_log.md`
+- `docs/07_operations/minfin_source_acquisition.md`
+- `docs/07_operations/minfin_monthly_update_procedure.md`
+
+### Проверки
+
+- `git status --short --branch` - OK, только untracked prompt-инструкция вне staging scope.
+- `git log --oneline -5` - OK.
+- `gh run list --limit 5` - OK, последний run NEXT.6 success.
+- `git ls-files -v | Select-String '^S '` - checked.
+- `Get-Content .git\info\exclude` - checked.
+- `.\.venv\Scripts\ofz-run.exe --help` - OK; strict flags отсутствуют.
+- `.\.venv\Scripts\python.exe scripts\qa\minfin_data_audit_registry_smoke.py` - OK.
+- `.\.venv\Scripts\python.exe scripts\qa\minfin_source_acquisition_tests.py` - OK.
+- `.\.venv\Scripts\python.exe scripts\01_data_audit.py --help` - OK; strict/no-legacy flags есть у data audit.
+- `.\.venv\Scripts\python.exe scripts\01_data_audit.py --source-registry-mode strict --no-allow-legacy-raw` - OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts` - OK.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+
+### Ограничения
+
+- Full pipeline strict/no-legacy не запускался, потому что canonical `ofz-run` пока не поддерживает нужные flags.
+- Strict-by-default не включался и не approved.
+- Raw/source update, live Minfin download, release build, BI build и destructive cleanup не выполнялись.
+- `data/raw/minfin/ofz_auction_results/versions/` не staged; исторический tracked snapshot требует отдельного operator decision перед полной policy cleanup.
+
 ## NEXT.6 - Chart/QA decomposition foundation
 
 Дата: 2026-06-25.

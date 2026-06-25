@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-25 - NEXT.7 Source registry strict migration plan
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-25 | Готовность controlled Minfin source registry к strict migration: registry smokes, source acquisition QA, data audit strict/no-legacy, `ofz-run --help`, compileall, quality-fast. | OK: `minfin_data_audit_registry_smoke.py`, `minfin_source_acquisition_tests.py`, `01_data_audit.py --source-registry-mode strict --no-allow-legacy-raw`, `compileall` и `ofz-quality --fast` прошли. | `ofz-run` пока не принимает `--source-registry-mode` и `--no-allow-legacy-raw`, поэтому strict-ready=true только для data audit validation, но не для full pipeline default switch. Default не менялся; generated outputs/raw versions не коммитятся. |
+
 ## 2026-06-25 - NEXT.6 Chart/QA decomposition foundation
 
 | Дата | Что проверено | Результат | Ограничения |
