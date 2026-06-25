@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-06-25 - NEXT.6 Chart/QA decomposition foundation
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-06-25 | Первый низкорисковый extraction для Chart/QA: `scripts/charts/export_utils.py`, подключение записи HTML/CSV artifacts в `06_build_charts.py` и `10_build_monthly_charts.py`, план дальнейшей декомпозиции. | OK: прошли `py_compile`, `compileall`, `ofz-run`, `html_chart_qa.py` на 50 графиках, `visual_regression.py --mode auto` и OFZ-PD yield regression. | Методология, output paths, filenames, chart semantics, source acquisition policy и release artifacts не менялись. `visual_regression --mode auto` использовал fallback, потому что screenshot backend недоступен в managed sandbox. Generated outputs не коммитятся. |
+
 ## 2026-06-24 - NEXT.5 Telemetry hardening
 
 | Дата | Что проверено | Результат | Ограничения |

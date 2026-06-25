@@ -33,6 +33,7 @@ if __package__ in {None, ""}:
         format_ru_number,
         format_signed_metric_value,
     )
+    from scripts.charts.export_utils import ensure_directories, write_chart_artifacts
 else:
     from . import config, palette, report_params, scatter_chart_policy, utils
     from .charts.common import (
@@ -44,6 +45,7 @@ else:
         format_ru_number,
         format_signed_metric_value,
     )
+    from .charts.export_utils import ensure_directories, write_chart_artifacts
 
 
 ChartBuilder = Callable[[pd.DataFrame, report_params.ReportParams, list[str]], "ChartResult | None"]
@@ -122,15 +124,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     prepared = prepare_scope(scope, limitations)
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
-    for directory in (
+    ensure_directories(
+        config.CHARTS_DIR,
         config.EXPORTS_CHART_DATA_RISK_QUADRANT_DIR,
         config.EXPORTS_CHART_DATA_SANKEY_DIR,
         config.EXPORTS_CHART_DATA_BOXPLOT_DIR,
         config.EXPORTS_CHART_DATA_STRUCTURE_DIR,
         config.EXPORTS_TECHNICAL_REVIEW_REQUIRED_DIR,
-    ):
-        directory.mkdir(parents=True, exist_ok=True)
+    )
 
     results: list[ChartResult] = []
     for builder in chart_builders():
@@ -144,8 +145,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             continue
         if result is None:
             continue
-        result.figure.write_html(result.html_path)
-        result.export_data.to_csv(result.csv_path, index=False, encoding="utf-8")
+        write_chart_artifacts(
+            result.figure,
+            result.export_data,
+            result.html_path,
+            result.csv_path,
+            csv_encoding="utf-8",
+        )
         results.append(result)
         logger.info("График сохранен: %s", result.html_path)
 
@@ -7049,9 +7055,8 @@ def markdown_cell(value: Any) -> str:
 def make_result(name: str, figure: Any, data: pd.DataFrame, params: report_params.ReportParams) -> ChartResult:
     suffix = make_suffix(params)
     html_dir = config.chart_html_dir_for_name(name)
-    html_dir.mkdir(parents=True, exist_ok=True)
     csv_dir = chart_data_dir_for_name(name)
-    csv_dir.mkdir(parents=True, exist_ok=True)
+    ensure_directories(html_dir, csv_dir)
     export_data = data.copy()
     if "_placement" in export_data.columns and "placement_volume" not in export_data.columns:
         export_data["placement_volume"] = pd.to_numeric(export_data["_placement"], errors="coerce")

@@ -1,5 +1,42 @@
 # Post-P3 optimization progress report
 
+## NEXT.6 - Chart/QA decomposition foundation
+
+Дата: 2026-06-25.
+
+### Статус
+
+- Выполнен первый foundation-step для декомпозиции Chart/QA после release `v0.1.0`.
+- Создан план `docs/00_project/chart_qa_decomposition_execution_plan.md`.
+- Выполнен один низкорисковый extraction: общий helper `scripts/charts/export_utils.py` для создания директорий и записи HTML/CSV chart artifacts.
+- Helper подключен к `scripts/06_build_charts.py` и `scripts/10_build_monthly_charts.py`.
+- Финансовая методология, scope базовых yield metrics `ОФЗ-ПД only`, output paths, filenames, chart semantics, source acquisition policy и release artifacts не менялись.
+
+### Изменения
+
+- `scripts/charts/export_utils.py`
+- `scripts/06_build_charts.py`
+- `scripts/10_build_monthly_charts.py`
+- `docs/00_project/chart_qa_decomposition_execution_plan.md`
+- `docs/00_project/post_p3_optimization_progress_report.md`
+- `docs/06_quality/manual_checks_log.md`
+
+### Проверки
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\06_build_charts.py scripts\10_build_monthly_charts.py scripts\html_chart_qa.py scripts\visual_regression.py scripts\charts\export_utils.py` - OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts` - OK.
+- `.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+- `.\.venv\Scripts\python.exe scripts\html_chart_qa.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK, найдено 50 HTML-графиков.
+- `.\.venv\Scripts\python.exe scripts\visual_regression.py --mode auto --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK с ожидаемым fallback warning: screenshot backend недоступен в managed sandbox.
+- `.\.venv\Scripts\python.exe scripts\qa\ofz_pd_yield_metrics_regression.py` - OK.
+- Generated outputs, `.ofz_launcher`, release artifacts, raw versions и source acquisition reports не входят в staging scope.
+
+### Ограничения
+
+- Это foundation refactor, а не разбиение всех chart/QA монолитов.
+- `html_chart_qa.py`, `visual_regression.py` и chart label/metadata policy пока не декомпозировались, чтобы не смешивать infrastructure extraction с visual semantics.
+- `visual_regression.py --mode auto` использовал fallback вместо screenshot backend; это не новый blocker для NEXT.6 и соответствует текущему managed environment.
+
 ## POSTP3.7 - Release-candidate gate
 
 Дата: 2026-06-24.

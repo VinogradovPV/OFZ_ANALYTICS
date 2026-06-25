@@ -21,8 +21,10 @@ except ImportError:
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from scripts import config, palette, report_params, utils, yield_policy
+    from scripts.charts.export_utils import ensure_directories, write_chart_artifacts
 else:
     from . import config, palette, report_params, utils, yield_policy
+    from .charts.export_utils import ensure_directories, write_chart_artifacts
 
 
 MONTHLY_METRICS_CSV = config.PROCESSED_DATA_DIR / "ofz_monthly_metrics.csv"
@@ -89,16 +91,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     prepared = prepare_metrics(metrics)
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
-    config.EXPORTS_CHART_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    ensure_directories(config.CHARTS_DIR, config.EXPORTS_CHART_DATA_DIR)
 
     results: list[ChartResult] = []
     for builder in chart_builders():
         result = builder(prepared, params, limitations)
         if result is None:
             continue
-        result.figure.write_html(result.html_path)
-        result.dataframe.to_csv(result.csv_path, index=False, encoding="utf-8-sig")
+        write_chart_artifacts(
+            result.figure,
+            result.dataframe,
+            result.html_path,
+            result.csv_path,
+            csv_encoding="utf-8-sig",
+        )
         results.append(result)
         logger.info("Помесячный график сохранен: %s", result.html_path)
         logger.info("Данные помесячного графика сохранены: %s", result.csv_path)
@@ -1509,9 +1515,8 @@ def make_result(
 ) -> ChartResult:
     suffix = make_output_suffix(params)
     html_dir = config.chart_html_dir_for_name(name)
-    html_dir.mkdir(parents=True, exist_ok=True)
     export_dir = csv_dir or config.EXPORTS_CHART_DATA_DIR
-    export_dir.mkdir(parents=True, exist_ok=True)
+    ensure_directories(html_dir, export_dir)
     return ChartResult(
         name=name,
         figure=figure,
