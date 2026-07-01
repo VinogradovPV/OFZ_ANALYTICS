@@ -1,5 +1,19 @@
 ﻿# Операционная инструкция: ежемесячное обновление данных Минфина
 
+## NEXT.8 - strict registry flags through pipeline
+
+Дата актуализации: 2026-07-01.
+
+Ежемесячный workflow по умолчанию остается совместимым: `warn + allow-legacy-raw`.
+
+При необходимости оператор теперь может запустить полный pipeline через canonical entry point с явными strict/no-legacy flags:
+
+```powershell
+.\.venv\Scripts\ofz-run.exe --report-date YYYY-MM-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative --source-registry-mode strict --no-allow-legacy-raw
+```
+
+До отдельного approval это не является default. Оператор не должен отключать legacy fallback по умолчанию, обходить `ofz-fetch-minfin` ручным копированием XLSX в raw или коммитить файлы из `data/raw/minfin/ofz_auction_results/versions/`.
+
 ## NEXT.7 - strict registry migration note
 
 Дата актуализации: 2026-06-25.

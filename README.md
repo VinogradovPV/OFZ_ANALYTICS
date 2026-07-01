@@ -231,6 +231,14 @@ Before running the selected pipeline command, the interactive launcher checks wh
 - `--safe` — safe reproduction mode для ранних этапов;
 - `--compare` — сравнение outputs, если применимо;
 - `--interactive` — интерактивный режим оркестратора.
+- `--source-registry-mode` — `off`, `warn` или `strict` для stage 1 data audit; default `warn`;
+- `--allow-legacy-raw` / `--no-allow-legacy-raw` — legacy raw fallback для stage 1; default `--allow-legacy-raw`.
+
+Registry strict/no-legacy доступен через canonical entry point, но strict-by-default не включен:
+
+```powershell
+.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative --source-registry-mode strict --no-allow-legacy-raw
+```
 
 ### cumulative и point
 

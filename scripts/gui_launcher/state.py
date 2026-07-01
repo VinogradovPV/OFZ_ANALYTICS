@@ -95,3 +95,7 @@ class GuiState:
             "--aggregation-mode",
             self.aggregation_mode,
         ]
+
+    def pipeline_registry_args(self) -> list[str]:
+        legacy_flag = "--allow-legacy-raw" if self.allow_legacy_raw else "--no-allow-legacy-raw"
+        return ["--source-registry-mode", self.source_registry_mode, legacy_flag]

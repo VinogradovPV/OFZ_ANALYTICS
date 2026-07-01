@@ -73,8 +73,11 @@ def main() -> int:
     assert "Только dry-run" in STAGE_ZERO_LABEL_TO_MODE
     assert "Download с подтверждением" in STAGE_ZERO_LABEL_TO_MODE
     assert STAGE_ZERO_LABEL_TO_MODE["Только dry-run"] == "dry-run"
+    assert REGISTRY_MODE_LABEL_TO_VALUE["Не проверять registry"] == "off"
     assert REGISTRY_MODE_LABEL_TO_VALUE["Проверять и предупреждать"] == "warn"
+    assert REGISTRY_MODE_LABEL_TO_VALUE["Требовать корректный registry"] == "strict"
     assert REGISTRY_MODE_VALUE_TO_LABEL[state.source_registry_mode] == "Проверять и предупреждать"
+    assert state.pipeline_registry_args() == ["--source-registry-mode", "warn", "--allow-legacy-raw"]
     assert state.launcher_log_dir == root / ".ofz_launcher" / "logs"
     assert "Выберите действие на вкладке" in PREVIEW_PLACEHOLDER
     basic_controls = set(MINFIN_BASIC_CONTROL_LABELS)
@@ -102,6 +105,22 @@ def main() -> int:
     assert "--dry-run" in live.steps[0].args
     assert "--no-network" not in live.steps[0].args
     assert not live.has_results
+    pipeline = registry.build("pipeline", state)
+    pipeline_args = pipeline.steps[-1].args
+    assert "--source-registry-mode" in pipeline_args
+    assert pipeline_args[pipeline_args.index("--source-registry-mode") + 1] == "warn"
+    assert "--allow-legacy-raw" in pipeline_args
+    assert "--no-allow-legacy-raw" not in pipeline_args
+    quality_args = registry.build("quality-fast", state).steps[0].args
+    assert "--source-registry-mode" not in quality_args
+    state.source_registry_mode = "strict"
+    state.allow_legacy_raw = False
+    strict_pipeline_args = registry.build("pipeline", state).steps[-1].args
+    assert strict_pipeline_args[strict_pipeline_args.index("--source-registry-mode") + 1] == "strict"
+    assert "--no-allow-legacy-raw" in strict_pipeline_args
+    assert "--allow-legacy-raw" not in strict_pipeline_args
+    state.source_registry_mode = "warn"
+    state.allow_legacy_raw = True
     expect_error(
         ConfirmationRequiredError,
         lambda: registry.build("minfin-monthly-download", state),

@@ -1,5 +1,50 @@
 # Post-P3 optimization progress report
 
+## NEXT.8 - Strict registry CLI plumbing
+
+Дата: 2026-07-01.
+
+### Статус
+
+- Выполнен NEXT.8: canonical `ofz-run` принимает `--source-registry-mode off|warn|strict`, `--allow-legacy-raw` и `--no-allow-legacy-raw`.
+- `scripts/run_pipeline.py` пробрасывает registry flags только в stage 1 `scripts/01_data_audit.py`.
+- GUI pipeline action теперь строит `ofz-run.exe` command с выбранным registry mode и legacy checkbox state.
+- Default не изменен: `warn + allow-legacy-raw`.
+- Strict-by-default не включался и не approved.
+
+### Изменения
+
+- `scripts/run_pipeline.py`
+- `scripts/gui_launcher/actions.py`
+- `scripts/gui_launcher/state.py`
+- `scripts/qa/pipeline_registry_cli_smoke.py`
+- `scripts/qa/gui_launcher_smoke.py`
+- `scripts/qa/gui_command_runner_smoke.py`
+- `docs/00_project/source_registry_strict_migration_plan.md`
+- `docs/00_project/post_p3_optimization_progress_report.md`
+- `docs/07_operations/gui_launcher.md`
+- `docs/07_operations/minfin_source_acquisition.md`
+- `docs/07_operations/minfin_monthly_update_procedure.md`
+- `docs/06_quality/manual_checks_log.md`
+- `README.md`
+
+### Проверки
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\run_pipeline.py scripts\01_data_audit.py scripts\gui_launcher\actions.py scripts\gui_launcher\state.py scripts\gui_launcher\widgets.py` - OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts` - OK.
+- `.\.venv\Scripts\python.exe scripts\qa\pipeline_registry_cli_smoke.py` - OK.
+- `.\.venv\Scripts\python.exe scripts\qa\gui_launcher_smoke.py` - OK.
+- `.\.venv\Scripts\python.exe scripts\qa\gui_command_runner_smoke.py` - OK.
+- `.\.venv\Scripts\ofz-run.exe --help` - OK; registry flags present.
+- `.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK; stage 1 received `--source-registry-mode warn --allow-legacy-raw`.
+- `.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative --source-registry-mode strict --no-allow-legacy-raw` - OK; stage 1 received `--source-registry-mode strict --no-allow-legacy-raw`.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+
+### Ограничения
+
+- Generated outputs, `data/processed`, logs, run manifests, telemetry and `.ofz_launcher` are generated/local artifacts and must not be staged.
+- Strict-by-default still requires a separate approval step.
+
 ## NEXT.7 - Source registry strict migration plan
 
 Дата: 2026-06-25.

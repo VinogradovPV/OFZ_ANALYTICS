@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-07-01 - NEXT.8 Strict registry CLI plumbing
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-01 | `ofz-run` registry flags, stage 1 data audit plumbing, GUI pipeline command builder, default `warn + allow-legacy-raw`, strict/no-legacy command path. | OK: прошли `py_compile`, `compileall`, `pipeline_registry_cli_smoke.py`, `gui_launcher_smoke.py`, `gui_command_runner_smoke.py`, `ofz-run --help`, default pipeline, strict/no-legacy pipeline и `ofz-quality --fast`. | Strict-by-default не включался и не approved. Pipeline/checks создали generated outputs, `data/processed`, telemetry/run manifests, logs и `.ofz_launcher` runtime files; они не входят в staging scope. |
+
 ## 2026-06-25 - NEXT.7 Source registry strict migration plan
 
 | Дата | Что проверено | Результат | Ограничения |

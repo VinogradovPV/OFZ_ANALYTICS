@@ -100,7 +100,7 @@ def minfin_step(
 
 
 def pipeline_step(state: GuiState) -> CommandStep:
-    return cli_step(state, "Pipeline", "ofz-run.exe", *state.common_report_args())
+    return cli_step(state, "Pipeline", "ofz-run.exe", *state.common_report_args(), *state.pipeline_registry_args())
 
 
 def schema_step(state: GuiState) -> CommandStep:

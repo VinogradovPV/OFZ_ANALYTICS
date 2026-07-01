@@ -2,6 +2,20 @@
 
 Дата: 2026-06-25.
 
+## NEXT.8 update - CLI plumbing completed
+
+Дата актуализации: 2026-07-01.
+
+NEXT.8 completed the low-risk plumbing step without changing production defaults:
+
+- `ofz-run` / `scripts/run_pipeline.py` now accepts `--source-registry-mode off|warn|strict`, `--allow-legacy-raw` and `--no-allow-legacy-raw`.
+- Stage 1 (`scripts/01_data_audit.py`) receives those flags on every pipeline run.
+- GUI pipeline command construction now appends the selected registry mode and legacy fallback checkbox state to the `ofz-run.exe` command.
+- Default remains `source-registry-mode=warn` and `allow-legacy-raw=true`.
+- Strict-by-default is still not approved and still requires a separate operator decision.
+
+The NEXT.7 blocker notes below are kept as historical context for the migration plan.
+
 ## 1. Current mode
 
 Текущий production-friendly режим остается совместимым:
@@ -114,7 +128,9 @@ Strict mode должен означать, что registry обязателен,
 
 ### Phase 2 - CLI plumbing
 
-Добавить strict flags в `ofz-run`, пробросить flags в stage 1, обновить GUI command builder и добавить tests/smoke. Default после Phase 2 все еще `warn + allow-legacy-raw`.
+Статус: выполнено в NEXT.8.
+
+Добавлены strict flags в `ofz-run`, flags пробрасываются в stage 1, GUI command builder передает выбранный source registry mode и legacy fallback, добавлен smoke `scripts/qa/pipeline_registry_cli_smoke.py`. Default после Phase 2 все еще `warn + allow-legacy-raw`.
 
 ### Phase 3 - strict precheck gate
 
@@ -138,10 +154,10 @@ Strict mode должен означать, что registry обязателен,
 
 Перед strict-by-default нужно явное approval пользователя:
 
-- [ ] `ofz-run` поддерживает strict/no-legacy flags.
-- [ ] GUI pipeline action пробрасывает registry mode.
-- [ ] Full pipeline strict/no-legacy прошел.
-- [ ] `ofz-quality --fast` прошел.
+- [x] `ofz-run` поддерживает strict/no-legacy flags.
+- [x] GUI pipeline action пробрасывает registry mode.
+- [x] Full pipeline strict/no-legacy прошел.
+- [x] `ofz-quality --fast` прошел.
 - [ ] `ofz-quality --full` прошел.
 - [ ] Operator docs обновлены.
 - [ ] Исторический tracked `versions/2026` snapshot классифицирован отдельным решением.

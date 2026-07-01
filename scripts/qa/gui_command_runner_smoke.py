@@ -27,7 +27,10 @@ def main() -> int:
                 (
                     sys.executable,
                     "-c",
-                    "import os, time; print('runner smoke'); print(os.environ.get('PYTHONUTF8')); print(os.environ.get('PYTHONIOENCODING')); time.sleep(0.2)",
+                    "import os, sys, time; print('runner smoke'); print(' '.join(sys.argv[1:])); print(os.environ.get('PYTHONUTF8')); print(os.environ.get('PYTHONIOENCODING')); time.sleep(0.2)",
+                    "--source-registry-mode",
+                    "strict",
+                    "--no-allow-legacy-raw",
                 ),
             ),
         ),
@@ -51,6 +54,7 @@ def main() -> int:
     assert completed[0].exit_code == 0, "".join(output)
     output_text = "".join(output)
     assert "runner smoke" in output_text
+    assert "--source-registry-mode strict --no-allow-legacy-raw" in output_text
     assert "utf-8" in output_text
     assert completed[0].output_tail
     assert not completed[0].saw_replacement_char

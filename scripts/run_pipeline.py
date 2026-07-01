@@ -200,6 +200,8 @@ class PipelineArgs:
     safe: bool
     compare: bool
     interactive: bool
+    source_registry_mode: str
+    allow_legacy_raw: bool
     report_date: str | None
     retrospective_years: int | None
     period_type: str | None
@@ -216,11 +218,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         telemetry_run = telemetry.start_pipeline_telemetry(args)
         logger.info(
             "Старт run_pipeline: stages=%s safe=%s compare=%s interactive=%s "
-            "report_date=%s retrospective_years=%s period_type=%s aggregation_mode=%s",
+            "source_registry_mode=%s allow_legacy_raw=%s report_date=%s "
+            "retrospective_years=%s period_type=%s aggregation_mode=%s",
             args.stages,
             args.safe,
             args.compare,
             args.interactive,
+            args.source_registry_mode,
+            args.allow_legacy_raw,
             args.report_date,
             args.retrospective_years,
             args.period_type,
@@ -273,6 +278,18 @@ def parse_args(argv: Sequence[str] | None = None) -> PipelineArgs:
     parser.add_argument("--safe", action="store_true", help="Для этапов 1-3 писать *_repro outputs.")
     parser.add_argument("--compare", action="store_true", help="Сравнить основные outputs и *_repro outputs этапов 1-3.")
     parser.add_argument("--interactive", action="store_true", help="Зарезервированный флаг; расчеты pipeline не меняет.")
+    parser.add_argument(
+        "--source-registry-mode",
+        choices=["off", "warn", "strict"],
+        default="warn",
+        help="Режим проверки controlled Minfin source registry для этапа 1. По умолчанию warn.",
+    )
+    parser.add_argument(
+        "--allow-legacy-raw",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Разрешить legacy data/raw fallback для этапа 1; используйте --no-allow-legacy-raw для strict/no-legacy.",
+    )
     parser.add_argument("--report-date", help="Отчетная дата YYYY-MM-DD.")
     parser.add_argument("--retrospective-years", type=int, help="Количество лет ретроспективы.")
     parser.add_argument("--period-type", help="Тип периода: month, quarter или year.")
@@ -302,6 +319,8 @@ def parse_args(argv: Sequence[str] | None = None) -> PipelineArgs:
         safe=bool(ns.safe),
         compare=bool(ns.compare),
         interactive=bool(ns.interactive),
+        source_registry_mode=str(ns.source_registry_mode),
+        allow_legacy_raw=bool(ns.allow_legacy_raw),
         report_date=ns.report_date,
         retrospective_years=ns.retrospective_years,
         period_type=ns.period_type,
@@ -487,6 +506,8 @@ def run_stage(stage: str, args: PipelineArgs, logger: logging.Logger) -> None:
         env["OFZ_SAFE_REPRO"] = "1"
 
     command = [sys.executable, str(spec.script)]
+    if stage == "1":
+        command.extend(source_registry_cli_args(args))
     if stage == "quality_gate":
         command.append("--fast")
     if spec.needs_report_params:
@@ -525,6 +546,11 @@ def report_cli_args(args: PipelineArgs) -> list[str]:
         "--aggregation-mode",
         str(args.aggregation_mode),
     ]
+
+
+def source_registry_cli_args(args: PipelineArgs) -> list[str]:
+    legacy_flag = "--allow-legacy-raw" if args.allow_legacy_raw else "--no-allow-legacy-raw"
+    return ["--source-registry-mode", str(args.source_registry_mode), legacy_flag]
 
 
 def validate_stage_output(stage: str, logger: logging.Logger) -> None:
@@ -600,6 +626,8 @@ def write_reproducibility_review(args: PipelineArgs) -> None:
         f"- Safe mode: `{args.safe}`",
         f"- Compare: `{args.compare}`",
         f"- Interactive: `{args.interactive}`",
+        f"- source_registry_mode: `{args.source_registry_mode}`",
+        f"- allow_legacy_raw: `{args.allow_legacy_raw}`",
         f"- report_date: `{args.report_date}`",
         f"- retrospective_years: `{args.retrospective_years}`",
         f"- period_type: `{args.period_type}`",

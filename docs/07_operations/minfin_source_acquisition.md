@@ -1,5 +1,24 @@
 ﻿# Операционный дизайн source acquisition Минфина
 
+## NEXT.8 - pipeline registry CLI plumbing
+
+Дата актуализации: 2026-07-01.
+
+`ofz-run.exe` теперь принимает registry flags и передает их в stage 1 data audit:
+
+```powershell
+.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative --source-registry-mode strict --no-allow-legacy-raw
+```
+
+Default не изменен:
+
+```text
+source-registry-mode=warn
+allow-legacy-raw=true
+```
+
+Strict-by-default по-прежнему не включен и требует отдельного approval.
+
 ## NEXT.7 - strict migration status
 
 Дата актуализации: 2026-06-25.

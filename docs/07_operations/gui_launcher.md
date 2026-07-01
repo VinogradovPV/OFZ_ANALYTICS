@@ -126,6 +126,8 @@ Python GUI launcher пишет объединенный stdout/stderr в runtime
 
 В CLI и command builder всегда передается internal value `off|warn|strict`. Рекомендуемый режим для обычной работы: `Проверять и предупреждать`. Строгий режим включайте после полного перехода на controlled source registry.
 
+Начиная с NEXT.8 pipeline action реально добавляет эти параметры в `ofz-run.exe`: выбранный режим превращается в `--source-registry-mode <off|warn|strict>`, а checkbox `Разрешить legacy-данные` превращается в `--allow-legacy-raw` или `--no-allow-legacy-raw`. Default GUI state остается `warn + allow-legacy-raw`; strict-by-default не включен.
+
 ## Cleanup outputs
 
 `Cleanup dry-run` только строит план очистки и ничего не удаляет. `Удалить outputs` требует `DELETE_OUTPUTS`, удаляет generated outputs и не меняет raw-данные. GUI logs сохраняются в `.ofz_launcher/logs/`.
