@@ -1,5 +1,11 @@
 # Журнал ручных проверок
 
+## 2026-07-01 - NEXT.9 Strict full pipeline precheck gate
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-01 | Full pipeline strict/no-legacy precheck через `ofz-run`, registry validation status, schema validation, quality-fast и quality-full. | OK: `pip install -e .`, `pip check`, `compileall`, `check_text_encoding.py`, strict/no-legacy `ofz-run`, `ofz-schema`, `ofz-quality --fast` и `ofz-quality --full` прошли. Data audit: `source_registry_status=ok`, `registry_warnings_count=0`, `registry_errors_count=0`, `legacy_raw_fallback_used=False`. | Strict-by-default не включался и не approved. Full quality содержит существующие analytical warnings и visual regression fallback из-за недоступного screenshot backend в managed среде. Generated outputs, `data/processed`, telemetry/run manifests, quality reports, logs и `.ofz_launcher` runtime files не входят в staging scope. |
+
 ## 2026-07-01 - NEXT.8 Strict registry CLI plumbing
 
 | Дата | Что проверено | Результат | Ограничения |

@@ -1,5 +1,43 @@
 # Post-P3 optimization progress report
 
+## NEXT.9 - Strict full pipeline precheck gate
+
+Дата: 2026-07-01.
+
+### Статус
+
+- Выполнен NEXT.9: strict/no-legacy full pipeline precheck прошел через canonical `ofz-run`.
+- Stage 1 data audit получил `--source-registry-mode strict --no-allow-legacy-raw`.
+- Data audit recorded `source_registry_status=ok`, `registry_warnings_count=0`, `registry_errors_count=0`, `legacy_raw_fallback_used=False`.
+- `ofz-schema`, `ofz-quality --fast` and `ofz-quality --full` passed.
+- Default не изменен: `warn + allow-legacy-raw`.
+- Strict-by-default не включался и не approved.
+
+### Изменения
+
+- `docs/00_project/strict_pipeline_precheck_report.md`
+- `docs/00_project/source_registry_strict_migration_plan.md`
+- `docs/00_project/post_p3_optimization_progress_report.md`
+- `docs/06_quality/manual_checks_log.md`
+
+### Проверки
+
+- `git status --short --branch` - OK; only untracked prompt files were present before NEXT.9 changes.
+- `.\.venv\Scripts\python.exe -m pip install -e .` - OK.
+- `.\.venv\Scripts\python.exe -m pip check` - OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts` - OK.
+- `.\.venv\Scripts\python.exe scripts\qa\check_text_encoding.py` - OK, checked 282 files, 0 problems.
+- `.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative --source-registry-mode strict --no-allow-legacy-raw` - OK.
+- `.\.venv\Scripts\ofz-schema.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK, 16 checks passed.
+- `.\.venv\Scripts\ofz-quality.exe --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+- `.\.venv\Scripts\ofz-quality.exe --full --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+
+### Ограничения
+
+- `ofz-quality --full` reported existing analytical warnings, but completed successfully.
+- Visual regression used fallback because the browser screenshot backend is unavailable in the managed Codex environment.
+- Generated outputs, `data/processed`, telemetry/run manifests, quality reports and logs are not staging scope.
+
 ## NEXT.8 - Strict registry CLI plumbing
 
 Дата: 2026-07-01.

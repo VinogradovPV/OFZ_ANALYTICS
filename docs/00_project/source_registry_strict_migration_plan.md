@@ -16,6 +16,22 @@ NEXT.8 completed the low-risk plumbing step without changing production defaults
 
 The NEXT.7 blocker notes below are kept as historical context for the migration plan.
 
+## NEXT.9 update - strict full pipeline precheck completed
+
+Дата актуализации: 2026-07-01.
+
+Full pipeline strict/no-legacy precheck passed through the canonical entry point:
+
+```powershell
+.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative --source-registry-mode strict --no-allow-legacy-raw
+```
+
+Additional local gates passed: editable install, `pip check`, `compileall`, UTF-8/mojibake scan, `ofz-schema`, `ofz-quality --fast` and `ofz-quality --full`.
+
+Fresh data audit recorded `source_registry_status=ok`, `registry_warnings_count=0`, `registry_errors_count=0` and `legacy_raw_fallback_used=False`.
+
+Strict-ready for full pipeline precheck: yes. Default remains `warn + allow-legacy-raw` until a separate approval request is prepared and approved.
+
 ## 1. Current mode
 
 Текущий production-friendly режим остается совместимым:
@@ -134,7 +150,9 @@ Strict mode должен означать, что registry обязателен,
 
 ### Phase 3 - strict precheck gate
 
-Запустить полный pipeline в strict/no-legacy режиме, `ofz-quality --fast`, `ofz-quality --full` и зафиксировать операторский waiver или approval.
+Статус: выполнено в NEXT.9.
+
+Полный pipeline в strict/no-legacy режиме, `ofz-quality --fast` и `ofz-quality --full` прошли. Операторский default switch не выполнялся.
 
 ### Phase 4 - default switch
 
@@ -158,7 +176,7 @@ Strict mode должен означать, что registry обязателен,
 - [x] GUI pipeline action пробрасывает registry mode.
 - [x] Full pipeline strict/no-legacy прошел.
 - [x] `ofz-quality --fast` прошел.
-- [ ] `ofz-quality --full` прошел.
+- [x] `ofz-quality --full` прошел.
 - [ ] Operator docs обновлены.
 - [ ] Исторический tracked `versions/2026` snapshot классифицирован отдельным решением.
 - [ ] Release checklist обновлен.
