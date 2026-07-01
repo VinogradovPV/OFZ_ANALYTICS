@@ -17,6 +17,9 @@ logs/
 # Generated processed data
 data/processed/
 
+# Controlled source version snapshots are local/external artifacts
+data/raw/minfin/ofz_auction_results/versions/
+
 # External release bundles
 releases/
 
