@@ -658,3 +658,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-06-23 | Registry mode labels, нижний action panel layout, новый runtime log root `.ofz_launcher/logs/`, cleanup PermissionError handling, artifact guard для `.ofz_launcher/`, regression на `DELETE_OUTPUTS` confirm helper. | OK: выполнены `py_compile`, `compileall`, `gui_launcher_smoke.py`, `gui_command_runner_smoke.py`, `ofz-gui --help`, `ofz-gui --smoke-ui`, `ofz-clean-outputs --help`. | Manual resize и destructive cleanup delete выполняются оператором. Existing local raw/output changes не относятся к этапу и не коммитятся. |
+
+## 2026-07-02 - NEXT.12 Ежемесячная операционная репетиция после strict plumbing
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-01/2026-07-02 | Проверен monthly workflow после strict registry plumbing: Minfin monthly dry-run, pipeline `warn + allow-legacy-raw`, quality-fast, pipeline `strict + no-allow-legacy-raw`, GUI help/smoke/widget smoke. | OK: Minfin dry-run завершился без raw mutation; pipeline stage 1 получил `--source-registry-mode warn --allow-legacy-raw`; quality-fast прошел; strict/no-legacy pipeline прошел и stage 1 получил `--source-registry-mode strict --no-allow-legacy-raw`; GUI smoke проверки прошли. | Live discovery Минфина вернул предупреждение о сетевой недоступности, raw unchanged. Интерактивное GUI окно не открывалось автоматически; ручной GUI сценарий остается операторским действием. Default source registry policy не менялась. Generated outputs не staging. |
