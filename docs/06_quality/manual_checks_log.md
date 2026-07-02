@@ -664,3 +664,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-07-01/2026-07-02 | Проверен monthly workflow после strict registry plumbing: Minfin monthly dry-run, pipeline `warn + allow-legacy-raw`, quality-fast, pipeline `strict + no-allow-legacy-raw`, GUI help/smoke/widget smoke. | OK: Minfin dry-run завершился без raw mutation; pipeline stage 1 получил `--source-registry-mode warn --allow-legacy-raw`; quality-fast прошел; strict/no-legacy pipeline прошел и stage 1 получил `--source-registry-mode strict --no-allow-legacy-raw`; GUI smoke проверки прошли. | Live discovery Минфина вернул предупреждение о сетевой недоступности, raw unchanged. Интерактивное GUI окно не открывалось автоматически; ручной GUI сценарий остается операторским действием. Default source registry policy не менялась. Generated outputs не staging. |
+
+## 2026-07-02 - NEXT.13 BI package handoff
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-02 | Проверен BI package handoff workflow после strict registry plumbing. Entry point `ofz-build-bi-package.exe` отсутствует, поэтому использован fallback `scripts\maintenance\build_bi_package.py`. | OK: `--help` доступен; dry-run для `2026-05-01`, `retrospective_years=4`, `period_type=month`, `aggregation_mode=cumulative` нашел dashboard exports, semantic model v2, analytical/monthly/revenue CSV, chart data, dictionaries и BI dimensions. Dry-run завершился сообщением `Dry-run only: no files were written.` | Реальная сборка BI package не выполнялась, потому что требует отдельного approval, `--include-outputs` и `--confirm BUILD_BI_PACKAGE`. Release/handoff artifacts, raw/source data и default source registry policy не менялись. |
