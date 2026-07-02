@@ -15,6 +15,13 @@ from .actions import ActionPlan, CommandStep
 
 OutputCallback = Callable[[str], None]
 CompletionCallback = Callable[["RunResult"], None]
+USER_VISIBLE_MOJIBAKE_MARKERS = (
+    "\ufffd",
+    "\u00d0",
+    "\u00d1",
+    "\u2568",
+    "\u2564",
+)
 
 
 @dataclass(frozen=True)
@@ -35,6 +42,10 @@ def format_command(args: tuple[str, ...]) -> str:
 
 def format_plan(plan: ActionPlan) -> str:
     return "\n".join(f"{index}. {format_command(step.args)}" for index, step in enumerate(plan.steps, 1))
+
+
+def has_user_visible_mojibake(text: str) -> bool:
+    return any(marker in text for marker in USER_VISIBLE_MOJIBAKE_MARKERS)
 
 
 class CommandRunner:
@@ -97,7 +108,7 @@ class CommandRunner:
                     self._emit(log_file, on_output, f"\n[{index}/{len(plan.steps)}] {step.label}\n$ {last_command}\n")
                     exit_code, saw_503, step_lines = self._run_step(step, log_file, on_output)
                     output_lines.extend(step_lines)
-                    saw_replacement_char = saw_replacement_char or any("\ufffd" in line for line in step_lines)
+                    saw_replacement_char = saw_replacement_char or any(has_user_visible_mojibake(line) for line in step_lines)
                     minfin_unavailable = minfin_unavailable or saw_503
                     self._emit(log_file, on_output, f"Exit code: {exit_code}\n")
                     if exit_code != 0:

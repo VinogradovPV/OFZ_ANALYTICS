@@ -10,7 +10,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scripts.gui_launcher.actions import ActionPlan, CommandStep
-from scripts.gui_launcher.command_runner import CommandRunner, RunResult
+from scripts.gui_launcher.command_runner import CommandRunner, RunResult, has_user_visible_mojibake
 
 
 def main() -> int:
@@ -58,6 +58,12 @@ def main() -> int:
     assert "utf-8" in output_text
     assert completed[0].output_tail
     assert not completed[0].saw_replacement_char
+    assert has_user_visible_mojibake("\ufffd")
+    assert has_user_visible_mojibake("\u00d0")
+    assert has_user_visible_mojibake("\u00d1")
+    assert has_user_visible_mojibake("\u2568")
+    assert has_user_visible_mojibake("\u2564")
+    assert not has_user_visible_mojibake("Нормальный UTF-8 вывод")
     assert log_path.read_text(encoding="utf-8").find("runner smoke") >= 0
     assert log_path.is_relative_to(log_dir)
     try:

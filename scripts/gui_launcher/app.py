@@ -747,7 +747,10 @@ class OfzAnalyticsGui:
             return f"Завершено с ошибкой. {plan.user_failure_hint}"
         summary = self._success_summary_for_action(plan, result.output_tail)
         if result.saw_replacement_char:
-            summary += "\nВ техническом журнале есть нечитаемые символы; проверьте UTF-8 настройки."
+            summary += (
+                "\nВ техническом журнале найдены признаки поврежденной кодировки. "
+                "Проверьте UTF-8 bootstrap PowerShell; raw output оставлен только в журнале."
+            )
         return summary
 
     def _success_summary_for_action(self, plan: ActionPlan, output_tail: str) -> str:

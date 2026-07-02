@@ -83,6 +83,9 @@ MOJIBAKE_MARKERS = tuple(
 )
 
 SELF_ALLOWLIST = {Path("scripts/qa/check_text_encoding.py")}
+WORK_INSTRUCTION_ALLOWLIST = {
+    Path("prompts/ofz_cbr_keyrate_web_parser_gui_utf8_instruction_v3(1).md"),
+}
 FIXTURE_ALLOWLIST_PARTS = {"encoding_fixtures", "mojibake_fixtures"}
 MAX_PRINTED_PROBLEMS = 200
 
@@ -155,7 +158,11 @@ def marker_label(marker: str) -> str:
 
 def is_marker_allowed(relative: Path) -> bool:
     normalized = Path(relative.as_posix())
-    return normalized in SELF_ALLOWLIST or bool(FIXTURE_ALLOWLIST_PARTS.intersection(relative.parts))
+    return (
+        normalized in SELF_ALLOWLIST
+        or normalized in WORK_INSTRUCTION_ALLOWLIST
+        or bool(FIXTURE_ALLOWLIST_PARTS.intersection(relative.parts))
+    )
 
 
 def find_markers(text: str) -> list[str]:

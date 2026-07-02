@@ -151,7 +151,7 @@ Environment details are documented in [`docs/07_operations/environment.md`](docs
 Для корректного вывода кириллицы в Windows PowerShell перед диагностическим запуском можно настроить сессию:
 
 ```powershell
-chcp 65001
+chcp 65001 | Out-Null
 $env:PYTHONUTF8 = "1"
 $env:PYTHONIOENCODING = "utf-8"
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
@@ -166,6 +166,8 @@ $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 ```
 
 По умолчанию scanner ничего не исправляет. Отчет аудита находится в [`docs/00_project/utf8_mojibake_audit_report.md`](docs/00_project/utf8_mojibake_audit_report.md).
+
+Операционная инструкция по обязательному UTF-8 bootstrap для Windows PowerShell: [`docs/07_operations/windows_utf8_powershell_setup.md`](docs/07_operations/windows_utf8_powershell_setup.md).
 
 Safe outputs cleanup:
 

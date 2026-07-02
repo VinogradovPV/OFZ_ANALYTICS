@@ -687,3 +687,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-07-02 | Доработан график `ofz_pd_yield_key_rate`: русские подписи месяцев, подписи значений через annotations, максимум доходности и ключевая ставка сверху маркера, минимум доходности снизу маркера, белый фон и дополнительный сдвиг при близких линиях. | OK: прошли `py_compile`, `compileall`, `cbr_key_rate_source_smoke.py`, `line_marker_style_smoke.py`, `ofz-run`, `html_chart_qa.py`, `visual_regression.py --mode auto`, `ofz_pd_yield_metrics_regression.py`, `ofz-quality --fast`. HTML QA подтвердил контракт `ofz_pd_yield_key_rate`, наличие `Янв-24`, отсутствие `Jan-24` и фон подписей `rgba(255,255,255,0.90)`. | Visual regression использовал fallback из-за недоступного screenshot backend в managed среде. Generated outputs, processed CBR CSV, raw originals, logs, releases, `.ofz_launcher`, `data/processed` и Minfin versions не staging. Default source registry policy не менялась: `warn + allow-legacy-raw`. |
+
+## 2026-07-02 - Этап 1 UTF-8 для Windows / PowerShell
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-02 | Введено обязательное правило UTF-8 для Windows PowerShell: отдельная операционная инструкция, уточнение README/GUI docs, проверка subprocess env GUI runner и предупреждение при mojibake-маркерах в пользовательском итоге. | OK: прошли `py_compile`, `check_text_encoding.py`, `gui_command_runner_smoke.py`, `gui_launcher_smoke.py`, `compileall`, `ofz-quality --stage encoding-mojibake`. GUI runner передает `PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8`, читает stdout/stderr как UTF-8 с `errors="replace"` и ловит `U+FFFD`, `U+00D0`, `U+00D1`, `U+2568`, `U+2564`. | Этап 1 не создает root wrappers `run-gui.ps1` / `ofz-gui.cmd`, не меняет CBR parser source, не удаляет reference PPTX/PNG и не меняет source registry default policy. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed` и raw versions не staging. |

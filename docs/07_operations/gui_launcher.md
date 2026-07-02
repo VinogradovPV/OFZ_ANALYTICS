@@ -48,6 +48,7 @@ GUI разделяет пользовательский итог и технич
 - Команды строятся только из allowlisted action IDs.
 - `subprocess.Popen` получает список аргументов и `shell=False`.
 - Subprocess получает `PYTHONUTF8=1` и `PYTHONIOENCODING=utf-8`, stdout/stderr читаются как UTF-8 с `errors="replace"`.
+- Если stdout/stderr содержит признаки mojibake (`U+FFFD`, `U+00D0`, `U+00D1`, `U+2568`, `U+2564`), GUI не считает такой текст нормальным пользовательским выводом: оператор видит предупреждение в `Итог операции`, а полный raw output остается в UTF-8 log-файле.
 - Одновременно выполняется только одна sequence.
 - При non-zero exit code последующие шаги не запускаются.
 - Произвольной shell-команды в интерфейсе нет.
@@ -146,3 +147,17 @@ Headless smoke:
 ```
 
 При ошибке открыть вкладку `Журнал`, проверить exit code, последнюю команду и полный log-файл.
+
+## UTF-8 PowerShell
+
+Перед ручным запуском GUI/CLI в новой Windows PowerShell-сессии применяйте bootstrap:
+
+```powershell
+chcp 65001 | Out-Null
+$env:PYTHONUTF8 = "1"
+$env:PYTHONIOENCODING = "utf-8"
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+```
+
+Подробная политика: [`windows_utf8_powershell_setup.md`](windows_utf8_powershell_setup.md).
