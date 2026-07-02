@@ -693,3 +693,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-07-02 | Введено обязательное правило UTF-8 для Windows PowerShell: отдельная операционная инструкция, уточнение README/GUI docs, проверка subprocess env GUI runner и предупреждение при mojibake-маркерах в пользовательском итоге. | OK: прошли `py_compile`, `check_text_encoding.py`, `gui_command_runner_smoke.py`, `gui_launcher_smoke.py`, `compileall`, `ofz-quality --stage encoding-mojibake`. GUI runner передает `PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8`, читает stdout/stderr как UTF-8 с `errors="replace"` и ловит `U+FFFD`, `U+00D0`, `U+00D1`, `U+2568`, `U+2564`. | Этап 1 не создает root wrappers `run-gui.ps1` / `ofz-gui.cmd`, не меняет CBR parser source, не удаляет reference PPTX/PNG и не меняет source registry default policy. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed` и raw versions не staging. |
+
+## 2026-07-02 - Этапы 2-3 GUI wrappers и cleanup reference artifacts
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-02 | Добавлены project-root wrappers `run-gui.ps1` и `ofz-gui.cmd`; документация объясняет, что bare `ofz-gui.exe` работает только при `.venv\Scripts` в `PATH`. Удалены reference PPTX/source slide artifacts; оставлена текстовая политика `line_marker_chart_style.md`. | OK: прошли `py_compile`, `compileall`, `check_text_encoding.py`, `gui_launcher_wrapper_smoke.py`, `gui_command_runner_smoke.py`, `gui_launcher_smoke.py`, `ofz-gui --help`, `ofz-gui --smoke`, `ofz-gui --smoke-ui`, `run-gui.ps1 --help`, `ofz-gui.cmd --help`, `ofz-quality --stage encoding-mojibake`. | GUI wrappers проверены статически и headless; интерактивное окно не открывалось автоматически. CBR parser source, chart semantics и source registry default policy не менялись. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed` и raw versions не staging. |

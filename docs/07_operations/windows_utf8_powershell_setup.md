@@ -32,6 +32,8 @@ $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 .\.venv\Scripts\ofz-run.exe --help
 ```
 
+Project-root GUI wrappers `.\run-gui.ps1` и `.\ofz-gui.cmd` уже выполняют этот bootstrap перед запуском `.venv\Scripts\ofz-gui.exe`.
+
 ## Subprocess policy
 
 GUI command runner и другие subprocess runners должны передавать в дочерний процесс:

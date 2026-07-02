@@ -333,9 +333,12 @@ CLI remains the main supported production interface. UI launchers are convenienc
 PowerShell GUI launcher is the recommended Windows UI MVP:
 
 ```powershell
+.\run-gui.ps1
+.\ofz-gui.cmd
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1 -Gui
 ```
+
+Bare `ofz-gui.exe` works only when `.venv\Scripts` is in `PATH`, for example after `.venv` activation.
 
 Word VBA launcher is optional. Use it only as a controlled launcher source and import it into a trusted document manually when needed:
 

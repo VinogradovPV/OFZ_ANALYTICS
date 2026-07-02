@@ -240,7 +240,7 @@ Raw/source mutation выполняется только через controlled so
 
 NEXT.16 добавляет controlled visual/data extension без изменения source registry default policy:
 
-- reference slide `docs/04_visualization/reference_slides/ofz_pd_yield_key_rate_reference.pptx`;
+- text style policy `docs/04_visualization/line_marker_chart_style.md`;
 - ручной CBR source `data/raw/cbr/key_rate_inflation/cbr_key_rate_inflation_2019-01_2026-05.xlsx`;
 - parser `scripts/source_acquisition/cbr_key_rate_inflation.py`;
 - processed generated dataset `data/processed/cbr_key_rate_inflation_monthly.csv`;

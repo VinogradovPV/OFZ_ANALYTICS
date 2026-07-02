@@ -6,6 +6,8 @@
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -e .
+.\run-gui.ps1
+.\ofz-gui.cmd
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1
 ```
 
@@ -22,5 +24,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_l
 ```
 
 Wrapper ищет `.venv\Scripts\ofz-gui.exe`, затем optional `dist\ofz-gui.exe`. Если entry point отсутствует, он показывает команду editable install. Произвольные shell-команды wrapper не принимает.
+
+Голая команда `ofz-gui.exe` работает только если `.venv\Scripts` находится в `PATH`, например после активации `.venv`.
 
 Полная инструкция: [`docs/07_operations/gui_launcher.md`](../../docs/07_operations/gui_launcher.md).

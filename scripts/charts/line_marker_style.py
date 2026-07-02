@@ -1,4 +1,4 @@
-"""Reference style helpers for line charts with markers."""
+"""Style helpers for line charts with markers."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def apply_reference_line_marker_layout(
     title: str | None = None,
     show_yaxis_labels: bool = False,
 ) -> None:
-    """Apply the reference slide layout to a Plotly line+markers figure."""
+    """Apply the line-marker style policy to a Plotly line+markers figure."""
     layout: dict[str, Any] = {
         "template": "plotly_white",
         "font": {"family": REFERENCE_FONT_FAMILY, "color": "#1F2933"},
@@ -56,7 +56,7 @@ def apply_reference_line_marker_layout(
 
 
 def apply_reference_line_marker_trace(trace: Any, color: str, text_position: str | None = None) -> None:
-    """Style one line+markers Plotly trace according to the reference slide."""
+    """Style one line+markers Plotly trace according to the line-marker policy."""
     update: dict[str, Any] = {
         "mode": "lines+markers+text" if getattr(trace, "text", None) is not None else "lines+markers",
         "line": {"color": color, "width": REFERENCE_LINE_WIDTH, "shape": "linear"},

@@ -1,16 +1,8 @@
-# Line+marker reference style
+# Line+marker chart style
 
-Дата: 2026-07-02
+Дата актуализации: 2026-07-02.
 
-## Источник
-
-Reference artifact:
-
-```text
-docs/04_visualization/reference_slides/ofz_pd_yield_key_rate_reference.pptx
-```
-
-Он задает единый стиль для графиков типа `lines + markers`.
+Этот документ является текстовой политикой стиля для графиков типа `lines + markers`. Reference PPTX/PNG больше не является source artifact проекта и не должен использоваться как входной файл pipeline.
 
 ## Style tokens
 
@@ -56,7 +48,7 @@ scripts/charts/line_marker_style.py
 
 ## Label density
 
-Reference slide показывает подписи на каждой точке, но это безопасно только для короткого горизонта.
+Подписи на каждой точке безопасны только для короткого горизонта.
 
 Политика:
 
@@ -72,12 +64,6 @@ Reference slide показывает подписи на каждой точке
 - у подписей используется белый фон `rgba(255,255,255,0.90)`, чтобы линия не проходила через текст;
 - если значения нескольких серий в одном месяце близки, сдвиг подписи увеличивается от линии.
 
-## NEXT.16 integration
+## Artifact policy
 
-В NEXT.16 helper применен к:
-
-- новому графику `ofz_pd_yield_key_rate`;
-- существующим line+marker графикам в `scripts/06_build_charts.py`;
-- monthly line+marker графикам в `scripts/10_build_monthly_charts.py`.
-
-Семантика, output filenames и методология существующих графиков не менялись.
+Reference PPTX/PNG не коммитятся и не хранятся в `docs/`, `data/raw/`, `outputs/`, `releases/` или runtime directories. В Git остается только текстовая политика стиля и кодовый helper.

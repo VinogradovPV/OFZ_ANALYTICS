@@ -8,16 +8,30 @@
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -e .
+.\run-gui.ps1
+```
+
+CMD wrapper:
+
+```powershell
+.\ofz-gui.cmd
+```
+
+Явный запуск entry point:
+
+```powershell
 .\.venv\Scripts\ofz-gui.exe
 ```
 
-Совместимый wrapper:
+Совместимый legacy wrapper:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows_launcher/ofz_launcher.ps1
 ```
 
-Wrapper содержит только поиск project root/entry point, UTF-8 setup и запуск GUI. Основная логика находится в `scripts/gui_launcher/`.
+Команда `ofz-gui.exe` без пути работает только если `.venv\Scripts` находится в `PATH`, например после активации `.venv`. Из корня проекта используйте `.\run-gui.ps1`, `.\ofz-gui.cmd` или `.\.venv\Scripts\ofz-gui.exe`.
+
+Wrappers содержат только поиск project root/entry point, UTF-8 setup и запуск GUI. Основная логика находится в `scripts/gui_launcher/`.
 
 ## Вкладки
 
@@ -140,6 +154,7 @@ Python GUI launcher пишет объединенный stdout/stderr в runtime
 Headless smoke:
 
 ```powershell
+.\.venv\Scripts\python.exe scripts\qa\gui_launcher_wrapper_smoke.py
 .\.venv\Scripts\ofz-gui.exe --smoke
 .\.venv\Scripts\ofz-gui.exe --smoke-ui
 .\.venv\Scripts\python.exe scripts\qa\gui_launcher_smoke.py

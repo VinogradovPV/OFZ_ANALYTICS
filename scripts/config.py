@@ -127,7 +127,7 @@ DOC_PATHS: dict[str, Path] = {
     "revenue_charts_report.md": DOCS_ANALYTICS_DIR / "revenue_charts_report.md",
     "boxplot_diagnostics.md": DOCS_VISUALIZATION_DIR / "boxplot_diagnostics.md",
     "chart_build_limitations.md": DOCS_VISUALIZATION_DIR / "chart_build_limitations.md",
-    "line_marker_reference_style.md": DOCS_VISUALIZATION_DIR / "line_marker_reference_style.md",
+    "line_marker_chart_style.md": DOCS_VISUALIZATION_DIR / "line_marker_chart_style.md",
     "monthly_visualization_strategy.md": DOCS_VISUALIZATION_DIR / "monthly_visualization_strategy.md",
     "palette_policy.md": DOCS_VISUALIZATION_DIR / "palette_policy.md",
     "visualization_strategy.md": DOCS_VISUALIZATION_DIR / "visualization_strategy.md",
