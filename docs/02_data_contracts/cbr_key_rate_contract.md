@@ -249,6 +249,8 @@ Fallback не меняет целевую модель хранения:
 
 Fixture-based parser smoke должен проверять:
 
+- fixture `scripts/qa/fixtures/cbr/key_rate_page_2019_2026.html`;
+- smoke runner `scripts/qa/cbr_key_rate_parser_smoke.py`;
 - URL builder для `cbr.ru/hd_base/KeyRate/`;
 - parser `table.data`;
 - headers `Дата` и `Ставка`;

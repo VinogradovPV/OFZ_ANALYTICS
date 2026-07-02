@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>CBR KeyRate fixture</title>
+</head>
+<body>
+  <form method="get" action="/hd_base/KeyRate/">
+    <input type="hidden" name="UniDbQuery.Posted" value="True">
+    <input type="text" name="UniDbQuery.From" value="01.01.2019" data-min-date="17.09.2013">
+    <input type="text" name="UniDbQuery.To" value="02.07.2026" data-max-date="02.07.2026">
+  </form>
+
+  <table class="data">
+    <tr>
+      <th>&#1044;&#1072;&#1090;&#1072;</th>
+      <th>&#1057;&#1090;&#1072;&#1074;&#1082;&#1072;</th>
+    </tr>
+    <tr><td>02.07.2026</td><td>14,25</td></tr>
+    <tr><td>01.07.2026</td><td>14,25</td></tr>
+    <tr><td>30.06.2026</td><td>14,25</td></tr>
+    <tr><td>28.06.2026</td><td>14,50</td></tr>
+    <tr><td>31.03.2026</td><td>15,00</td></tr>
+    <tr><td>15.03.2026</td><td>15,50</td></tr>
+    <tr><td>28.02.2026</td><td>16,00</td></tr>
+    <tr><td>02.01.2019</td><td>7,75</td></tr>
+  </table>
+
+  <script>
+    window.settings = {
+      xAxis: {
+        categories: [
+          "02.07.2026",
+          "01.07.2026",
+          "30.06.2026",
+          "28.06.2026",
+          "31.03.2026",
+          "15.03.2026",
+          "28.02.2026",
+          "02.01.2019"
+        ]
+      },
+      series: [{
+        name: "Key rate",
+        data: [14.25, 14.25, 14.25, 14.50, 15.00, 15.50, 16.00, 7.75]
+      }]
+    };
+  </script>
+</body>
+</html>

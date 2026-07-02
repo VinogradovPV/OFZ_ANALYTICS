@@ -717,3 +717,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-07-02 | Добавлен `scripts/reference_data/cbr_key_rate.py`: CLI `--source web\|html-file\|xlsx`, URL builder CBR KeyRate, parser `table.data`, Highcharts fallback/cross-check, daily output строго `date,value`, отдельный metadata JSON, monthly derived view по `last_available_observation_in_month`, emergency XLSX fallback без inflation-полей. | OK: прошли `py_compile`, `compileall`, `check_text_encoding.py`, `--help`, синтетический parser API smoke, `--source html-file --dry-run` на temporary HTML fixture, `--source xlsx --dry-run` на текущем ручном raw XLSX. | Live web dry-run не выполнялся в рамках Этапа E; он остается отдельной операторской проверкой. Parser пока не подключался к графику/pipeline, текущий XLSX fallback chart flow и source registry default policy не менялись. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed`, raw CBR XLSX и raw versions не staging. |
+
+## 2026-07-02 - Этап F CBR key rate parser fixtures
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-02 | Добавлены offline fixture `scripts/qa/fixtures/cbr/key_rate_page_2019_2026.html` и smoke `scripts/qa/cbr_key_rate_parser_smoke.py`: form filters, `table.data`, Highcharts categories/data, URL builder, headers, decimal comma, daily `date,value`, no inflation columns, ascending sort, Highcharts cross-check, monthly last observation rule, March/June/July 2026 assertions, dry-run without CSV writes. | OK: прошли `py_compile`, `cbr_key_rate_parser_smoke.py`, `cbr_key_rate.py --source html-file --dry-run`, `compileall`, `ofz-quality --stage encoding-mojibake`. | Fixture-based QA не использует live web. Parser по-прежнему не подключался к графику/pipeline, текущий XLSX fallback chart flow и source registry default policy не менялись. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed`, raw CBR XLSX и raw versions не staging. |

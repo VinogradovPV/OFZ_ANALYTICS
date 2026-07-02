@@ -81,6 +81,13 @@ scripts/reference_data/cbr_key_rate.py
 
 Parser поддерживает источники `web`, `html-file` и emergency fallback `xlsx`. Для web/html источника preferred parser source - `table.data`; Highcharts используется только как fallback/cross-check. При обычном запуске parser пишет daily CSV, metadata JSON и monthly derived view в `data/processed/reference/`; эти файлы являются generated artifacts и не коммитятся.
 
+Offline QA fixture и smoke для parser-а:
+
+```text
+scripts/qa/fixtures/cbr/key_rate_page_2019_2026.html
+scripts/qa/cbr_key_rate_parser_smoke.py
+```
+
 Текущий pipeline временно использует ручной XLSX fallback Банка России и текстовую style policy для line+marker графиков. Fallback не меняет целевую модель хранения.
 
 Временный ручной raw source:
