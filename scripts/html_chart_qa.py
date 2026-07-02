@@ -1444,10 +1444,16 @@ def check_ofz_pd_yield_key_rate_contract(html_by_file: dict[Path, str]) -> QaRes
         for color in required_colors:
             if color.lower() not in normalized.lower():
                 failed.append(f"{path.name}: нет цвета {color}")
+        if "Янв-24" not in normalized:
+            failed.append(f"{path.name}: не подтверждены русские подписи месяцев")
+        if "Jan-24" in normalized:
+            failed.append(f"{path.name}: найдена английская подпись месяца Jan-24")
         if '"size":7' not in compact:
             failed.append(f"{path.name}: не подтвержден marker size 7")
         if '"width":1.5' not in compact:
             failed.append(f"{path.name}: не подтверждена marker outline width 1.5")
+        if "rgba(255,255,255,0.90)" not in normalized:
+            failed.append(f"{path.name}: не подтверждена белая подложка data labels")
 
         csv_path = config.EXPORTS_CHART_DATA_YIELD_DIR / f"{path.stem}.csv"
         if not csv_path.exists():

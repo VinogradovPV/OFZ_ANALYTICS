@@ -17,6 +17,20 @@ REQUIRED_COLUMNS = (
 )
 ORIGINAL_CBR_FILE_NAME = "Инфляция и ключевая ставка Банка России_F01_01_2019_T02_07_2026.xlsx"
 MONTH_RE = re.compile(r"^(?P<month>\d{1,2})\.(?P<year>\d{4})$")
+RU_MONTH_ABBR = {
+    1: "Янв",
+    2: "Фев",
+    3: "Мар",
+    4: "Апр",
+    5: "Май",
+    6: "Июн",
+    7: "Июл",
+    8: "Авг",
+    9: "Сен",
+    10: "Окт",
+    11: "Ноя",
+    12: "Дек",
+}
 
 
 def read_cbr_key_rate_workbook(path: Path) -> pd.DataFrame:
@@ -62,7 +76,7 @@ def normalize_cbr_key_rate_table(df: pd.DataFrame, source_file: Path) -> pd.Data
     source_original_name = ORIGINAL_CBR_FILE_NAME if source.name.startswith("cbr_key_rate_inflation_") else source.name
     loaded_at = datetime.now(UTC).replace(microsecond=0).isoformat()
 
-    result["month_label"] = result["month"].dt.strftime("%b-%y")
+    result["month_label"] = result["month"].map(format_ru_month_label)
     result["month"] = result["month"].dt.strftime("%Y-%m-01")
     result["source_file"] = source.as_posix()
     result["source_original_name"] = source_original_name
@@ -111,3 +125,10 @@ def parse_cbr_month(value: object) -> str:
     if month < 1 or month > 12:
         raise ValueError(f"Invalid CBR month number: {text!r}")
     return f"{year:04d}-{month:02d}-01"
+
+
+def format_ru_month_label(value: object) -> str:
+    timestamp = pd.to_datetime(value, errors="coerce")
+    if pd.isna(timestamp):
+        return ""
+    return f"{RU_MONTH_ABBR[int(timestamp.month)]}-{str(int(timestamp.year))[-2:]}"

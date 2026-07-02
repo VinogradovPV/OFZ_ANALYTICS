@@ -1223,7 +1223,9 @@ def check_ofz_pd_yield_key_rate_contract(path: Path, html: str) -> VisualCheck:
         "#FF5D50",
         "#00CE7E",
         "#BB88EF",
-        "lines+markers+text",
+        "lines+markers",
+        "Янв-24",
+        "rgba(255,255,255,0.90)",
     ]
     missing = [token for token in required_tokens if token not in html]
     compact = html.replace(" ", "")

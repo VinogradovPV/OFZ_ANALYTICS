@@ -681,3 +681,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-07-02 | Добавлены reference PPTX, ручной CBR XLSX в stable raw path, parser CBR key rate/inflation, line+marker style helper, новый график `ofz_pd_yield_key_rate`, HTML/visual contracts и smoke tests. | OK: прошли `py_compile`, `compileall`, `cbr_key_rate_source_smoke.py`, `line_marker_style_smoke.py`, `ofz-run`, `html_chart_qa.py`, `visual_regression.py --mode auto`, `ofz_pd_yield_metrics_regression.py`, `ofz-quality --fast`. CBR period: `2019-01` ... `2026-05`; новый HTML построен в `outputs/charts/yield/ofz_pd/`. | Visual regression использовал fallback из-за недоступного screenshot backend в managed среде. Processed CBR CSV, generated charts, visual regression reports, logs, releases, `.ofz_launcher`, `data/processed` и Minfin versions не staging. Default source registry policy не менялась: `warn + allow-legacy-raw`. |
+
+## 2026-07-02 - OFZ-PD key rate chart label polish
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-02 | Доработан график `ofz_pd_yield_key_rate`: русские подписи месяцев, подписи значений через annotations, максимум доходности и ключевая ставка сверху маркера, минимум доходности снизу маркера, белый фон и дополнительный сдвиг при близких линиях. | OK: прошли `py_compile`, `compileall`, `cbr_key_rate_source_smoke.py`, `line_marker_style_smoke.py`, `ofz-run`, `html_chart_qa.py`, `visual_regression.py --mode auto`, `ofz_pd_yield_metrics_regression.py`, `ofz-quality --fast`. HTML QA подтвердил контракт `ofz_pd_yield_key_rate`, наличие `Янв-24`, отсутствие `Jan-24` и фон подписей `rgba(255,255,255,0.90)`. | Visual regression использовал fallback из-за недоступного screenshot backend в managed среде. Generated outputs, processed CBR CSV, raw originals, logs, releases, `.ofz_launcher`, `data/processed` и Minfin versions не staging. Default source registry policy не менялась: `warn + allow-legacy-raw`. |

@@ -25,10 +25,12 @@ docs/04_visualization/reference_slides/ofz_pd_yield_key_rate_reference.pptx
 - заливка маркера белая;
 - обводка маркера цветом серии, примерно `1.5 pt`;
 - легенда снизу;
-- X-axis labels в формате `Jan-24` с поворотом около `-45` градусов;
+- reference slide содержит X-axis labels в формате `Jan-24`, production-график использует русский формат `Янв-24` с поворотом около `-45` градусов;
 - title color `#001648`, font family `Golos Text, Arial, sans-serif`;
 - max OFZ-PD yield color `#FF5D50`;
 - min OFZ-PD yield color `#00CE7E`;
 - CBR key rate color `#BB88EF`.
+
+Production-реализация `ofz_pd_yield_key_rate` также фиксирует позиционирование подписей значений: максимум доходности и ключевая ставка над маркером, минимум доходности под маркером. Подписи имеют белый фон и дополнительный сдвиг при близких значениях серий, чтобы текст не пересекался с линиями.
 
 PPTX не является pipeline output и не должен попадать в `outputs/`, `releases/` или runtime directories.

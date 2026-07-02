@@ -75,6 +75,20 @@ MAX_YIELD_DISCOUNT_OUTLIERS_LABELS_TOTAL = 30
 YIELD_DISCOUNT_LABEL_MIN_DISTANCE_NORM = 0.07
 MIN_SEGMENT_LABEL_SHARE = 0.02
 MIN_SEGMENT_LABEL_VALUE_BLN = 20.0
+RU_MONTH_ABBR = {
+    1: "Янв",
+    2: "Фев",
+    3: "Мар",
+    4: "Апр",
+    5: "Май",
+    6: "Июн",
+    7: "Июл",
+    8: "Авг",
+    9: "Сен",
+    10: "Окт",
+    11: "Ноя",
+    12: "Дек",
+}
 
 QUALITATIVE_COLORS = palette.QUALITATIVE_PALETTE
 SEQUENTIAL_COLORS = palette.SEQUENTIAL_PALETTE
@@ -1094,7 +1108,7 @@ def build_ofz_pd_yield_key_rate_chart(
     cbr["month"] = pd.to_datetime(cbr["month"], errors="coerce")
     chart_data = monthly_yield.merge(cbr, on="month", how="left", suffixes=("", "_cbr"))
     chart_data = chart_data.sort_values("month").reset_index(drop=True)
-    chart_data["month_label"] = chart_data["month"].dt.strftime("%b-%y")
+    chart_data["month_label"] = chart_data["month"].map(format_ru_month_label)
     chart_data["key_rate_available"] = chart_data["key_rate_pct"].notna()
     chart_data["yield_scope"] = "ofz_pd_only"
     chart_data["source_cbr_file"] = chart_data.get("source_file", "")
@@ -1114,16 +1128,14 @@ def build_ofz_pd_yield_key_rate_chart(
     series = [
         ("ofz_pd_yield_max", "ofz_pd_yield_max", "Максимальная доходность ОФЗ-ПД", 2, "top center"),
         ("ofz_pd_yield_min", "ofz_pd_yield_min", "Минимальная доходность ОФЗ-ПД", 2, "bottom center"),
-        ("key_rate", "key_rate_pct", "Ключевая ставка Банка России", 1, "middle right"),
+        ("key_rate", "key_rate_pct", "Ключевая ставка Банка России", 1, "top center"),
     ]
     for series_key, value_column, name, decimals, text_position in series:
         color = REFERENCE_LINE_MARKER_COLORS[series_key]
-        text = reference_line_labels(chart_data, value_column, decimals)
         trace = go.Scatter(
             x=chart_data["month_label"],
             y=chart_data[value_column],
             name=name,
-            text=text,
             customdata=chart_data[
                 [
                     "month_label",
@@ -1145,15 +1157,16 @@ def build_ofz_pd_yield_key_rate_chart(
                 "Инфляция, г/г: %{customdata[4]:.2f}%<br>"
                 "Цель по инфляции: %{customdata[5]:.1f}%<br>"
                 "Наблюдений ОФЗ-ПД: %{customdata[6]}<br>"
-                "Yield scope: %{customdata[7]}<br>"
-                "Key rate available: %{customdata[8]}<extra></extra>"
+                "Контур доходности: %{customdata[7]}<br>"
+                "Ключевая ставка доступна: %{customdata[8]}<extra></extra>"
             ),
         )
-        apply_reference_line_marker_trace(trace, color, text_position=text_position)
+        apply_reference_line_marker_trace(trace, color)
         fig.add_trace(trace)
 
     title = "Динамика доходности ОФЗ-ПД и ключевой ставки Банка России, %"
     apply_reference_line_marker_layout(fig, title=title, show_yaxis_labels=False)
+    add_ofz_pd_key_rate_value_labels(fig, chart_data, series)
     fig.update_yaxes(title_text="Проценты годовых")
     fig.update_xaxes(title_text="Месяц")
 
@@ -1188,6 +1201,88 @@ def ensure_cbr_key_rate_processed(limitations: list[str]) -> pd.DataFrame:
             "processed CSV is a generated artifact and must not be staged."
         )
     return pd.read_csv(config.CBR_KEY_RATE_PROCESSED_CSV)
+
+
+def format_ru_month_label(value: object) -> str:
+    timestamp = pd.to_datetime(value, errors="coerce")
+    if pd.isna(timestamp):
+        return ""
+    return f"{RU_MONTH_ABBR[int(timestamp.month)]}-{str(int(timestamp.year))[-2:]}"
+
+
+def add_ofz_pd_key_rate_value_labels(
+    figure: Any,
+    data: pd.DataFrame,
+    series: Sequence[tuple[str, str, str, int, str]],
+) -> None:
+    """Add readable value labels with a line-overlap guard for the reference chart."""
+    y_columns = [value_column for _, value_column, _, _, _ in series]
+    y_range = pd.to_numeric(data[y_columns].stack(), errors="coerce")
+    y_span = float(y_range.max() - y_range.min()) if not y_range.empty else 1.0
+    close_threshold = max(y_span * 0.035, 0.18)
+
+    for series_key, value_column, _name, decimals, text_position in series:
+        color = REFERENCE_LINE_MARKER_COLORS[series_key]
+        labels = reference_line_labels(data, value_column, decimals)
+        base_shift = reference_label_base_shift(series_key)
+        for index, label in enumerate(labels):
+            if not label:
+                continue
+            row = data.iloc[index]
+            value = pd.to_numeric(pd.Series([row.get(value_column)]), errors="coerce").iloc[0]
+            if pd.isna(value):
+                continue
+            yshift = label_yshift_with_overlap_guard(
+                row=row,
+                value_column=value_column,
+                y_columns=y_columns,
+                base_shift=base_shift,
+                close_threshold=close_threshold,
+            )
+            figure.add_annotation(
+                x=row["month_label"],
+                y=float(value),
+                text=label,
+                showarrow=False,
+                xanchor="center",
+                yanchor="bottom" if text_position == "top center" else "top",
+                yshift=yshift,
+                font={"color": color, "size": 11, "family": "Golos Text, Arial, sans-serif"},
+                bgcolor="rgba(255,255,255,0.90)",
+                bordercolor="rgba(255,255,255,0.90)",
+                borderpad=1,
+            )
+
+
+def reference_label_base_shift(series_key: str) -> int:
+    if series_key == "key_rate":
+        return 26
+    if series_key == "ofz_pd_yield_min":
+        return -16
+    return 16
+
+
+def label_yshift_with_overlap_guard(
+    row: pd.Series,
+    value_column: str,
+    y_columns: Sequence[str],
+    base_shift: int,
+    close_threshold: float,
+) -> int:
+    value = pd.to_numeric(pd.Series([row.get(value_column)]), errors="coerce").iloc[0]
+    if pd.isna(value):
+        return base_shift
+    other_values = [
+        pd.to_numeric(pd.Series([row.get(column)]), errors="coerce").iloc[0]
+        for column in y_columns
+        if column != value_column
+    ]
+    close_values = [float(other) for other in other_values if pd.notna(other) and abs(float(other) - float(value)) <= close_threshold]
+    if not close_values:
+        return base_shift
+    if base_shift > 0:
+        return base_shift + 8
+    return base_shift - 8
 
 
 def reference_line_labels(data: pd.DataFrame, value_column: str, decimals: int) -> list[str]:
