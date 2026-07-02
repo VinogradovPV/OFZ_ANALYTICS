@@ -324,6 +324,8 @@ Smoke tests должны проверять наличие:
 - Для длинной ретроспективы каждая панель соответствует виду ОФЗ, а ось X показывает периоды в хронологическом порядке.
 - Экспорт статистик boxplot сохраняется в `outputs/exports/chart_data/boxplot/` и содержит `report_period_start`, `report_period_display_label`, `report_period_order`, `ofz_type`, `n`, `min`, `q1`, `median`, `q3`, `max`, `lower_fence`, `upper_fence`, `has_outliers`, `outliers_count`.
 
+- Отдельный график `yield_boxplot_ofz_pd` для короткого horizon использует fallback `jittered strip + summary ticks`, чтобы точки ОФЗ-ПД не схлопывались в одну вертикальную линию.
+
 ## Stacked structure charts
 
 - Структурные stacked-графики по срокам, форматам и monthly-разрезам показывают итоговую сумму над столбцом при наличии двух и более сегментов.
@@ -380,4 +382,3 @@ Smoke tests должны проверять наличие:
 - `format_terms_comparison_*` сравнивает форматы по доходности, дисконту, `revenue_to_nominal_ratio` и `nominal_revenue_gap_bln`; в hover и подписях используется `placement_count`.
 - `format_terms_scatter_*` показывает отдельные размещения: цвет = формат, форма = вид ОФЗ, размер = объем размещения по номиналу.
 - Ограничения по отсутствующим `discount_to_nominal` и `revenue_volume` закреплены: значения не выдумываются, строки получают `data_quality_flag`, а неполные графики/элементы должны интерпретироваться с учетом качества данных.
-

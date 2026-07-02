@@ -3388,44 +3388,62 @@ def build_yield_boxplot_ofz_pd_chart(
     data["Цвет периода"] = data["report_period_label"].astype("string") if "report_period_label" in data.columns else data["report_year"].astype("string")
     data["Период boxplot"] = data["report_period_label"].astype("string") if "report_period_label" in data.columns else data["Цвет периода"]
     data["Период X boxplot"] = build_yield_boxplot_x_period(data)
-    data["chart_mode"] = "ofz_pd_period_boxplot"
+    period_order = yield_boxplot_period_order(data, params)
+    single_period_mode = len(period_order) <= 2
+    data["chart_mode"] = "ofz_pd_single_period_strip_box" if single_period_mode else "ofz_pd_period_boxplot"
     data["label_mode"] = "full"
     data = add_yield_boxplot_hover_columns(data)
-    period_order = yield_boxplot_period_order(data, params)
     period_x_order = yield_boxplot_x_order(data, period_order)
     stats = build_yield_boxplot_ofz_pd_stats(data, period_order, period_x_order)
     if stats.empty:
         limitations.append("Boxplot ОФЗ-ПД пропущен: не удалось рассчитать статистики.")
         return None
+    if single_period_mode:
+        stats["chart_mode"] = "ofz_pd_single_period_strip_box"
     data = add_yield_boxplot_outlier_flags(data, stats)
     write_yield_boxplot_ofz_pd_stats_export(stats, params)
 
     assert go is not None
     fig = go.Figure()
     period_color_map = palette.build_period_color_map(period_order)
-    for period_label in period_order:
-        group = data.loc[data["Период boxplot"].astype(str) == period_label].copy()
-        if group.empty:
-            continue
-        x_value = str(group["Период X boxplot"].iloc[0])
-        fig.add_trace(
-            go.Box(
-                x=[x_value] * len(group),
-                y=group["_yield"],
-                name=x_value,
-                marker={"color": period_color_map.get(period_label, QUALITATIVE_COLORS[0]), "size": 5},
-                line={"color": period_color_map.get(period_label, QUALITATIVE_COLORS[0])},
-                fillcolor=hex_to_rgba(period_color_map.get(period_label, QUALITATIVE_COLORS[0]), 0.30),
-                boxpoints="all",
-                jitter=0.18,
-                pointpos=0,
-                width=0.50,
-                customdata=yield_boxplot_custom_data(group),
-                hovertemplate=yield_boxplot_hover_template(),
+    if single_period_mode:
+        for x_index, period_label in enumerate(period_order):
+            group = data.loc[data["Период boxplot"].astype(str) == period_label].copy()
+            period_stats = stats.loc[stats["report_period_label"].astype(str) == period_label].copy()
+            if group.empty or period_stats.empty:
+                continue
+            add_yield_boxplot_ofz_pd_single_period_fallback(
+                fig,
+                group,
+                period_stats,
+                x_center=float(x_index),
+                color=period_color_map.get(period_label, QUALITATIVE_COLORS[0]),
             )
-        )
-    add_yield_boxplot_ofz_pd_stat_annotations(fig, stats)
-    add_yield_boxplot_ofz_pd_stats_hover_trace(fig, stats)
+        update_yield_boxplot_ofz_pd_single_period_yaxis(fig, data)
+    else:
+        for period_label in period_order:
+            group = data.loc[data["Период boxplot"].astype(str) == period_label].copy()
+            if group.empty:
+                continue
+            x_value = str(group["Период X boxplot"].iloc[0])
+            fig.add_trace(
+                go.Box(
+                    x=[x_value] * len(group),
+                    y=group["_yield"],
+                    name=x_value,
+                    marker={"color": period_color_map.get(period_label, QUALITATIVE_COLORS[0]), "size": 5},
+                    line={"color": period_color_map.get(period_label, QUALITATIVE_COLORS[0])},
+                    fillcolor=hex_to_rgba(period_color_map.get(period_label, QUALITATIVE_COLORS[0]), 0.30),
+                    boxpoints="all",
+                    jitter=0.18,
+                    pointpos=0,
+                    width=0.50,
+                    customdata=yield_boxplot_custom_data(group),
+                    hovertemplate=yield_boxplot_hover_template(),
+                )
+            )
+        add_yield_boxplot_ofz_pd_stat_annotations(fig, stats)
+        add_yield_boxplot_ofz_pd_stats_hover_trace(fig, stats)
     fig.add_annotation(
         text="ОФЗ-ПД: min/max подписаны у усов; q1/q3/fences/outliers доступны в hover и export",
         xref="paper",
@@ -3443,7 +3461,11 @@ def build_yield_boxplot_ofz_pd_chart(
         showlegend=False,
         margin={"l": 72, "r": 72, "t": 120, "b": 92},
     )
-    fig.update_xaxes(categoryorder="array", categoryarray=period_x_order)
+    if single_period_mode:
+        tickvals = list(range(len(period_x_order)))
+        fig.update_xaxes(tickmode="array", tickvals=tickvals, ticktext=period_x_order, range=[-0.72, max(tickvals) + 0.72])
+    else:
+        fig.update_xaxes(categoryorder="array", categoryarray=period_x_order)
     apply_common_layout(fig, legend_title="Период")
     limitations.append(
         "Создан отдельный boxplot ОФЗ-ПД: X = период, Y = доходность; на графике показаны min, median, max и n."
@@ -6171,6 +6193,142 @@ def write_yield_boxplot_ofz_pd_stats_export(stats: pd.DataFrame, params: report_
     available_columns = [column for column in export_columns if column in export_data.columns]
     path = config.EXPORTS_CHART_DATA_BOXPLOT_DIR / f"yield_boxplot_ofz_pd_stats_{suffix}.csv"
     export_data[available_columns].to_csv(path, index=False, encoding="utf-8")
+
+
+def add_yield_boxplot_ofz_pd_single_period_fallback(
+    figure: Any,
+    group: pd.DataFrame,
+    stats: pd.DataFrame,
+    *,
+    x_center: float,
+    color: str,
+) -> None:
+    """Render a readable one-period OFZ-PD distribution as jittered strip + summary ticks."""
+    if group.empty or stats.empty:
+        return
+    assert go is not None
+    row = stats.iloc[0]
+    prepared = group.sort_values(["_yield", "issue_code"], na_position="last").copy()
+    x_offsets = single_period_jitter_offsets(len(prepared), spread=0.45)
+    prepared["single_period_x"] = [x_center + offset for offset in x_offsets]
+
+    figure.add_trace(
+        go.Scatter(
+            x=prepared["single_period_x"],
+            y=prepared["_yield"],
+            mode="markers",
+            name="single_period_strip_points",
+            showlegend=False,
+            marker={
+                "color": color,
+                "size": 9,
+                "opacity": 0.55,
+                "line": {"color": "#1F2933", "width": 0.8},
+            },
+            customdata=yield_boxplot_custom_data(prepared),
+            hovertemplate=yield_boxplot_hover_template(),
+        )
+    )
+
+    q1 = float(row["yield_q1"])
+    q3 = float(row["yield_q3"])
+    median_value = float(row["yield_median"])
+    min_value = float(row["yield_min_actual"])
+    max_value = float(row["yield_max_actual"])
+    box_half_width = 0.24
+    tick_half_width = 0.38
+    figure.add_shape(
+        type="rect",
+        x0=x_center - box_half_width,
+        x1=x_center + box_half_width,
+        y0=q1,
+        y1=q3,
+        line={"color": color, "width": 1.6},
+        fillcolor=hex_to_rgba(color, 0.18),
+        layer="below",
+    )
+    for value, width, line_color, line_width in [
+        (min_value, tick_half_width, "#166A75", 1.8),
+        (median_value, 0.44, "#1F2933", 2.3),
+        (max_value, tick_half_width, QUALITATIVE_COLORS[5], 1.8),
+    ]:
+        figure.add_shape(
+            type="line",
+            x0=x_center - width,
+            x1=x_center + width,
+            y0=value,
+            y1=value,
+            line={"color": line_color, "width": line_width},
+        )
+
+    annotation_x = x_center + 0.50
+    annotations = [
+        (max_value, f"макс: {max_value:.2f}", 12, QUALITATIVE_COLORS[5], "single_period_max_tick"),
+        (median_value, f"мед: {median_value:.2f}<br>n={int(row['auction_count'])}", 0, "#1F2933", "single_period_median_tick"),
+        (min_value, f"мин: {min_value:.2f}", -12, "#166A75", "single_period_min_tick"),
+    ]
+    for value, text, yshift, font_color, name in annotations:
+        figure.add_annotation(
+            x=annotation_x,
+            y=value,
+            text=text,
+            showarrow=False,
+            xanchor="left",
+            yanchor="middle",
+            yshift=yshift,
+            align="left",
+            font={"size": 10, "color": font_color},
+            bgcolor="rgba(255,255,255,0.74)",
+            name=name,
+        )
+    figure.add_annotation(
+        text="Один период: точки разведены по горизонтали; отметки показывают min, median, max.",
+        xref="paper",
+        yref="paper",
+        x=0,
+        y=1.04,
+        showarrow=False,
+        align="left",
+        font={"size": 11, "color": "#4B5563"},
+        name="single_period_strip_box_note",
+    )
+
+    hover_stats = prepare_yield_boxplot_hover_stats(stats.copy())
+    figure.add_trace(
+        go.Scatter(
+            x=[x_center],
+            y=hover_stats["yield_median"],
+            mode="markers",
+            name="single_period_stats_hover",
+            marker={"size": 22, "color": "rgba(0,0,0,0)"},
+            showlegend=False,
+            hoverinfo="text",
+            customdata=yield_boxplot_stats_hover_data(hover_stats),
+            hovertemplate=yield_boxplot_stats_hover_template(),
+        )
+    )
+    figure.update_layout(meta={"ofz_pd_boxplot_mode": "single_period_strip_box", "single_period_jitter": 0.45})
+
+
+def update_yield_boxplot_ofz_pd_single_period_yaxis(figure: Any, data: pd.DataFrame) -> None:
+    """Add vertical padding for short-horizon OFZ-PD strip-box fallback."""
+    values = pd.to_numeric(data["_yield"], errors="coerce").dropna()
+    if values.empty:
+        return
+    y_min = float(values.min())
+    y_max = float(values.max())
+    y_padding = max((y_max - y_min) * 0.18, 0.25)
+    figure.update_yaxes(range=[y_min - y_padding, y_max + y_padding])
+
+
+def single_period_jitter_offsets(count: int, spread: float) -> list[float]:
+    """Return deterministic horizontal offsets for one-period strip points."""
+    if count <= 0:
+        return []
+    if count == 1:
+        return [0.0]
+    step = (spread * 2) / (count - 1)
+    return [round(-spread + index * step, 6) for index in range(count)]
 
 
 def add_yield_boxplot_ofz_pd_stat_annotations(figure: Any, stats: pd.DataFrame) -> None:

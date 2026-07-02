@@ -127,6 +127,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         check_yield_boxplot_long_mode_integrity(plot_by_file),
         check_yield_boxplot_min_max_contract(html_by_file),
         check_yield_boxplot_ofz_pd_exists(html_files),
+        check_yield_boxplot_ofz_pd_single_period_contract(html_by_file),
         check_ofz_pd_yield_key_rate_contract(html_by_file),
         check_revenue_charts_contract(plot_by_file),
         check_visible_technical_names(html_by_file),
@@ -1405,6 +1406,54 @@ def check_yield_boxplot_ofz_pd_exists(html_files: Sequence[Path]) -> QaResult:
     if not matched:
         return QaResult("yield_boxplot_ofz_pd_exists", False, "Не найден отдельный график yield_boxplot_ofz_pd.")
     return QaResult("yield_boxplot_ofz_pd_exists", True, "Отдельный boxplot ОФЗ-ПД найден: " + short_list(matched, limit=3))
+
+
+def check_yield_boxplot_ofz_pd_single_period_contract(html_by_file: dict[Path, str]) -> QaResult:
+    """Проверить single-period fallback отдельного boxplot ОФЗ-ПД, если он есть в QA-наборе."""
+    files = {
+        path: html
+        for path, html in html_by_file.items()
+        if path.name.startswith("yield_boxplot_ofz_pd_year_cumulative_")
+        and (retrospective_years_from_name(path.name) or 0) == 1
+    }
+    if not files:
+        return QaResult("yield_boxplot_ofz_pd_single_period_contract", True, "Single-period OFZ-PD boxplot не найден в текущем QA-наборе.")
+
+    failed: list[str] = []
+    for path, html in files.items():
+        normalized = html
+        compact = "".join(html.split())
+        required_tokens = [
+            "single_period_strip_points",
+            "single_period_stats_hover",
+            "single_period_strip_box",
+            "single_period_jitter",
+            "single_period_min_tick",
+            "single_period_median_tick",
+            "single_period_max_tick",
+        ]
+        missing = [token for token in required_tokens if token not in normalized]
+        if missing:
+            failed.append(f"{path.name}: нет single-period tokens {', '.join(missing)}")
+        if '"opacity":0.55' not in compact:
+            failed.append(f"{path.name}: не подтверждена opacity 0.55 для strip points")
+        if '"range":[-0.72,1.72]' not in compact:
+            failed.append(f"{path.name}: не подтвержден expanded x-axis range")
+        for token in ["мин:", "мед:", "макс:", "n="]:
+            if token not in normalized:
+                failed.append(f"{path.name}: нет подписи `{token}`")
+        stats_path = yield_boxplot_stats_path_for_html(path)
+        if not stats_path.exists():
+            failed.append(f"{path.name}: не найден stats export {stats_path.name}")
+            continue
+        rows = read_csv_rows(stats_path)
+        modes = {str(row.get("chart_mode", "")).strip() for row in rows}
+        if modes != {"ofz_pd_single_period_strip_box"}:
+            failed.append(f"{stats_path.name}: unexpected chart_mode {sorted(modes)}")
+
+    if failed:
+        return QaResult("yield_boxplot_ofz_pd_single_period_contract", False, short_list(failed, limit=8))
+    return QaResult("yield_boxplot_ofz_pd_single_period_contract", True, f"Single-period OFZ-PD boxplot проверен: {len(files)} файлов.")
 
 
 def check_ofz_pd_yield_key_rate_contract(html_by_file: dict[Path, str]) -> QaResult:
