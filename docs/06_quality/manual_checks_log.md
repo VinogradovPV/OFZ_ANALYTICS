@@ -705,3 +705,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-07-02 | Зафиксирован контракт источника ключевой ставки Банка России: primary URL `cbr.ru/hd_base/KeyRate/`, preferred `table.data`, Highcharts только fallback/cross-check, monthly rule `last_available_observation_in_month`, daily/monthly output fields и fallback XLSX policy. | OK: прошли `check_text_encoding.py`, `ofz-quality --stage encoding-mojibake`, contract token check по `table.data`, `Highcharts`, `UniDbQuery.Posted`, `last_available_observation_in_month`, `key_rate_month_end_pct`, `source_parser=xlsx_fallback`, `git diff --check`. | Этап 4 только документирует source contract. Web parser, CBR live dry-run, chart field migration, label formatting и source registry default policy не менялись. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed` и raw versions не staging. |
+
+## 2026-07-02 - Этап D CBR key rate storage model
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-02 | Уточнена модель хранения ключевой ставки Банка России: daily source copy `data/processed/reference/cbr_key_rate_daily.csv` строго `date,value`, provenance вынесен в `cbr_key_rate_daily.meta.json`, monthly derived view `data/processed/reference/cbr_key_rate_monthly.csv` строится по `last_available_observation_in_month`. | OK: контракт и README синхронизированы с v4-инструкцией; daily/monthly CSV больше не описывают provenance-поля и inflation-поля как часть целевой модели. | Этап D только документирует storage model. Web parser, live CBR dry-run, текущий XLSX fallback, chart code и source registry default policy не менялись. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed` и raw versions не staging. |

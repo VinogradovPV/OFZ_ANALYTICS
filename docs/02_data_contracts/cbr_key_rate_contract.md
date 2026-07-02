@@ -4,9 +4,11 @@
 
 ## Назначение
 
-Этот контракт фиксирует источник, parser policy и monthly normalization для ключевой ставки Банка России в OFZ Analytics. Контракт нужен для последующей реализации web parser и для графика `ofz_pd_yield_key_rate`.
+Этот контракт фиксирует модель хранения, источник и правила нормализации ключевой ставки Банка России в OFZ Analytics. Контракт нужен для будущего web parser и для графика `ofz_pd_yield_key_rate`.
 
-Текущая реализация pipeline может временно использовать ручной XLSX fallback. После внедрения web parser primary source должен соответствовать этому документу.
+В scope входит только ключевая ставка Банка России. Инфляция, цель по инфляции и любые поля `inflation_yoy` / `inflation_target` не входят в этот контракт.
+
+Текущий pipeline может временно использовать ручной XLSX fallback, но целевая модель хранения после внедрения web parser должна соответствовать этому документу.
 
 ## Primary source
 
@@ -14,6 +16,12 @@
 
 ```text
 https://cbr.ru/hd_base/KeyRate/
+```
+
+Параметризованный URL:
+
+```text
+https://cbr.ru/hd_base/KeyRate/?UniDbQuery.Posted=True&UniDbQuery.From=<DD.MM.YYYY>&UniDbQuery.To=<DD.MM.YYYY>
 ```
 
 Параметры запроса:
@@ -30,7 +38,7 @@ https://cbr.ru/hd_base/KeyRate/
 https://cbr.ru/hd_base/KeyRate/?UniDbQuery.Posted=True&UniDbQuery.From=01.01.2019&UniDbQuery.To=02.07.2026
 ```
 
-Parser должен сохранять фактический `source_url` в output metadata.
+Фактический `source_url` не записывается в daily CSV. Если provenance нужен, он хранится только в отдельном metadata-файле.
 
 ## Preferred HTML source
 
@@ -87,34 +95,82 @@ Cross-check должен сравнить:
 
 При расхождении таблицы и Highcharts parser должен завершаться понятной ошибкой или фиксировать blocker warning в QA, а не молча выбирать один источник.
 
-## Daily output
+## Daily source copy
 
-Daily output содержит одно наблюдение на дату изменения ключевой ставки.
+Daily source copy является нормализованной копией формы сайта Банка России, а не аналитической таблицей.
+
+Путь:
+
+```text
+data/processed/reference/cbr_key_rate_daily.csv
+```
+
+CSV должен содержать строго две колонки и только их:
+
+```text
+date,value
+```
 
 Обязательные поля:
 
 | Поле | Тип | Nullable | Правило |
 |---|---|---:|---|
-| `key_rate_date` | date | no | Дата наблюдения, ISO `YYYY-MM-DD`. |
-| `key_rate_pct` | number | no | Значение ключевой ставки, проценты годовых. |
-| `source_parser` | string | no | `html_table`, `highcharts_fallback` или `xlsx_fallback`. |
-| `source_url` | string | yes | URL страницы ЦБ для web/html source. |
-| `source_retrieved_at` | datetime | yes | UTC-время получения источника. |
-| `source_page_last_modified` | string | yes | HTTP Last-Modified, если доступен. |
-| `source_html_sha256` | string | yes | SHA256 HTML-снимка, если source web/html. |
-| `source_row_count` | integer | no | Количество строк source parser. |
+| `date` | date | no | Дата наблюдения, ISO `YYYY-MM-DD`. |
+| `value` | number | no | Значение ключевой ставки, проценты годовых. |
 
-Daily CSV является generated artifact и не коммитится.
+Daily CSV не должен содержать:
 
-## Monthly normalization
+- `inflation`;
+- `inflation_yoy`;
+- `inflation_target`;
+- `key_rate_max_pct`;
+- `key_rate_min_pct`;
+- `key_rate_avg_pct`;
+- `source_url`;
+- `retrieved_at`.
 
-Для помесячного графика и chart data используется правило:
+Файл `data/processed/reference/cbr_key_rate_daily.csv` является generated artifact и не коммитится.
+
+## Daily metadata
+
+Если нужно сохранить provenance, он хранится отдельно:
+
+```text
+data/processed/reference/cbr_key_rate_daily.meta.json
+```
+
+Разрешенные поля metadata:
+
+| Поле | Тип | Nullable | Правило |
+|---|---|---:|---|
+| `source_url` | string | no | Фактический URL страницы Банка России с параметрами периода. |
+| `from_date` | date | no | Начало requested period, ISO `YYYY-MM-DD`. |
+| `to_date` | date | no | Конец requested period, ISO `YYYY-MM-DD`. |
+| `retrieved_at` | datetime | no | UTC-время получения источника. |
+| `page_last_modified` | string | yes | HTTP Last-Modified, если доступен. |
+| `html_sha256` | string | yes | SHA256 HTML-снимка, если source web/html. |
+| `row_count` | integer | no | Количество строк в daily CSV. |
+| `parser` | string | no | `html_table` или `highcharts_fallback`. |
+
+Metadata JSON является generated artifact и не коммитится.
+
+## Monthly derived view
+
+Monthly derived view строится только из daily source copy и используется для графика.
+
+Путь:
+
+```text
+data/processed/reference/cbr_key_rate_monthly.csv
+```
+
+Правило выбора значения:
 
 ```text
 last_available_observation_in_month
 ```
 
-То есть для каждого месяца выбирается последняя доступная дата наблюдения в этом месяце и ставка на эту дату.
+То есть для каждого месяца выбирается последняя доступная дата наблюдения внутри месяца и значение `value` на эту дату.
 
 Запрещено использовать:
 
@@ -123,10 +179,6 @@ last_available_observation_in_month
 - среднее месяца;
 - первое значение месяца;
 - интерполяцию пропусков.
-
-Если отчетная дата попадает внутрь месяца и в источнике есть только часть месяца, строка помечается как partial.
-
-## Monthly output
 
 Обязательные поля monthly output:
 
@@ -137,18 +189,15 @@ last_available_observation_in_month
 | `key_rate_month_end_pct` | number | no | Ставка на последний доступный день месяца. |
 | `key_rate_date` | date | no | Фактическая дата выбранного daily observation. |
 | `key_rate_source_rule` | string | no | Всегда `last_available_observation_in_month`. |
-| `key_rate_month_is_partial` | boolean | no | `true`, если месяц неполный относительно requested `to-date`. |
-| `source_url` | string | yes | URL страницы ЦБ или HTML source. |
-| `source_retrieved_at` | datetime | yes | UTC-время получения source. |
-| `source_page_last_modified` | string | yes | HTTP Last-Modified, если доступен. |
-| `source_html_sha256` | string | yes | SHA256 HTML-снимка, если source web/html. |
-| `source_row_count` | integer | no | Количество строк source parser. |
+| `key_rate_month_is_partial` | boolean | no | `true`, если месяц неполный относительно requested `to_date`. |
 
-Monthly CSV является generated artifact и не коммитится.
+Monthly CSV не должен содержать provenance-поля `source_url`, `retrieved_at`, `page_last_modified`, `html_sha256` и `row_count`. Эти сведения остаются в daily metadata.
+
+Файл `data/processed/reference/cbr_key_rate_monthly.csv` является generated artifact и не коммитится.
 
 ## Chart integration
 
-График `ofz_pd_yield_key_rate` должен использовать monthly key rate field:
+График `ofz_pd_yield_key_rate` должен использовать monthly field:
 
 ```text
 key_rate_month_end_pct
@@ -187,24 +236,14 @@ Hover/note графика должны явно сообщать:
 
 ## Fallback XLSX
 
-XLSX допускается только как fallback/manual source до завершения web parser или при недоступности сайта Банка России.
+XLSX допускается только как временный manual fallback до завершения web parser или при недоступности сайта Банка России.
 
-Ожидаемые колонки:
+Fallback не меняет целевую модель хранения:
 
-```text
-Дата
-Ключевая ставка, % годовых
-Инфляция, % г/г
-Цель по инфляции
-```
-
-Output должен помечать такой источник:
-
-```text
-source_parser=xlsx_fallback
-```
-
-Raw XLSX не добавляется в Git без отдельного approval.
+- daily source copy остается `date,value`;
+- monthly derived view строится по `last_available_observation_in_month`;
+- inflation-поля не входят в контракт key rate;
+- raw XLSX не добавляется в Git без отдельного approval.
 
 ## QA expectations
 
@@ -215,10 +254,14 @@ Fixture-based parser smoke должен проверять:
 - headers `Дата` и `Ставка`;
 - десятичную запятую;
 - сортировку по возрастанию;
+- daily CSV ровно с колонками `date,value`;
+- отсутствие в daily CSV колонок `inflation`, `inflation_yoy`, `inflation_target`, `source_url`, `retrieved_at`;
+- metadata JSON только с разрешенными provenance-полями;
 - Highcharts fallback/cross-check;
 - monthly rule `last_available_observation_in_month`;
+- отсутствие monthly max/min/avg/first aggregations;
 - partial month flag;
 - dry-run без записи CSV;
 - понятную ошибку для пустой или malformed таблицы.
 
-Live web dry-run допускается как отдельная проверка. Если сайт ЦБ недоступен, это фиксируется как ограничение live-проверки, но не блокирует fixture-based smoke.
+Live web dry-run допускается как отдельная проверка. Если сайт Банка России недоступен, это фиксируется как ограничение live-проверки, но не блокирует fixture-based smoke.
