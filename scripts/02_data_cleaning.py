@@ -129,8 +129,13 @@ def list_raw_files(raw_dir: Path) -> list[Path]:
     return sorted(
         path
         for path in raw_dir.iterdir()
-        if path.is_file() and path.suffix.lower() in RAW_EXTENSIONS
+        if path.is_file() and path.suffix.lower() in RAW_EXTENSIONS and is_legacy_minfin_auction_raw_file(path)
     )
+
+
+def is_legacy_minfin_auction_raw_file(path: Path) -> bool:
+    """Keep OFZ auction cleaning scoped to Minfin auction source workbooks."""
+    return path.name.lower().startswith("internet_auction_results_rus_")
 
 
 def read_raw_tables(raw_files: list[Path], logger: Any) -> list[RawTable]:

@@ -15,6 +15,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
+CBR_RAW_DIR = RAW_DATA_DIR / "cbr"
+CBR_KEY_RATE_RAW_DIR = CBR_RAW_DIR / "key_rate_inflation"
+CBR_KEY_RATE_RAW_XLSX = CBR_KEY_RATE_RAW_DIR / "cbr_key_rate_inflation_2019-01_2026-05.xlsx"
+CBR_KEY_RATE_PROCESSED_CSV = PROCESSED_DATA_DIR / "cbr_key_rate_inflation_monthly.csv"
 OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 CHARTS_DIR = OUTPUTS_DIR / "charts"
 CHARTS_MONTHLY_DIR = CHARTS_DIR / "monthly"
@@ -69,6 +73,7 @@ EXPORTS_CHART_DATA_SCATTER_DIR = EXPORTS_CHART_DATA_DIR / "scatter"
 EXPORTS_CHART_DATA_MONTHLY_DIR = EXPORTS_CHART_DATA_DIR / "monthly"
 EXPORTS_CHART_DATA_STRUCTURE_DIR = EXPORTS_CHART_DATA_DIR / "structure"
 EXPORTS_CHART_DATA_REVENUE_DIR = EXPORTS_CHART_DATA_DIR / "revenue"
+EXPORTS_CHART_DATA_YIELD_DIR = EXPORTS_CHART_DATA_DIR / "yield"
 EXPORTS_TECHNICAL_DIR = EXPORTS_DIR / "technical"
 EXPORTS_REVIEW_REQUIRED_DIR = EXPORTS_TECHNICAL_DIR / "review_required"
 DASHBOARDS_DIR = OUTPUTS_DIR / "dashboards"
@@ -122,6 +127,7 @@ DOC_PATHS: dict[str, Path] = {
     "revenue_charts_report.md": DOCS_ANALYTICS_DIR / "revenue_charts_report.md",
     "boxplot_diagnostics.md": DOCS_VISUALIZATION_DIR / "boxplot_diagnostics.md",
     "chart_build_limitations.md": DOCS_VISUALIZATION_DIR / "chart_build_limitations.md",
+    "line_marker_reference_style.md": DOCS_VISUALIZATION_DIR / "line_marker_reference_style.md",
     "monthly_visualization_strategy.md": DOCS_VISUALIZATION_DIR / "monthly_visualization_strategy.md",
     "palette_policy.md": DOCS_VISUALIZATION_DIR / "palette_policy.md",
     "visualization_strategy.md": DOCS_VISUALIZATION_DIR / "visualization_strategy.md",
@@ -226,6 +232,8 @@ OFZ_AUCTIONS_FEATURES_CSV = (
 
 REQUIRED_DIRECTORIES = (
     RAW_DATA_DIR,
+    CBR_RAW_DIR,
+    CBR_KEY_RATE_RAW_DIR,
     PROCESSED_DATA_DIR,
     DOCS_DIR,
     DOCS_PROJECT_DIR,
@@ -294,6 +302,7 @@ REQUIRED_DIRECTORIES = (
     EXPORTS_CHART_DATA_MONTHLY_DIR,
     EXPORTS_CHART_DATA_STRUCTURE_DIR,
     EXPORTS_CHART_DATA_REVENUE_DIR,
+    EXPORTS_CHART_DATA_YIELD_DIR,
     EXPORTS_TECHNICAL_DIR,
     EXPORTS_REVIEW_REQUIRED_DIR,
     DASHBOARDS_DIR,
@@ -359,6 +368,7 @@ OUTPUT_DIRECTORIES = (
     EXPORTS_CHART_DATA_MONTHLY_DIR,
     EXPORTS_CHART_DATA_STRUCTURE_DIR,
     EXPORTS_CHART_DATA_REVENUE_DIR,
+    EXPORTS_CHART_DATA_YIELD_DIR,
     EXPORTS_TECHNICAL_DIR,
     EXPORTS_REVIEW_REQUIRED_DIR,
     DASHBOARDS_DIR,
@@ -440,6 +450,8 @@ def chart_html_dir_for_name(name: str) -> Path:
     if name == "yield_boxplot_by_ofz_type":
         return CHARTS_YIELD_BOXPLOT_DIR
     if name == "yield_boxplot_ofz_pd":
+        return CHARTS_YIELD_OFZ_PD_DIR
+    if name == "ofz_pd_yield_key_rate":
         return CHARTS_YIELD_OFZ_PD_DIR
     if name.startswith("yield_"):
         return CHARTS_YIELD_DIR

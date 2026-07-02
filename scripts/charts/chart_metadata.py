@@ -35,4 +35,6 @@ def chart_data_dir_for_name(name: str) -> Path:
         return config.EXPORTS_CHART_DATA_SANKEY_DIR
     if name.startswith("yield_boxplot"):
         return config.EXPORTS_CHART_DATA_BOXPLOT_DIR
+    if name == "ofz_pd_yield_key_rate":
+        return config.EXPORTS_CHART_DATA_YIELD_DIR
     return config.EXPORTS_CHART_DATA_STRUCTURE_DIR

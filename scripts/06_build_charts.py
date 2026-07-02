@@ -36,6 +36,13 @@ if __package__ in {None, ""}:
     from scripts.charts.chart_metadata import chart_data_dir_for_name as chart_data_dir_for_metadata_name
     from scripts.charts.chart_metadata import make_report_suffix
     from scripts.charts.export_utils import ensure_directories, write_chart_artifacts
+    from scripts.charts.line_marker_style import (
+        REFERENCE_LINE_MARKER_COLORS,
+        apply_reference_line_marker_layout,
+        apply_reference_line_marker_trace,
+        format_reference_percent_label,
+    )
+    from scripts.source_acquisition.cbr_key_rate_inflation import write_cbr_key_rate_processed
 else:
     from . import config, palette, report_params, scatter_chart_policy, utils
     from .charts.common import (
@@ -50,6 +57,13 @@ else:
     from .charts.chart_metadata import chart_data_dir_for_name as chart_data_dir_for_metadata_name
     from .charts.chart_metadata import make_report_suffix
     from .charts.export_utils import ensure_directories, write_chart_artifacts
+    from .charts.line_marker_style import (
+        REFERENCE_LINE_MARKER_COLORS,
+        apply_reference_line_marker_layout,
+        apply_reference_line_marker_trace,
+        format_reference_percent_label,
+    )
+    from .source_acquisition.cbr_key_rate_inflation import write_cbr_key_rate_processed
 
 
 ChartBuilder = Callable[[pd.DataFrame, report_params.ReportParams, list[str]], "ChartResult | None"]
@@ -134,6 +148,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         config.EXPORTS_CHART_DATA_SANKEY_DIR,
         config.EXPORTS_CHART_DATA_BOXPLOT_DIR,
         config.EXPORTS_CHART_DATA_STRUCTURE_DIR,
+        config.EXPORTS_CHART_DATA_YIELD_DIR,
         config.EXPORTS_TECHNICAL_REVIEW_REQUIRED_DIR,
     )
 
@@ -291,6 +306,7 @@ def chart_builders() -> list[ChartBuilder]:
         build_demand_supply_chart,
         build_bid_to_cover_chart,
         build_yield_by_type_chart,
+        build_ofz_pd_yield_key_rate_chart,
         build_maturity_structure_chart,
         build_format_structure_chart,
         build_format_discount_chart,
@@ -333,6 +349,24 @@ def apply_common_layout(figure: Any, legend_title: str | None = None) -> None:
         uniformtext_minsize=10,
         uniformtext_mode="hide",
     )
+
+
+def apply_reference_style_to_line_marker_figure(
+    figure: Any,
+    title: str | None = None,
+    show_yaxis_labels: bool = True,
+) -> None:
+    """Apply the shared reference styling to existing line+marker figures."""
+    for index, trace in enumerate(figure.data):
+        mode = str(getattr(trace, "mode", "") or "")
+        if "lines" not in mode:
+            continue
+        line = getattr(trace, "line", None)
+        color = getattr(line, "color", None) or QUALITATIVE_COLORS[index % len(QUALITATIVE_COLORS)]
+        text_position = getattr(trace, "textposition", None) or "top center"
+        apply_reference_line_marker_trace(trace, color, text_position=text_position)
+    apply_reference_line_marker_layout(figure, title=title, show_yaxis_labels=show_yaxis_labels)
+
 
 def volume_to_bln(value: Any) -> Any:
     """Перевести объем из млн рублей в млрд рублей для визуализаций."""
@@ -968,6 +1002,11 @@ def build_bid_to_cover_chart(
         font={"size": 12, "color": "#1F2933"},
     )
     apply_common_layout(fig)
+    apply_reference_style_to_line_marker_figure(
+        fig,
+        title="Покрытие предложения спросом",
+        show_yaxis_labels=True,
+    )
     fig.update_layout(xaxis_title="Период", yaxis_title="Спрос / предложение", margin={"l": 72, "r": 32, "t": 110, "b": 64})
     limitations.append(
         "График покрытия предложения спросом рассчитывает периодный bid-to-cover как "
@@ -1011,7 +1050,179 @@ def build_yield_by_type_chart(
     fig.update_traces(textposition="top center")
     fig.update_layout(xaxis_title="Период", yaxis_title="Доходность")
     apply_common_layout(fig, legend_title="Вид ОФЗ")
+    apply_reference_style_to_line_marker_figure(
+        fig,
+        title="Средневзвешенная доходность ОФЗ-ПД",
+        show_yaxis_labels=True,
+    )
     return make_result("yield_by_type", fig, data, params)
+
+
+def build_ofz_pd_yield_key_rate_chart(
+    df: pd.DataFrame,
+    params: report_params.ReportParams,
+    limitations: list[str],
+) -> ChartResult | None:
+    required = ["auction_date", "_yield"]
+    if missing := missing_columns(df, required):
+        limitations.append(f"OFZ-PD key rate chart skipped: missing {', '.join(missing)}.")
+        return None
+    data = df.copy()
+    data["auction_month"] = pd.to_datetime(data["auction_date"], errors="coerce").dt.to_period("M").dt.to_timestamp()
+    data["_yield_numeric"] = pd.to_numeric(data["_yield"], errors="coerce")
+    data = data.loc[data["auction_month"].notna() & data["_yield_numeric"].notna()].copy()
+    data = data.loc[ofz_pd_yield_mask(data)].copy()
+    if data.empty:
+        limitations.append("OFZ-PD key rate chart skipped: no OFZ-PD rows with valid yield.")
+        return None
+
+    monthly_yield = (
+        data.groupby("auction_month", dropna=False)
+        .agg(
+            ofz_pd_yield_max=("_yield_numeric", "max"),
+            ofz_pd_yield_min=("_yield_numeric", "min"),
+            ofz_pd_observation_count=("_yield_numeric", "count"),
+        )
+        .reset_index()
+        .rename(columns={"auction_month": "month"})
+    )
+
+    cbr = ensure_cbr_key_rate_processed(limitations)
+    if cbr.empty:
+        limitations.append("OFZ-PD key rate chart skipped: CBR key rate dataset is unavailable.")
+        return None
+    cbr["month"] = pd.to_datetime(cbr["month"], errors="coerce")
+    chart_data = monthly_yield.merge(cbr, on="month", how="left", suffixes=("", "_cbr"))
+    chart_data = chart_data.sort_values("month").reset_index(drop=True)
+    chart_data["month_label"] = chart_data["month"].dt.strftime("%b-%y")
+    chart_data["key_rate_available"] = chart_data["key_rate_pct"].notna()
+    chart_data["yield_scope"] = "ofz_pd_only"
+    chart_data["source_cbr_file"] = chart_data.get("source_file", "")
+    chart_data["source_cbr_original_name"] = chart_data.get("source_original_name", "")
+    chart_data["source_cbr_min_month"] = chart_data.get("source_min_month", "")
+    chart_data["source_cbr_max_month"] = chart_data.get("source_max_month", "")
+
+    missing_key_rate = chart_data.loc[~chart_data["key_rate_available"], "month_label"].astype(str).tolist()
+    if missing_key_rate:
+        limitations.append(
+            "OFZ-PD key rate chart has months without CBR key rate, no interpolation applied: "
+            + ", ".join(missing_key_rate[:12])
+        )
+
+    assert go is not None
+    fig = go.Figure()
+    series = [
+        ("ofz_pd_yield_max", "ofz_pd_yield_max", "Максимальная доходность ОФЗ-ПД", 2, "top center"),
+        ("ofz_pd_yield_min", "ofz_pd_yield_min", "Минимальная доходность ОФЗ-ПД", 2, "bottom center"),
+        ("key_rate", "key_rate_pct", "Ключевая ставка Банка России", 1, "middle right"),
+    ]
+    for series_key, value_column, name, decimals, text_position in series:
+        color = REFERENCE_LINE_MARKER_COLORS[series_key]
+        text = reference_line_labels(chart_data, value_column, decimals)
+        trace = go.Scatter(
+            x=chart_data["month_label"],
+            y=chart_data[value_column],
+            name=name,
+            text=text,
+            customdata=chart_data[
+                [
+                    "month_label",
+                    "ofz_pd_yield_max",
+                    "ofz_pd_yield_min",
+                    "key_rate_pct",
+                    "inflation_yoy_pct",
+                    "inflation_target_pct",
+                    "ofz_pd_observation_count",
+                    "yield_scope",
+                    "key_rate_available",
+                ]
+            ],
+            hovertemplate=(
+                "Месяц: %{customdata[0]}<br>"
+                "Максимальная доходность ОФЗ-ПД: %{customdata[1]:.2f}%<br>"
+                "Минимальная доходность ОФЗ-ПД: %{customdata[2]:.2f}%<br>"
+                "Ключевая ставка Банка России: %{customdata[3]:.1f}%<br>"
+                "Инфляция, г/г: %{customdata[4]:.2f}%<br>"
+                "Цель по инфляции: %{customdata[5]:.1f}%<br>"
+                "Наблюдений ОФЗ-ПД: %{customdata[6]}<br>"
+                "Yield scope: %{customdata[7]}<br>"
+                "Key rate available: %{customdata[8]}<extra></extra>"
+            ),
+        )
+        apply_reference_line_marker_trace(trace, color, text_position=text_position)
+        fig.add_trace(trace)
+
+    title = "Динамика доходности ОФЗ-ПД и ключевой ставки Банка России, %"
+    apply_reference_line_marker_layout(fig, title=title, show_yaxis_labels=False)
+    fig.update_yaxes(title_text="Проценты годовых")
+    fig.update_xaxes(title_text="Месяц")
+
+    export = chart_data.copy()
+    export["month"] = export["month"].dt.strftime("%Y-%m-01")
+    return make_result("ofz_pd_yield_key_rate", fig, export[ofz_pd_key_rate_export_columns(export)], params)
+
+
+def ofz_pd_yield_mask(data: pd.DataFrame) -> pd.Series:
+    """Return rows eligible for OFZ-PD yield metrics without relying only on display encoding."""
+    mask = pd.Series(True, index=data.index, dtype=bool)
+    if "yield_scope" in data.columns:
+        mask &= data["yield_scope"].astype("string").str.lower().eq("ofz_pd_only").fillna(False)
+    if "ofz_type" in data.columns:
+        ofz_type = data["ofz_type"].astype("string")
+        decoded_pd = ofz_type.str.contains("ПД", na=False)
+        legacy_pd = ofz_type.str.contains("ÏÄ", na=False)
+        if (decoded_pd | legacy_pd).any():
+            mask &= decoded_pd | legacy_pd
+    return mask
+
+
+def ensure_cbr_key_rate_processed(limitations: list[str]) -> pd.DataFrame:
+    """Load processed CBR key rate data, creating it from manual raw XLSX when needed."""
+    if not config.CBR_KEY_RATE_PROCESSED_CSV.exists():
+        if not config.CBR_KEY_RATE_RAW_XLSX.exists():
+            limitations.append(f"CBR key rate raw XLSX not found: {config.CBR_KEY_RATE_RAW_XLSX}.")
+            return pd.DataFrame()
+        write_cbr_key_rate_processed(config.CBR_KEY_RATE_RAW_XLSX, config.CBR_KEY_RATE_PROCESSED_CSV)
+        limitations.append(
+            "CBR key rate processed dataset was generated lazily from the manual raw XLSX; "
+            "processed CSV is a generated artifact and must not be staged."
+        )
+    return pd.read_csv(config.CBR_KEY_RATE_PROCESSED_CSV)
+
+
+def reference_line_labels(data: pd.DataFrame, value_column: str, decimals: int) -> list[str]:
+    """Return dense labels for short charts and endpoint/extrema labels for long charts."""
+    values = pd.to_numeric(data[value_column], errors="coerce")
+    if len(data) <= 24:
+        return [format_reference_percent_label(value, decimals) for value in values]
+    label_indexes: set[int] = set()
+    valid = values.dropna()
+    if not valid.empty:
+        label_indexes.update({int(valid.index[0]), int(valid.index[-1]), int(valid.idxmin()), int(valid.idxmax())})
+    return [
+        format_reference_percent_label(value, decimals) if index in label_indexes else ""
+        for index, value in values.items()
+    ]
+
+
+def ofz_pd_key_rate_export_columns(data: pd.DataFrame) -> list[str]:
+    columns = [
+        "month",
+        "month_label",
+        "ofz_pd_yield_max",
+        "ofz_pd_yield_min",
+        "key_rate_pct",
+        "inflation_yoy_pct",
+        "inflation_target_pct",
+        "key_rate_available",
+        "yield_scope",
+        "ofz_pd_observation_count",
+        "source_cbr_file",
+        "source_cbr_original_name",
+        "source_cbr_min_month",
+        "source_cbr_max_month",
+    ]
+    return [column for column in columns if column in data.columns]
 
 
 def build_maturity_structure_chart(

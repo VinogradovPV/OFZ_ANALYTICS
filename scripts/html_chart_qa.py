@@ -127,6 +127,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         check_yield_boxplot_long_mode_integrity(plot_by_file),
         check_yield_boxplot_min_max_contract(html_by_file),
         check_yield_boxplot_ofz_pd_exists(html_files),
+        check_ofz_pd_yield_key_rate_contract(html_by_file),
         check_revenue_charts_contract(plot_by_file),
         check_visible_technical_names(html_by_file),
     ]
@@ -1404,6 +1405,70 @@ def check_yield_boxplot_ofz_pd_exists(html_files: Sequence[Path]) -> QaResult:
     if not matched:
         return QaResult("yield_boxplot_ofz_pd_exists", False, "Не найден отдельный график yield_boxplot_ofz_pd.")
     return QaResult("yield_boxplot_ofz_pd_exists", True, "Отдельный boxplot ОФЗ-ПД найден: " + short_list(matched, limit=3))
+
+
+def check_ofz_pd_yield_key_rate_contract(html_by_file: dict[Path, str]) -> QaResult:
+    """Проверить контракт нового графика ОФЗ-ПД + ключевая ставка."""
+    files = {path: html for path, html in html_by_file.items() if path.name.startswith("ofz_pd_yield_key_rate_")}
+    if not files:
+        return QaResult("ofz_pd_yield_key_rate_contract", True, "График OFZ-PD + key rate не найден в текущем наборе.")
+
+    required_series = [
+        "Максимальная доходность ОФЗ-ПД",
+        "Минимальная доходность ОФЗ-ПД",
+        "Ключевая ставка Банка России",
+    ]
+    required_colors = ["#FF5D50", "#00CE7E", "#BB88EF"]
+    required_columns = {
+        "month",
+        "month_label",
+        "ofz_pd_yield_max",
+        "ofz_pd_yield_min",
+        "key_rate_pct",
+        "inflation_yoy_pct",
+        "inflation_target_pct",
+        "key_rate_available",
+        "yield_scope",
+        "source_cbr_file",
+    }
+    failed: list[str] = []
+    for path, html in files.items():
+        normalized = unescape_json_text(html)
+        compact = normalized.replace(" ", "")
+        for token in ["ОФЗ-ПД", "ключевой ставки Банка России"]:
+            if token not in normalized:
+                failed.append(f"{path.name}: в title не найден `{token}`")
+        for series in required_series:
+            if series not in normalized:
+                failed.append(f"{path.name}: нет серии `{series}`")
+        for color in required_colors:
+            if color.lower() not in normalized.lower():
+                failed.append(f"{path.name}: нет цвета {color}")
+        if '"size":7' not in compact:
+            failed.append(f"{path.name}: не подтвержден marker size 7")
+        if '"width":1.5' not in compact:
+            failed.append(f"{path.name}: не подтверждена marker outline width 1.5")
+
+        csv_path = config.EXPORTS_CHART_DATA_YIELD_DIR / f"{path.stem}.csv"
+        if not csv_path.exists():
+            failed.append(f"{path.name}: не найден CSV {csv_path.name}")
+            continue
+        rows = read_csv_rows(csv_path)
+        if not rows:
+            failed.append(f"{csv_path.name}: пустой CSV")
+            continue
+        missing = sorted(required_columns.difference(rows[0].keys()))
+        if missing:
+            failed.append(f"{csv_path.name}: нет колонок {', '.join(missing)}")
+        scopes = {str(row.get("yield_scope", "")).strip() for row in rows}
+        if scopes != {"ofz_pd_only"}:
+            failed.append(f"{csv_path.name}: unexpected yield_scope {sorted(scopes)}")
+        if not any(str(row.get("key_rate_pct", "")).strip() for row in rows):
+            failed.append(f"{csv_path.name}: key_rate_pct пуст")
+
+    if failed:
+        return QaResult("ofz_pd_yield_key_rate_contract", False, short_list(failed, limit=8))
+    return QaResult("ofz_pd_yield_key_rate_contract", True, f"OFZ-PD + key rate проверен: {len(files)} файлов.")
 
 
 def check_revenue_charts_contract(html_by_file: dict[Path, str]) -> QaResult:

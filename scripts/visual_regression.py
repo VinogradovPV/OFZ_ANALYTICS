@@ -554,6 +554,7 @@ def inspect_html_files(
                 check_facet_yaxis_titles(path, inspection_text),
                 check_demand_cutoff_contract(path, inspection_text),
                 check_yield_vs_discount_contract(path, inspection_text),
+                check_ofz_pd_yield_key_rate_contract(path, inspection_text),
                 check_format_discount_contract(path, inspection_text),
                 check_format_terms_comparison_contract(path, inspection_text),
                 check_format_terms_aggregate_scatter_contract(path, inspection_text),
@@ -1209,6 +1210,35 @@ def check_yield_vs_discount_contract(path: Path, html: str) -> VisualCheck:
         if "мед. дисконт" not in text or "мед. доходность" not in text:
             return VisualCheck(path.name, "yield_vs_discount_contract", "fail", "Медианные линии не подписаны раздельно.")
     return VisualCheck(path.name, "yield_vs_discount_contract", "ok", "Контракт yield_vs_discount подтвержден.")
+
+
+def check_ofz_pd_yield_key_rate_contract(path: Path, html: str) -> VisualCheck:
+    """Fallback-проверка Plotly JSON для графика ОФЗ-ПД + ключевая ставка."""
+    if not path.stem.startswith("ofz_pd_yield_key_rate"):
+        return VisualCheck(path.name, "ofz_pd_yield_key_rate_contract", "ok", "Не ofz_pd_yield_key_rate.")
+    required_tokens = [
+        "Максимальная доходность ОФЗ-ПД",
+        "Минимальная доходность ОФЗ-ПД",
+        "Ключевая ставка Банка России",
+        "#FF5D50",
+        "#00CE7E",
+        "#BB88EF",
+        "lines+markers+text",
+    ]
+    missing = [token for token in required_tokens if token not in html]
+    compact = html.replace(" ", "")
+    if '"size":7' not in compact:
+        missing.append("marker size 7")
+    if '"width":1.5' not in compact:
+        missing.append("marker outline width 1.5")
+    if missing:
+        return VisualCheck(
+            path.name,
+            "ofz_pd_yield_key_rate_contract",
+            "fail",
+            "Не подтвержден reference line+marker contract: " + ", ".join(missing),
+        )
+    return VisualCheck(path.name, "ofz_pd_yield_key_rate_contract", "ok", "OFZ-PD + key rate contract подтвержден.")
 
 
 def yield_discount_text_labels_by_trace(html: str) -> list[list[str]]:

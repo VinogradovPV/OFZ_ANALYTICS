@@ -676,3 +676,8 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-07-02 | Второй малый Chart/QA extraction: `scripts/charts/chart_metadata.py`, wrapper integration в `scripts/06_build_charts.py`, smoke `scripts/qa/chart_metadata_smoke.py`. | OK: прошли `py_compile`, `check_text_encoding.py`, `chart_metadata_smoke.py`, `compileall`, `ofz-run`, `html_chart_qa.py`, `visual_regression.py --mode auto` и `ofz_pd_yield_metrics_regression.py`. | Методология, output paths, filenames, chart semantics, source registry policy и default registry mode не менялись. Visual regression использовал fallback из-за недоступного screenshot backend. Generated outputs не staging. |
+## 2026-07-02 - NEXT.16 Reference slide and CBR key rate source integration
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-02 | Добавлены reference PPTX, ручной CBR XLSX в stable raw path, parser CBR key rate/inflation, line+marker style helper, новый график `ofz_pd_yield_key_rate`, HTML/visual contracts и smoke tests. | OK: прошли `py_compile`, `compileall`, `cbr_key_rate_source_smoke.py`, `line_marker_style_smoke.py`, `ofz-run`, `html_chart_qa.py`, `visual_regression.py --mode auto`, `ofz_pd_yield_metrics_regression.py`, `ofz-quality --fast`. CBR period: `2019-01` ... `2026-05`; новый HTML построен в `outputs/charts/yield/ofz_pd/`. | Visual regression использовал fallback из-за недоступного screenshot backend в managed среде. Processed CBR CSV, generated charts, visual regression reports, logs, releases, `.ofz_launcher`, `data/processed` и Minfin versions не staging. Default source registry policy не менялась: `warn + allow-legacy-raw`. |

@@ -236,13 +236,32 @@ Raw/source mutation выполняется только через controlled so
 - автоматическая интерактивная GUI проверка в Codex managed session;
 - перенос historical generated reports из skip-worktree состояния.
 
-## 11. Ближайший рекомендуемый NEXT
+## 11. NEXT.16 visual/data extension
 
-После NEXT.15 безопасные следующие варианты:
+NEXT.16 добавляет controlled visual/data extension без изменения source registry default policy:
 
-1. `NEXT.16 - GUI manual strict/no-legacy rehearsal report`.
-2. `NEXT.17 - BI package real build approval request`.
-3. `NEXT.18 - Chart/QA decomposition iteration 3`.
-4. `NEXT.19 - Monthly operation procedure cleanup`.
+- reference slide `docs/04_visualization/reference_slides/ofz_pd_yield_key_rate_reference.pptx`;
+- ручной CBR source `data/raw/cbr/key_rate_inflation/cbr_key_rate_inflation_2019-01_2026-05.xlsx`;
+- parser `scripts/source_acquisition/cbr_key_rate_inflation.py`;
+- processed generated dataset `data/processed/cbr_key_rate_inflation_monthly.csv`;
+- новый chart family `ofz_pd_yield_key_rate`;
+- общий helper `scripts/charts/line_marker_style.py` для line+markers charts;
+- HTML QA и visual fallback contracts для нового chart family.
+
+Правила остаются прежними:
+
+- `source-registry-mode=warn`;
+- `allow-legacy-raw=true`;
+- strict-by-default не включен;
+- generated outputs, `data/processed`, logs, releases, `.ofz_launcher` и Minfin versions не staging.
+
+## 12. Ближайший рекомендуемый NEXT
+
+После NEXT.16 безопасные следующие варианты:
+
+1. `NEXT.17 - GUI manual strict/no-legacy rehearsal report`.
+2. `NEXT.18 - BI package real build approval request`.
+3. `NEXT.19 - Chart/QA decomposition iteration 3`.
+4. `NEXT.20 - Monthly operation procedure cleanup`.
 
 Рекомендуемый следующий шаг: GUI manual strict/no-legacy rehearsal report, потому что он закрывает последний практический gap перед возможным решением по strict default switch.

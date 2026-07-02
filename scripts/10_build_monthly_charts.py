@@ -22,9 +22,17 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from scripts import config, palette, report_params, utils, yield_policy
     from scripts.charts.export_utils import ensure_directories, write_chart_artifacts
+    from scripts.charts.line_marker_style import (
+        apply_reference_line_marker_layout,
+        apply_reference_line_marker_trace,
+    )
 else:
     from . import config, palette, report_params, utils, yield_policy
     from .charts.export_utils import ensure_directories, write_chart_artifacts
+    from .charts.line_marker_style import (
+        apply_reference_line_marker_layout,
+        apply_reference_line_marker_trace,
+    )
 
 
 MONTHLY_METRICS_CSV = config.PROCESSED_DATA_DIR / "ofz_monthly_metrics.csv"
@@ -363,6 +371,11 @@ def build_monthly_cumulative_placement_chart(
         ),
     )
     apply_common_layout(figure, "Год")
+    apply_reference_style_to_line_marker_figure(
+        figure,
+        title="Накопленный объем размещения ОФЗ по номиналу",
+        show_yaxis_labels=True,
+    )
     apply_monthly_volume_axis(figure, "Накопленный объем размещения по номиналу, млрд рублей")
     export_data = chart_export_data(
         plot_df,
@@ -498,6 +511,11 @@ def _build_monthly_bid_to_cover_chart_legacy(
         annotation_text="Спрос = предложение",
     )
     apply_common_layout(figure, "Год")
+    apply_reference_style_to_line_marker_figure(
+        figure,
+        title="Помесячное покрытие предложения спросом",
+        show_yaxis_labels=True,
+    )
     export_data = chart_export_data(df, ["bid_to_cover_ratio", "total_demand", "total_supply"])
     return make_result("monthly_bid_to_cover", figure, params, export_data)
 
@@ -528,6 +546,11 @@ def build_monthly_weighted_avg_yield_chart(
         hovertemplate=base_ratio_hover("Средневзвешенная доходность ОФЗ-ПД", "%{y:.2f}%"),
     )
     apply_common_layout(figure, "Год")
+    apply_reference_style_to_line_marker_figure(
+        figure,
+        title=yield_policy.BASE_YIELD_TITLE,
+        show_yaxis_labels=True,
+    )
     export_data = chart_export_data(
         df,
         ["yield_weighted_avg", "yield_min", "yield_median", "yield_max", "total_placement_volume_bln"],
@@ -1446,6 +1469,23 @@ def apply_common_layout(figure: Any, legend_title: str) -> None:
     figure.update_yaxes(tickformat=",.1f", separatethousands=True, exponentformat="none", showexponent="none")
 
 
+def apply_reference_style_to_line_marker_figure(
+    figure: Any,
+    title: str | None = None,
+    show_yaxis_labels: bool = True,
+) -> None:
+    """Apply the shared reference style to monthly line+marker figures."""
+    for index, trace in enumerate(figure.data):
+        mode = str(getattr(trace, "mode", "") or "")
+        if "lines" not in mode:
+            continue
+        line = getattr(trace, "line", None)
+        color = getattr(line, "color", None) or QUALITATIVE_COLORS[index % len(QUALITATIVE_COLORS)]
+        text_position = getattr(trace, "textposition", None) or "top center"
+        apply_reference_line_marker_trace(trace, color, text_position=text_position)
+    apply_reference_line_marker_layout(figure, title=title, show_yaxis_labels=show_yaxis_labels)
+
+
 def apply_monthly_volume_axis(figure: Any, title: str) -> None:
     figure.update_yaxes(
         title_text=title,
@@ -1848,6 +1888,11 @@ def build_monthly_bid_to_cover_chart(
         annotation_position="top left",
     )
     apply_common_layout(figure, "Год")
+    apply_reference_style_to_line_marker_figure(
+        figure,
+        title="Помесячное покрытие предложения спросом",
+        show_yaxis_labels=True,
+    )
     figure.update_yaxes(title_text="Спрос / предложение")
     export_data = chart_export_data(
         plot_df,
