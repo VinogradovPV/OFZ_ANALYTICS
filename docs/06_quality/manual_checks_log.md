@@ -699,3 +699,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-07-02 | Добавлены project-root wrappers `run-gui.ps1` и `ofz-gui.cmd`; документация объясняет, что bare `ofz-gui.exe` работает только при `.venv\Scripts` в `PATH`. Удалены reference PPTX/source slide artifacts; оставлена текстовая политика `line_marker_chart_style.md`. | OK: прошли `py_compile`, `compileall`, `check_text_encoding.py`, `gui_launcher_wrapper_smoke.py`, `gui_command_runner_smoke.py`, `gui_launcher_smoke.py`, `ofz-gui --help`, `ofz-gui --smoke`, `ofz-gui --smoke-ui`, `run-gui.ps1 --help`, `ofz-gui.cmd --help`, `ofz-quality --stage encoding-mojibake`. | GUI wrappers проверены статически и headless; интерактивное окно не открывалось автоматически. CBR parser source, chart semantics и source registry default policy не менялись. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed` и raw versions не staging. |
+
+## 2026-07-02 - Этап 4 CBR source contract
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-02 | Зафиксирован контракт источника ключевой ставки Банка России: primary URL `cbr.ru/hd_base/KeyRate/`, preferred `table.data`, Highcharts только fallback/cross-check, monthly rule `last_available_observation_in_month`, daily/monthly output fields и fallback XLSX policy. | OK: прошли `check_text_encoding.py`, `ofz-quality --stage encoding-mojibake`, contract token check по `table.data`, `Highcharts`, `UniDbQuery.Posted`, `last_available_observation_in_month`, `key_rate_month_end_pct`, `source_parser=xlsx_fallback`, `git diff --check`. | Этап 4 только документирует source contract. Web parser, CBR live dry-run, chart field migration, label formatting и source registry default policy не менялись. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed` и raw versions не staging. |
