@@ -117,6 +117,19 @@ outputs/charts/yield/ofz_pd/ofz_pd_yield_key_rate_<suffix>.html
 outputs/exports/chart_data/yield/ofz_pd_yield_key_rate_<suffix>.csv
 ```
 
+Chart CSV для `ofz_pd_yield_key_rate` использует поля контракта key rate:
+
+```text
+period_month
+period_label
+ofz_pd_yield_min_pct
+ofz_pd_yield_max_pct
+key_rate_month_end_pct
+key_rate_date
+key_rate_source_rule
+key_rate_month_is_partial
+```
+
 Style helper:
 
 ```text

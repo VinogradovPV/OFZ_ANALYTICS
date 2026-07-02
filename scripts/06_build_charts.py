@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable, Sequence
 
@@ -42,7 +42,13 @@ if __package__ in {None, ""}:
         apply_reference_line_marker_trace,
         format_reference_percent_label,
     )
-    from scripts.source_acquisition.cbr_key_rate_inflation import write_cbr_key_rate_processed
+    from scripts.reference_data.cbr_key_rate import (
+        build_metadata as build_cbr_key_rate_metadata,
+        make_daily_frame as make_cbr_key_rate_daily_frame,
+        make_monthly_frame as make_cbr_key_rate_monthly_frame,
+        read_xlsx_key_rate,
+        write_outputs as write_cbr_key_rate_outputs,
+    )
 else:
     from . import config, palette, report_params, scatter_chart_policy, utils
     from .charts.common import (
@@ -63,7 +69,13 @@ else:
         apply_reference_line_marker_trace,
         format_reference_percent_label,
     )
-    from .source_acquisition.cbr_key_rate_inflation import write_cbr_key_rate_processed
+    from .reference_data.cbr_key_rate import (
+        build_metadata as build_cbr_key_rate_metadata,
+        make_daily_frame as make_cbr_key_rate_daily_frame,
+        make_monthly_frame as make_cbr_key_rate_monthly_frame,
+        read_xlsx_key_rate,
+        write_outputs as write_cbr_key_rate_outputs,
+    )
 
 
 ChartBuilder = Callable[[pd.DataFrame, report_params.ReportParams, list[str]], "ChartResult | None"]
@@ -1105,16 +1117,16 @@ def build_ofz_pd_yield_key_rate_chart(
     if cbr.empty:
         limitations.append("OFZ-PD key rate chart skipped: CBR key rate dataset is unavailable.")
         return None
-    cbr["month"] = pd.to_datetime(cbr["month"], errors="coerce")
+    cbr["month"] = pd.to_datetime(cbr["period_month"], errors="coerce")
     chart_data = monthly_yield.merge(cbr, on="month", how="left", suffixes=("", "_cbr"))
     chart_data = chart_data.sort_values("month").reset_index(drop=True)
     chart_data["month_label"] = chart_data["month"].map(format_ru_month_label)
-    chart_data["key_rate_available"] = chart_data["key_rate_pct"].notna()
+    chart_data["period_month"] = chart_data["month"].dt.strftime("%Y-%m-01")
+    chart_data["period_label"] = chart_data["month_label"]
+    chart_data["ofz_pd_yield_max_pct"] = chart_data["ofz_pd_yield_max"]
+    chart_data["ofz_pd_yield_min_pct"] = chart_data["ofz_pd_yield_min"]
+    chart_data["key_rate_available"] = chart_data["key_rate_month_end_pct"].notna()
     chart_data["yield_scope"] = "ofz_pd_only"
-    chart_data["source_cbr_file"] = chart_data.get("source_file", "")
-    chart_data["source_cbr_original_name"] = chart_data.get("source_original_name", "")
-    chart_data["source_cbr_min_month"] = chart_data.get("source_min_month", "")
-    chart_data["source_cbr_max_month"] = chart_data.get("source_max_month", "")
 
     missing_key_rate = chart_data.loc[~chart_data["key_rate_available"], "month_label"].astype(str).tolist()
     if missing_key_rate:
@@ -1128,7 +1140,7 @@ def build_ofz_pd_yield_key_rate_chart(
     series = [
         ("ofz_pd_yield_max", "ofz_pd_yield_max", "Максимальная доходность ОФЗ-ПД", 2, "top center"),
         ("ofz_pd_yield_min", "ofz_pd_yield_min", "Минимальная доходность ОФЗ-ПД", 2, "bottom center"),
-        ("key_rate", "key_rate_pct", "Ключевая ставка Банка России", 1, "top center"),
+        ("key_rate", "key_rate_month_end_pct", "Ключевая ставка Банка России", 2, "top center"),
     ]
     for series_key, value_column, name, decimals, text_position in series:
         color = REFERENCE_LINE_MARKER_COLORS[series_key]
@@ -1141,9 +1153,10 @@ def build_ofz_pd_yield_key_rate_chart(
                     "month_label",
                     "ofz_pd_yield_max",
                     "ofz_pd_yield_min",
-                    "key_rate_pct",
-                    "inflation_yoy_pct",
-                    "inflation_target_pct",
+                    "key_rate_month_end_pct",
+                    "key_rate_date",
+                    "key_rate_source_rule",
+                    "key_rate_month_is_partial",
                     "ofz_pd_observation_count",
                     "yield_scope",
                     "key_rate_available",
@@ -1161,11 +1174,43 @@ def build_ofz_pd_yield_key_rate_chart(
                 "Ключевая ставка доступна: %{customdata[8]}<extra></extra>"
             ),
         )
+        trace.update(
+            hovertemplate=(
+                "\u041c\u0435\u0441\u044f\u0446: %{customdata[0]}<br>"
+                "\u041c\u0430\u043a\u0441. \u0434\u043e\u0445\u043e\u0434\u043d\u043e\u0441\u0442\u044c \u041e\u0424\u0417-\u041f\u0414: %{customdata[1]:.2f}%<br>"
+                "\u041c\u0438\u043d. \u0434\u043e\u0445\u043e\u0434\u043d\u043e\u0441\u0442\u044c \u041e\u0424\u0417-\u041f\u0414: %{customdata[2]:.2f}%<br>"
+                "\u041a\u043b\u044e\u0447\u0435\u0432\u0430\u044f \u0441\u0442\u0430\u0432\u043a\u0430 \u0411\u0430\u043d\u043a\u0430 \u0420\u043e\u0441\u0441\u0438\u0438: %{customdata[3]:.2f}%<br>"
+                "\u0414\u0430\u0442\u0430 \u043a\u043b\u044e\u0447\u0435\u0432\u043e\u0439 \u0441\u0442\u0430\u0432\u043a\u0438: %{customdata[4]}<br>"
+                "\u041f\u0440\u0430\u0432\u0438\u043b\u043e: %{customdata[5]}<br>"
+                "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043c\u0435\u0441\u044f\u0446: %{customdata[6]}<br>"
+                "\u041d\u0430\u0431\u043b\u044e\u0434\u0435\u043d\u0438\u0439 \u041e\u0424\u0417-\u041f\u0414: %{customdata[7]}<br>"
+                "\u041a\u043e\u043d\u0442\u0443\u0440 \u0434\u043e\u0445\u043e\u0434\u043d\u043e\u0441\u0442\u0438: %{customdata[8]}<br>"
+                "\u041a\u043b\u044e\u0447\u0435\u0432\u0430\u044f \u0441\u0442\u0430\u0432\u043a\u0430 \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430: %{customdata[9]}<extra></extra>"
+            )
+        )
         apply_reference_line_marker_trace(trace, color)
         fig.add_trace(trace)
 
     title = "Динамика доходности ОФЗ-ПД и ключевой ставки Банка России, %"
     apply_reference_line_marker_layout(fig, title=title, show_yaxis_labels=False)
+    fig.add_annotation(
+        text=(
+            "\u041a\u043b\u044e\u0447\u0435\u0432\u0430\u044f \u0441\u0442\u0430\u0432\u043a\u0430 "
+            "\u0411\u0430\u043d\u043a\u0430 \u0420\u043e\u0441\u0441\u0438\u0438 "
+            "\u0443\u043a\u0430\u0437\u0430\u043d\u0430 \u043d\u0430 "
+            "\u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0439 "
+            "\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u044b\u0439 "
+            "\u0434\u0435\u043d\u044c \u043c\u0435\u0441\u044f\u0446\u0430."
+        ),
+        xref="paper",
+        yref="paper",
+        x=0,
+        y=-0.18,
+        showarrow=False,
+        xanchor="left",
+        yanchor="top",
+        font={"size": 11, "color": "#4B5563"},
+    )
     add_ofz_pd_key_rate_value_labels(fig, chart_data, series)
     fig.update_yaxes(title_text="Проценты годовых")
     fig.update_xaxes(title_text="Месяц")
@@ -1190,17 +1235,39 @@ def ofz_pd_yield_mask(data: pd.DataFrame) -> pd.Series:
 
 
 def ensure_cbr_key_rate_processed(limitations: list[str]) -> pd.DataFrame:
-    """Load processed CBR key rate data, creating it from manual raw XLSX when needed."""
-    if not config.CBR_KEY_RATE_PROCESSED_CSV.exists():
+    """Load reference CBR key rate monthly data, creating XLSX fallback outputs when needed."""
+    if not config.CBR_KEY_RATE_MONTHLY_CSV.exists():
         if not config.CBR_KEY_RATE_RAW_XLSX.exists():
             limitations.append(f"CBR key rate raw XLSX not found: {config.CBR_KEY_RATE_RAW_XLSX}.")
             return pd.DataFrame()
-        write_cbr_key_rate_processed(config.CBR_KEY_RATE_RAW_XLSX, config.CBR_KEY_RATE_PROCESSED_CSV)
-        limitations.append(
-            "CBR key rate processed dataset was generated lazily from the manual raw XLSX; "
-            "processed CSV is a generated artifact and must not be staged."
+        result = read_xlsx_key_rate(config.CBR_KEY_RATE_RAW_XLSX)
+        daily = make_cbr_key_rate_daily_frame(result.observations)
+        to_date = max(observation.date for observation in result.observations)
+        from_date = min(observation.date for observation in result.observations)
+        monthly = make_cbr_key_rate_monthly_frame(result.observations, to_date)
+        metadata = build_cbr_key_rate_metadata(
+            source_url=config.CBR_KEY_RATE_RAW_XLSX.as_posix(),
+            from_date=from_date,
+            to_date=to_date,
+            retrieved_at=datetime.now(UTC),
+            page_last_modified=None,
+            html=None,
+            row_count=len(daily),
+            parser=result.parser,
         )
-    return pd.read_csv(config.CBR_KEY_RATE_PROCESSED_CSV)
+        write_cbr_key_rate_outputs(
+            daily=daily,
+            monthly=monthly,
+            metadata=metadata,
+            daily_output_csv=config.CBR_KEY_RATE_DAILY_CSV,
+            daily_meta_json=config.CBR_KEY_RATE_DAILY_META_JSON,
+            monthly_output_csv=config.CBR_KEY_RATE_MONTHLY_CSV,
+        )
+        limitations.append(
+            "CBR key rate reference datasets were generated lazily from the emergency XLSX fallback; "
+            "processed reference CSV/JSON files are generated artifacts and must not be staged."
+        )
+    return pd.read_csv(config.CBR_KEY_RATE_MONTHLY_CSV)
 
 
 def format_ru_month_label(value: object) -> str:
@@ -1302,20 +1369,14 @@ def reference_line_labels(data: pd.DataFrame, value_column: str, decimals: int) 
 
 def ofz_pd_key_rate_export_columns(data: pd.DataFrame) -> list[str]:
     columns = [
-        "month",
-        "month_label",
-        "ofz_pd_yield_max",
-        "ofz_pd_yield_min",
-        "key_rate_pct",
-        "inflation_yoy_pct",
-        "inflation_target_pct",
-        "key_rate_available",
-        "yield_scope",
-        "ofz_pd_observation_count",
-        "source_cbr_file",
-        "source_cbr_original_name",
-        "source_cbr_min_month",
-        "source_cbr_max_month",
+        "period_month",
+        "period_label",
+        "ofz_pd_yield_min_pct",
+        "ofz_pd_yield_max_pct",
+        "key_rate_month_end_pct",
+        "key_rate_date",
+        "key_rate_source_rule",
+        "key_rate_month_is_partial",
     ]
     return [column for column in columns if column in data.columns]
 

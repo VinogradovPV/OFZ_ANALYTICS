@@ -1420,16 +1420,14 @@ def check_ofz_pd_yield_key_rate_contract(html_by_file: dict[Path, str]) -> QaRes
     ]
     required_colors = ["#FF5D50", "#00CE7E", "#BB88EF"]
     required_columns = {
-        "month",
-        "month_label",
-        "ofz_pd_yield_max",
-        "ofz_pd_yield_min",
-        "key_rate_pct",
-        "inflation_yoy_pct",
-        "inflation_target_pct",
-        "key_rate_available",
-        "yield_scope",
-        "source_cbr_file",
+        "period_month",
+        "period_label",
+        "ofz_pd_yield_min_pct",
+        "ofz_pd_yield_max_pct",
+        "key_rate_month_end_pct",
+        "key_rate_date",
+        "key_rate_source_rule",
+        "key_rate_month_is_partial",
     }
     failed: list[str] = []
     for path, html in files.items():
@@ -1438,6 +1436,8 @@ def check_ofz_pd_yield_key_rate_contract(html_by_file: dict[Path, str]) -> QaRes
         for token in ["ОФЗ-ПД", "ключевой ставки Банка России"]:
             if token not in normalized:
                 failed.append(f"{path.name}: в title не найден `{token}`")
+        if "последний доступный день месяца" not in normalized:
+            failed.append(f"{path.name}: не найдено примечание по правилу key rate month-end")
         for series in required_series:
             if series not in normalized:
                 failed.append(f"{path.name}: нет серии `{series}`")
@@ -1466,11 +1466,15 @@ def check_ofz_pd_yield_key_rate_contract(html_by_file: dict[Path, str]) -> QaRes
         missing = sorted(required_columns.difference(rows[0].keys()))
         if missing:
             failed.append(f"{csv_path.name}: нет колонок {', '.join(missing)}")
-        scopes = {str(row.get("yield_scope", "")).strip() for row in rows}
-        if scopes != {"ofz_pd_only"}:
-            failed.append(f"{csv_path.name}: unexpected yield_scope {sorted(scopes)}")
-        if not any(str(row.get("key_rate_pct", "")).strip() for row in rows):
-            failed.append(f"{csv_path.name}: key_rate_pct пуст")
+        forbidden = {"key_rate_pct", "inflation_yoy_pct", "inflation_target_pct"}
+        present_forbidden = sorted(forbidden.intersection(rows[0].keys()))
+        if present_forbidden:
+            failed.append(f"{csv_path.name}: legacy columns found {', '.join(present_forbidden)}")
+        if not any(str(row.get("key_rate_month_end_pct", "")).strip() for row in rows):
+            failed.append(f"{csv_path.name}: key_rate_month_end_pct empty")
+        rules = {str(row.get("key_rate_source_rule", "")).strip() for row in rows}
+        if rules != {"last_available_observation_in_month"}:
+            failed.append(f"{csv_path.name}: unexpected key_rate_source_rule {sorted(rules)}")
 
     if failed:
         return QaResult("ofz_pd_yield_key_rate_contract", False, short_list(failed, limit=8))
