@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 
@@ -11,11 +11,22 @@ ALLOWED_PERIOD_TYPES = {"month", "quarter", "year"}
 ALLOWED_AGGREGATION_MODES = {"cumulative", "point"}
 ALLOWED_REGISTRY_MODES = {"off", "warn", "strict"}
 ALLOWED_STAGE_ZERO_MODES = {"off", "dry-run", "download"}
+DEFAULT_CBR_FROM_DATE = "01.01.2019"
+DEFAULT_CBR_TO_DATE = "02.07.2026"
+DEFAULT_CBR_HTML_FIXTURE = "scripts/qa/fixtures/cbr/key_rate_page_2019_2026.html"
+DEFAULT_CBR_XLSX_FILE = "data/raw/cbr/key_rate_inflation/cbr_key_rate_inflation_2019-01_2026-05.xlsx"
 
 
 def default_report_date() -> str:
     today = date.today()
     return today.replace(day=1).isoformat()
+
+
+def parse_cbr_gui_date(value: str, field_name: str) -> date:
+    try:
+        return datetime.strptime(value.strip(), "%d.%m.%Y").date()
+    except ValueError as exc:
+        raise ValueError(f"{field_name} должна быть в формате DD.MM.YYYY.") from exc
 
 
 @dataclass
@@ -40,6 +51,15 @@ class GuiState:
     stage_zero_mode: str = "dry-run"
     run_schema_before_pipeline: bool = False
     open_outputs_after_run: bool = False
+    cbr_from_date: str = DEFAULT_CBR_FROM_DATE
+    cbr_to_date: str = DEFAULT_CBR_TO_DATE
+    cbr_url: str = ""
+    cbr_html_file: str = DEFAULT_CBR_HTML_FIXTURE
+    cbr_xlsx_file: str = DEFAULT_CBR_XLSX_FILE
+    cbr_timeout_seconds: int = 30
+    cbr_retries: int = 2
+    cbr_save_html_snapshot: bool = False
+    cbr_no_network: bool = False
 
     def validate(self) -> None:
         root = self.project_root.resolve()
@@ -64,6 +84,16 @@ class GuiState:
             raise ValueError("Final year должен быть в диапазоне 2000..2100.")
         if not 1 <= int(self.max_pages) <= 100:
             raise ValueError("Max pages должен быть в диапазоне 1..100.")
+        cbr_from = parse_cbr_gui_date(self.cbr_from_date, "CBR from date")
+        cbr_to = parse_cbr_gui_date(self.cbr_to_date, "CBR to date")
+        if cbr_from > cbr_to:
+            raise ValueError("CBR from date должна быть меньше или равна CBR to date.")
+        if not 1 <= int(self.cbr_timeout_seconds) <= 120:
+            raise ValueError("CBR timeout seconds должен быть в диапазоне 1..120.")
+        if not 0 <= int(self.cbr_retries) <= 10:
+            raise ValueError("CBR retries должен быть в диапазоне 0..10.")
+        if self.cbr_no_network and not (self.cbr_html_file.strip() or self.cbr_xlsx_file.strip()):
+            raise ValueError("Для CBR no network укажите HTML fixture или XLSX fallback.")
 
     @property
     def venv_scripts(self) -> Path:
