@@ -82,3 +82,21 @@
 2. Выделить `qa/chart_contract_helpers.py` для HTML QA после фиксации текущих report fields.
 3. Разделять `visual_regression.py` по backend/manifest/reporting только после отдельного smoke для fallback и screenshot режимов.
 4. Не начинать методологические изменения в рамках decompositions; финансовые изменения должны идти отдельными stages.
+
+## NEXT.14 - второй extraction
+
+Дата: 2026-07-02.
+
+В `NEXT.14 - Chart/QA decomposition iteration 2` выполнен следующий малый behavior-neutral шаг:
+
+- создан `scripts/charts/chart_metadata.py`;
+- вынесены `make_report_suffix(params)` и `chart_data_dir_for_name(name)`;
+- `scripts/06_build_charts.py` сохранил совместимые wrapper-функции `make_suffix(...)` и `chart_data_dir_for_name(...)`;
+- добавлен `scripts/qa/chart_metadata_smoke.py`.
+
+Поведение сохранено:
+
+- suffix для HTML/CSV имен остается `period_type_aggregation_mode_report-date_retrospective_N`;
+- routing chart data CSV остается прежним: risk/scatter/sankey/boxplot/structure;
+- output directories, filenames, chart builders, labels и financial methodology не менялись;
+- yield/boxplot methodology не затрагивалась.

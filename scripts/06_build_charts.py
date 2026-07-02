@@ -33,6 +33,8 @@ if __package__ in {None, ""}:
         format_ru_number,
         format_signed_metric_value,
     )
+    from scripts.charts.chart_metadata import chart_data_dir_for_name as chart_data_dir_for_metadata_name
+    from scripts.charts.chart_metadata import make_report_suffix
     from scripts.charts.export_utils import ensure_directories, write_chart_artifacts
 else:
     from . import config, palette, report_params, scatter_chart_policy, utils
@@ -45,6 +47,8 @@ else:
         format_ru_number,
         format_signed_metric_value,
     )
+    from .charts.chart_metadata import chart_data_dir_for_name as chart_data_dir_for_metadata_name
+    from .charts.chart_metadata import make_report_suffix
     from .charts.export_utils import ensure_directories, write_chart_artifacts
 
 
@@ -7074,29 +7078,11 @@ def make_result(name: str, figure: Any, data: pd.DataFrame, params: report_param
 
 
 def make_suffix(params: report_params.ReportParams) -> str:
-    return (
-        f"{params.period_type}_{params.aggregation_mode}_{params.report_date.isoformat()}_"
-        f"retrospective_{params.retrospective_years}"
-    )
+    return make_report_suffix(params)
 
 
 def chart_data_dir_for_name(name: str) -> Path:
-    """Вернуть целевую папку для CSV-основы графика."""
-    if (
-        name.startswith("risk_quadrant")
-        or name.startswith("demand_cutoff")
-        or name.startswith("bid_to_cover")
-        or name.startswith("discount_vs_demand")
-        or name.startswith("yield_vs_demand")
-    ):
-        return config.EXPORTS_CHART_DATA_RISK_QUADRANT_DIR
-    if name.startswith("yield_vs_discount") or name.startswith("format_terms_scatter") or name.startswith("format_terms_aggregate_scatter"):
-        return config.EXPORTS_CHART_DATA_SCATTER_DIR
-    if name.startswith("sankey"):
-        return config.EXPORTS_CHART_DATA_SANKEY_DIR
-    if name.startswith("yield_boxplot"):
-        return config.EXPORTS_CHART_DATA_BOXPLOT_DIR
-    return config.EXPORTS_CHART_DATA_STRUCTURE_DIR
+    return chart_data_dir_for_metadata_name(name)
 
 
 def write_limitations(

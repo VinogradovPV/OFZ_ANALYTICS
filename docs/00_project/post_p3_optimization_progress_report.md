@@ -1,5 +1,44 @@
 # Post-P3 optimization progress report
 
+## NEXT.14 - Chart/QA decomposition iteration 2
+
+Дата: 2026-07-02.
+
+### Статус
+
+- Выполнен второй малый шаг декомпозиции Chart/QA.
+- Создан helper `scripts/charts/chart_metadata.py` для chart artifact metadata:
+  - `make_report_suffix(params)`;
+  - `chart_data_dir_for_name(name)`.
+- `scripts/06_build_charts.py` сохранил совместимые локальные обертки `make_suffix(...)` и `chart_data_dir_for_name(...)`, но routing и suffix logic вынесены в helper.
+- Добавлен smoke `scripts/qa/chart_metadata_smoke.py`.
+- Финансовая методология, chart semantics, output paths, filenames, source registry policy и default registry mode не менялись.
+
+### Изменения
+
+- `scripts/charts/chart_metadata.py`
+- `scripts/qa/chart_metadata_smoke.py`
+- `scripts/06_build_charts.py`
+- `docs/00_project/chart_qa_decomposition_execution_plan.md`
+- `docs/00_project/post_p3_optimization_progress_report.md`
+- `docs/06_quality/manual_checks_log.md`
+
+### Проверки
+
+- `.\.venv\Scripts\python.exe -m py_compile scripts\06_build_charts.py scripts\charts\chart_metadata.py scripts\qa\chart_metadata_smoke.py` - OK.
+- `.\.venv\Scripts\python.exe scripts\qa\chart_metadata_smoke.py` - OK.
+- `.\.venv\Scripts\python.exe -m compileall -q scripts` - OK.
+- `.\.venv\Scripts\ofz-run.exe --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+- `.\.venv\Scripts\python.exe scripts\html_chart_qa.py --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK.
+- `.\.venv\Scripts\python.exe scripts\visual_regression.py --mode auto --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative` - OK, screenshot backend fallback.
+- `.\.venv\Scripts\python.exe scripts\qa\ofz_pd_yield_metrics_regression.py` - OK.
+
+### Ограничения
+
+- Это behavior-neutral extraction. Методология yield/boxplot и scatter label policy не менялись.
+- Visual regression использовал fallback, потому что screenshot backend недоступен в managed sandbox.
+- Generated outputs, telemetry, run manifests, reports, logs и `.ofz_launcher` не входят в staging scope.
+
 ## NEXT.9 - Strict full pipeline precheck gate
 
 Дата: 2026-07-01.

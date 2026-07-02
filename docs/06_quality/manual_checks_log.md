@@ -670,3 +670,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-07-02 | Проверен BI package handoff workflow после strict registry plumbing. Entry point `ofz-build-bi-package.exe` отсутствует, поэтому использован fallback `scripts\maintenance\build_bi_package.py`. | OK: `--help` доступен; dry-run для `2026-05-01`, `retrospective_years=4`, `period_type=month`, `aggregation_mode=cumulative` нашел dashboard exports, semantic model v2, analytical/monthly/revenue CSV, chart data, dictionaries и BI dimensions. Dry-run завершился сообщением `Dry-run only: no files were written.` | Реальная сборка BI package не выполнялась, потому что требует отдельного approval, `--include-outputs` и `--confirm BUILD_BI_PACKAGE`. Release/handoff artifacts, raw/source data и default source registry policy не менялись. |
+
+## 2026-07-02 - NEXT.14 Chart/QA decomposition iteration 2
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-02 | Второй малый Chart/QA extraction: `scripts/charts/chart_metadata.py`, wrapper integration в `scripts/06_build_charts.py`, smoke `scripts/qa/chart_metadata_smoke.py`. | OK: прошли `py_compile`, `check_text_encoding.py`, `chart_metadata_smoke.py`, `compileall`, `ofz-run`, `html_chart_qa.py`, `visual_regression.py --mode auto` и `ofz_pd_yield_metrics_regression.py`. | Методология, output paths, filenames, chart semantics, source registry policy и default registry mode не менялись. Visual regression использовал fallback из-за недоступного screenshot backend. Generated outputs не staging. |
