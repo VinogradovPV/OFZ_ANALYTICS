@@ -711,3 +711,9 @@
 | Дата | Что проверено | Результат | Ограничения |
 |---|---|---|---|
 | 2026-07-02 | Уточнена модель хранения ключевой ставки Банка России: daily source copy `data/processed/reference/cbr_key_rate_daily.csv` строго `date,value`, provenance вынесен в `cbr_key_rate_daily.meta.json`, monthly derived view `data/processed/reference/cbr_key_rate_monthly.csv` строится по `last_available_observation_in_month`. | OK: контракт и README синхронизированы с v4-инструкцией; daily/monthly CSV больше не описывают provenance-поля и inflation-поля как часть целевой модели. | Этап D только документирует storage model. Web parser, live CBR dry-run, текущий XLSX fallback, chart code и source registry default policy не менялись. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed` и raw versions не staging. |
+
+## 2026-07-02 - Этап E CBR key rate web parser
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-02 | Добавлен `scripts/reference_data/cbr_key_rate.py`: CLI `--source web\|html-file\|xlsx`, URL builder CBR KeyRate, parser `table.data`, Highcharts fallback/cross-check, daily output строго `date,value`, отдельный metadata JSON, monthly derived view по `last_available_observation_in_month`, emergency XLSX fallback без inflation-полей. | OK: прошли `py_compile`, `compileall`, `check_text_encoding.py`, `--help`, синтетический parser API smoke, `--source html-file --dry-run` на temporary HTML fixture, `--source xlsx --dry-run` на текущем ручном raw XLSX. | Live web dry-run не выполнялся в рамках Этапа E; он остается отдельной операторской проверкой. Parser пока не подключался к графику/pipeline, текущий XLSX fallback chart flow и source registry default policy не менялись. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed`, raw CBR XLSX и raw versions не staging. |

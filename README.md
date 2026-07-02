@@ -67,6 +67,20 @@ data/processed/reference/cbr_key_rate_monthly.csv
 
 Monthly view содержит `key_rate_month_end_pct`, `key_rate_date`, `key_rate_source_rule=last_available_observation_in_month` и `key_rate_month_is_partial`. Max/min/avg/first aggregations для ключевой ставки запрещены.
 
+Web parser ключевой ставки:
+
+```text
+scripts/reference_data/cbr_key_rate.py
+```
+
+Базовый dry-run без записи processed-файлов:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\reference_data\cbr_key_rate.py --source web --dry-run
+```
+
+Parser поддерживает источники `web`, `html-file` и emergency fallback `xlsx`. Для web/html источника preferred parser source - `table.data`; Highcharts используется только как fallback/cross-check. При обычном запуске parser пишет daily CSV, metadata JSON и monthly derived view в `data/processed/reference/`; эти файлы являются generated artifacts и не коммитятся.
+
 Текущий pipeline временно использует ручной XLSX fallback Банка России и текстовую style policy для line+marker графиков. Fallback не меняет целевую модель хранения.
 
 Временный ручной raw source:
