@@ -1454,6 +1454,14 @@ def check_ofz_pd_yield_key_rate_contract(html_by_file: dict[Path, str]) -> QaRes
             failed.append(f"{path.name}: не подтверждена marker outline width 1.5")
         if "rgba(255,255,255,0.90)" not in normalized:
             failed.append(f"{path.name}: не подтверждена белая подложка data labels")
+        annotation_tokens = [
+            "value_label_ofz_pd_yield_max",
+            "value_label_ofz_pd_yield_min",
+            "value_label_key_rate",
+        ]
+        missing_annotations = [token for token in annotation_tokens if token not in normalized]
+        if missing_annotations:
+            failed.append(f"{path.name}: нет annotation value labels {', '.join(missing_annotations)}")
 
         csv_path = config.EXPORTS_CHART_DATA_YIELD_DIR / f"{path.stem}.csv"
         if not csv_path.exists():

@@ -137,6 +137,8 @@ scripts/charts/line_marker_style.py
 docs/04_visualization/line_marker_chart_style.md
 ```
 
+Подписи значений строятся как collision-aware annotations: близкие значения в одном месяце разводятся по разным lanes с порогом `max(0.25 п.п., 2.5% диапазона Y)`, а ключевая ставка всегда подписывается с двумя знаками после запятой.
+
 График использует только `yield_scope=ofz_pd_only`, соединяет ключевую ставку по месяцу и не интерполирует пропуски CBR ряда. Default source registry policy не менялась: `source-registry-mode=warn`, `allow-legacy-raw=true`.
 
 ## Структура проекта

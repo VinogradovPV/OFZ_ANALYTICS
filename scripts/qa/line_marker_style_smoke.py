@@ -33,12 +33,23 @@ def main() -> int:
         "build_ofz_pd_yield_key_rate_chart",
         "apply_reference_line_marker_layout",
         "apply_reference_line_marker_trace",
+        "build_collision_safe_value_annotations",
         "REFERENCE_LINE_MARKER_COLORS",
         "ofz_pd_yield_key_rate",
     ]
     missing = [token for token in required_tokens if token not in chart_source]
     if missing:
         raise AssertionError(f"Chart builder does not use reference style tokens: {', '.join(missing)}")
+    helper_tokens = [
+        "add_line_marker_trace",
+        "apply_line_marker_layout",
+        "build_collision_safe_value_annotations",
+        "detect_label_collisions",
+        "format_key_rate_pct",
+    ]
+    missing_helpers = [token for token in helper_tokens if not hasattr(line_marker_style, token)]
+    if missing_helpers:
+        raise AssertionError(f"Line marker helper is missing tokens: {', '.join(missing_helpers)}")
 
     print("Line+marker reference style smoke passed")
     return 0
