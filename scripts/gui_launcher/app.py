@@ -265,6 +265,40 @@ class OfzAnalyticsGui:
         self.notebook.add(tab, text=title)
         return tab
 
+    def _new_scrollable_tab(self, title: str) -> ttk.Frame:
+        tab = ttk.Frame(self.notebook)
+        self.notebook.add(tab, text=title)
+        canvas = tk.Canvas(tab, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(tab, orient="vertical", command=canvas.yview)
+        content = ttk.Frame(canvas)
+        window_id = canvas.create_window((0, 0), window=content, anchor="nw")
+
+        def _sync_scroll_region(_event: tk.Event) -> None:
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        def _sync_content_width(event: tk.Event) -> None:
+            canvas.itemconfigure(window_id, width=event.width)
+
+        def _scroll_with_mouse(event: tk.Event) -> None:
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        def _enable_mouse_scroll(_event: tk.Event) -> None:
+            canvas.bind_all("<MouseWheel>", _scroll_with_mouse)
+
+        def _disable_mouse_scroll(_event: tk.Event) -> None:
+            canvas.unbind_all("<MouseWheel>")
+
+        content.bind("<Configure>", _sync_scroll_region)
+        canvas.bind("<Configure>", _sync_content_width)
+        canvas.bind("<Enter>", _enable_mouse_scroll)
+        canvas.bind("<Leave>", _disable_mouse_scroll)
+        content.bind("<Enter>", _enable_mouse_scroll)
+        content.bind("<Leave>", _disable_mouse_scroll)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        return content
+
     def _build_overview_tab(self) -> None:
         tab = self._new_tab("Обзор")
         add_info_block(tab, *TAB_INFO["Обзор"])
@@ -404,7 +438,7 @@ class OfzAnalyticsGui:
         self._set_minfin_advanced_visibility()
 
     def _build_cbr_tab(self) -> None:
-        tab = self._new_tab("Банк России")
+        tab = self._new_scrollable_tab("Банк России")
         add_info_block(tab, *TAB_INFO["Банк России"])
 
         usage_frame = ttk.LabelFrame(tab, text="Как пользоваться вкладкой")
