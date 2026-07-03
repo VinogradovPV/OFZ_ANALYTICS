@@ -99,6 +99,38 @@ def minfin_step(
     return cli_step(state, label, "ofz-fetch-minfin.exe", *args)
 
 
+def cbr_key_rate_step(
+    state: GuiState,
+    label: str,
+    source: str,
+    *,
+    dry_run: bool,
+) -> CommandStep:
+    args = [
+        "--source",
+        source,
+        "--from-date",
+        state.cbr_from_date,
+        "--to-date",
+        state.cbr_to_date,
+        "--timeout-seconds",
+        str(state.cbr_timeout_seconds),
+        "--retries",
+        str(state.cbr_retries),
+    ]
+    if state.cbr_url.strip():
+        args.extend(["--url", state.cbr_url.strip()])
+    if source == "html-file":
+        args.extend(["--html-file", state.cbr_html_file.strip()])
+    if source == "xlsx":
+        args.extend(["--input-file", state.cbr_xlsx_file.strip()])
+    if state.cbr_save_html_snapshot and source == "web":
+        args.append("--save-html-snapshot")
+    if dry_run:
+        args.append("--dry-run")
+    return python_step(state, label, "scripts/reference_data/cbr_key_rate.py", *args)
+
+
 def pipeline_step(state: GuiState) -> CommandStep:
     return cli_step(state, "Pipeline", "ofz-run.exe", *state.common_report_args(), *state.pipeline_registry_args())
 
@@ -221,6 +253,42 @@ def registry() -> dict[str, ActionDefinition]:
             result_label="Registry Минфина",
             user_success_message="Ручной импорт XLSX завершен успешно.",
             mutation_summary="Меняет controlled raw storage Минфина.",
+        ),
+        "cbr-key-rate-web-dry": ActionDefinition(
+            "cbr-key-rate-web-dry",
+            "Проверить сайт Банка России без записи reference datasets.",
+            lambda state: (cbr_key_rate_step(state, "CBR key rate web dry-run", "web", dry_run=True),),
+            user_success_message="Проверка сайта Банка России завершена. Reference datasets не изменялись.",
+            user_failure_hint="Проверка сайта Банка России завершилась ошибкой. Используйте HTML fixture или XLSX fallback для offline-диагностики.",
+        ),
+        "cbr-key-rate-web-update": ActionDefinition(
+            "cbr-key-rate-web-update",
+            "Обновить generated reference datasets ключевой ставки Банка России из web source.",
+            lambda state: (cbr_key_rate_step(state, "CBR key rate web update", "web", dry_run=False),),
+            "UPDATE_CBR_KEY_RATE",
+            result_paths=lambda state: (
+                state.project_root / "data/processed/reference/cbr_key_rate_daily.csv",
+                state.project_root / "data/processed/reference/cbr_key_rate_monthly.csv",
+                state.project_root / "data/processed/reference/cbr_key_rate_daily.meta.json",
+            ),
+            result_label="CBR reference datasets",
+            user_success_message="Reference datasets ключевой ставки Банка России обновлены.",
+            user_failure_hint="Обновление ключевой ставки Банка России завершилось ошибкой. Проверьте журнал и при необходимости используйте fixture/fallback.",
+            mutation_summary="Создает generated reference datasets в data/processed/reference/.",
+        ),
+        "cbr-key-rate-html-fixture": ActionDefinition(
+            "cbr-key-rate-html-fixture",
+            "Проверить локальный HTML fixture Банка России без записи outputs.",
+            lambda state: (cbr_key_rate_step(state, "CBR key rate HTML fixture", "html-file", dry_run=True),),
+            user_success_message="HTML fixture Банка России успешно проверен. Reference datasets не изменялись.",
+            user_failure_hint="HTML fixture Банка России не прошел проверку. Проверьте путь и структуру table.data.",
+        ),
+        "cbr-key-rate-xlsx-fallback": ActionDefinition(
+            "cbr-key-rate-xlsx-fallback",
+            "Проверить аварийный XLSX fallback Банка России без записи reference datasets.",
+            lambda state: (cbr_key_rate_step(state, "CBR key rate XLSX fallback", "xlsx", dry_run=True),),
+            user_success_message="XLSX fallback Банка России успешно проверен. Reference datasets не изменялись.",
+            user_failure_hint="XLSX fallback Банка России не прошел проверку. Проверьте путь и обязательные колонки.",
         ),
         "pipeline": ActionDefinition(
             "pipeline",
@@ -384,6 +452,10 @@ class ActionRegistry:
         definition = self.definition(action_id)
         if action_id.startswith("minfin-manual-") and not state.manual_file.strip():
             raise ValueError("Для manual-import выберите --manual-file.")
+        if action_id == "cbr-key-rate-html-fixture" and not state.cbr_html_file.strip():
+            raise ValueError("Для CBR HTML fixture выберите --html-file.")
+        if action_id == "cbr-key-rate-xlsx-fallback" and not state.cbr_xlsx_file.strip():
+            raise ValueError("Для CBR XLSX fallback выберите --input-file.")
         required_confirm = definition.required_confirm
         if action_id == "pipeline-stage-zero" and state.stage_zero_mode == "download":
             required_confirm = "DOWNLOAD_MINFIN_SOURCE"
