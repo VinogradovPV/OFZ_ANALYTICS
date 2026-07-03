@@ -81,6 +81,8 @@ scripts/reference_data/cbr_key_rate.py
 
 Parser поддерживает источники `web`, `html-file` и emergency fallback `xlsx`. Для web/html источника preferred parser source - `table.data`; Highcharts используется только как fallback/cross-check. При обычном запуске parser пишет daily CSV, metadata JSON и monthly derived view в `data/processed/reference/`; эти файлы являются generated artifacts и не коммитятся.
 
+В desktop GUI workflow ключевой ставки доступен на вкладке `Банк России`, сразу после вкладки `Исходные данные Минфина`. Безопасные действия вкладки: `Проверить сайт Банка России`, `Проверить HTML fixture`, `Проверить XLSX fallback` - они запускают dry-run и не пишут generated files. Действие `Обновить ключевую ставку` требует точного подтверждения `UPDATE_CBR_KEY_RATE` и создает generated files `data/processed/reference/cbr_key_rate_daily.csv`, `data/processed/reference/cbr_key_rate_monthly.csv`, `data/processed/reference/cbr_key_rate_daily.meta.json`; эти файлы не коммитятся.
+
 Offline QA fixture и smoke для parser-а:
 
 ```text

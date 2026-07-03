@@ -10,6 +10,8 @@
 
 Текущий pipeline может временно использовать ручной XLSX fallback, но целевая модель хранения web parser должна соответствовать этому документу.
 
+Desktop GUI использует этот же contract на вкладке `Банк России`, расположенной сразу после вкладки `Исходные данные Минфина`. GUI не вводит отдельную модель данных: dry-run действия только проверяют источник, а update с подтверждением `UPDATE_CBR_KEY_RATE` пишет generated reference datasets в `data/processed/reference/`.
+
 ## Primary source
 
 Основной источник:
