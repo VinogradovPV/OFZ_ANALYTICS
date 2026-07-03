@@ -48,6 +48,10 @@ def main() -> int:
     required_actions = {
         "minfin-monthly-offline",
         "minfin-monthly-download",
+        "cbr-key-rate-web-dry",
+        "cbr-key-rate-web-update",
+        "cbr-key-rate-html-fixture",
+        "cbr-key-rate-xlsx-fallback",
         "pipeline-stage-zero",
         "quality-fast",
         "release-build",
@@ -57,6 +61,7 @@ def main() -> int:
     assert TAB_TITLES == (
         "Обзор",
         "Исходные данные Минфина",
+        "Банк России",
         "Pipeline",
         "Проверки качества",
         "Отчеты и графики",
@@ -127,6 +132,25 @@ def main() -> int:
         "monthly download was not blocked",
     )
     registry.build("minfin-monthly-download", state, confirm="DOWNLOAD_MINFIN_SOURCE")
+    cbr_web_dry = registry.build("cbr-key-rate-web-dry", state)
+    assert cbr_web_dry.steps[0].args[:3] == (str(state.python_executable), "scripts/reference_data/cbr_key_rate.py", "--source")
+    assert "web" in cbr_web_dry.steps[0].args
+    assert "--dry-run" in cbr_web_dry.steps[0].args
+    expect_error(
+        ConfirmationRequiredError,
+        lambda: registry.build("cbr-key-rate-web-update", state),
+        "CBR web update was not blocked",
+    )
+    cbr_web_update = registry.build("cbr-key-rate-web-update", state, confirm="UPDATE_CBR_KEY_RATE")
+    assert cbr_web_update.required_confirm == "UPDATE_CBR_KEY_RATE"
+    assert cbr_web_update.has_results
+    assert "--dry-run" not in cbr_web_update.steps[0].args
+    cbr_fixture = registry.build("cbr-key-rate-html-fixture", state)
+    assert "--html-file" in cbr_fixture.steps[0].args
+    assert "--dry-run" in cbr_fixture.steps[0].args
+    cbr_xlsx = registry.build("cbr-key-rate-xlsx-fallback", state)
+    assert "--input-file" in cbr_xlsx.steps[0].args
+    assert "--dry-run" in cbr_xlsx.steps[0].args
 
     state.stage_zero_mode = "download"
     expect_error(

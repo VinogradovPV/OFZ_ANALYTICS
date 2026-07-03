@@ -20,6 +20,7 @@ dependencies = [
 dev = [
     "setuptools>=80,<81",
     "playwright>=1.45,<2.0",
+    "pytest>=8,<9",
 ]
 
 [project.scripts]
