@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 import tkinter as tk
@@ -23,6 +24,7 @@ from .widgets import add_action_row, add_info_block, add_intro, add_labeled_comb
 TAB_TITLES = (
     "Обзор",
     "Исходные данные Минфина",
+    "Банк России",
     "Pipeline",
     "Проверки качества",
     "Отчеты и графики",
@@ -80,6 +82,12 @@ TAB_INFO = {
         "Перед pipeline, если нужно обновить текущий год или закрыть прошлый год.",
         "Сначала нажмите \"Проверить сайт Минфина\", затем при необходимости \"Обновить текущий год\".",
         "Dry-run ничего не меняет; download меняет controlled raw storage и требует подтверждения.",
+    ),
+    "Банк России": (
+        "Проверяет и обновляет generated reference datasets ключевой ставки Банка России.",
+        "Перед построением графика ОФЗ-ПД + ключевая ставка или при обновлении справочного ряда.",
+        "Сначала выполните dry-run сайта или HTML fixture, затем при необходимости обновите reference datasets.",
+        "Dry-run ничего не меняет; update пишет generated files в data/processed/reference/ и требует подтверждения.",
     ),
     "Pipeline": (
         "Запускает основной расчетный pipeline.",
@@ -182,6 +190,16 @@ class OfzAnalyticsGui:
         self.no_network_var = tk.BooleanVar(value=self.state.no_network)
         self.html_file_var = tk.StringVar(value=self.state.html_file)
         self.manual_file_var = tk.StringVar(value=self.state.manual_file)
+        self.cbr_from_date_var = tk.StringVar(value=self.state.cbr_from_date)
+        self.cbr_to_date_var = tk.StringVar(value=self.state.cbr_to_date)
+        self.cbr_url_var = tk.StringVar(value=self.state.cbr_url)
+        self.cbr_html_file_var = tk.StringVar(value=self.state.cbr_html_file)
+        self.cbr_xlsx_file_var = tk.StringVar(value=self.state.cbr_xlsx_file)
+        self.cbr_timeout_var = tk.StringVar(value=str(self.state.cbr_timeout_seconds))
+        self.cbr_retries_var = tk.StringVar(value=str(self.state.cbr_retries))
+        self.cbr_save_html_snapshot_var = tk.BooleanVar(value=self.state.cbr_save_html_snapshot)
+        self.cbr_no_network_var = tk.BooleanVar(value=self.state.cbr_no_network)
+        self.cbr_confirm_var = tk.StringVar()
         self.minfin_confirm_var = tk.StringVar()
         self.minfin_advanced_var = tk.BooleanVar(value=False)
         self.manual_import_var = tk.BooleanVar(value=False)
@@ -197,6 +215,9 @@ class OfzAnalyticsGui:
             self.pipeline_confirm_var,
             self.release_confirm_var,
             self.maintenance_confirm_var,
+            self.cbr_confirm_var,
+            self.cbr_html_file_var,
+            self.cbr_xlsx_file_var,
             self.stage_zero_var,
             self.minfin_advanced_var,
             self.manual_import_var,
@@ -208,6 +229,14 @@ class OfzAnalyticsGui:
         self.minfin_file_var = tk.StringVar(value="XLSX: -")
         self.minfin_hash_var = tk.StringVar(value="SHA256: -")
         self.minfin_paths_var = tk.StringVar(value="latest/final/registry: -")
+        self.cbr_status_var = tk.StringVar(value="Reference datasets: еще не проверялись")
+        self.cbr_latest_date_var = tk.StringVar(value="Latest date: -")
+        self.cbr_latest_value_var = tk.StringVar(value="Latest value: -")
+        self.cbr_row_count_var = tk.StringVar(value="Rows: -")
+        self.cbr_parser_var = tk.StringVar(value="Parser: -")
+        self.cbr_hash_var = tk.StringVar(value="HTML SHA256: -")
+        self.cbr_source_url_var = tk.StringVar(value="Source URL: -")
+        self.cbr_paths_var = tk.StringVar(value="daily/monthly/meta: -")
 
     def _configure_style(self) -> None:
         style = ttk.Style(self.root)
@@ -220,6 +249,7 @@ class OfzAnalyticsGui:
         self.notebook.pack(fill="both", expand=True, padx=8, pady=(8, 4))
         self._build_overview_tab()
         self._build_minfin_tab()
+        self._build_cbr_tab()
         self._build_pipeline_tab()
         self._build_quality_tab()
         self._build_reports_tab()
@@ -372,6 +402,97 @@ class OfzAnalyticsGui:
             self.minfin_confirm_var,
         )
         self._set_minfin_advanced_visibility()
+
+    def _build_cbr_tab(self) -> None:
+        tab = self._new_tab("Банк России")
+        add_info_block(tab, *TAB_INFO["Банк России"])
+
+        usage_frame = ttk.LabelFrame(tab, text="Как пользоваться вкладкой")
+        usage_frame.pack(fill="x", padx=10, pady=6)
+        ttk.Label(
+            usage_frame,
+            text=(
+                "Сначала проверьте сайт Банка России или offline fixture. "
+                "Обновление reference datasets выполняйте только после проверки и подтверждения UPDATE_CBR_KEY_RATE."
+            ),
+            wraplength=1080,
+            justify="left",
+        ).pack(anchor="w", padx=8, pady=6)
+
+        status_frame = ttk.LabelFrame(tab, text="Статус источника")
+        status_frame.pack(fill="x", padx=10, pady=6)
+        for variable in (
+            self.cbr_status_var,
+            self.cbr_latest_date_var,
+            self.cbr_latest_value_var,
+            self.cbr_row_count_var,
+            self.cbr_parser_var,
+            self.cbr_hash_var,
+            self.cbr_source_url_var,
+            self.cbr_paths_var,
+        ):
+            ttk.Label(status_frame, textvariable=variable, wraplength=1080, justify="left").pack(anchor="w", padx=8, pady=2)
+        ttk.Button(status_frame, text="Обновить статус", command=self._refresh_cbr_status).pack(anchor="w", padx=8, pady=5)
+        self._refresh_cbr_status(show_errors=False)
+
+        settings_frame = ttk.LabelFrame(tab, text="Параметры запроса")
+        settings_frame.pack(fill="x", padx=10, pady=6)
+        settings_frame.columnconfigure(1, weight=1)
+        add_labeled_entry(settings_frame, 0, "From DD.MM.YYYY", self.cbr_from_date_var, 16)
+        add_labeled_entry(settings_frame, 0, "To DD.MM.YYYY", self.cbr_to_date_var, 16, column=2)
+        add_labeled_entry(settings_frame, 1, "CBR URL override", self.cbr_url_var, 70)
+        add_labeled_entry(settings_frame, 2, "HTML fixture", self.cbr_html_file_var, 70)
+        ttk.Button(settings_frame, text="Выбрать HTML", command=self._choose_cbr_html).grid(row=2, column=2, padx=5)
+        add_labeled_entry(settings_frame, 3, "XLSX fallback", self.cbr_xlsx_file_var, 70)
+        ttk.Button(settings_frame, text="Выбрать XLSX", command=self._choose_cbr_xlsx).grid(row=3, column=2, padx=5)
+        add_labeled_entry(settings_frame, 4, "Timeout seconds", self.cbr_timeout_var, 10)
+        add_labeled_entry(settings_frame, 4, "Retries", self.cbr_retries_var, 10, column=2)
+        ttk.Checkbutton(settings_frame, text="Save HTML snapshot при web update", variable=self.cbr_save_html_snapshot_var).grid(
+            row=5, column=0, columnspan=2, sticky="w", padx=5, pady=4
+        )
+        ttk.Checkbutton(settings_frame, text="No network: использовать fixture/fallback для диагностики", variable=self.cbr_no_network_var).grid(
+            row=5, column=2, columnspan=2, sticky="w", padx=5, pady=4
+        )
+
+        actions_frame = ttk.LabelFrame(tab, text="Основные действия")
+        actions_frame.pack(fill="x", padx=10, pady=6)
+        self._action_row(
+            actions_frame,
+            "Проверить сайт Банка России",
+            "Live dry-run: парсит table.data/Highcharts, generated files не пишет.",
+            "cbr-key-rate-web-dry",
+        )
+        self._action_row(
+            actions_frame,
+            "Обновить ключевую ставку",
+            "Пишет generated reference datasets; запуск требует UPDATE_CBR_KEY_RATE.",
+            "cbr-key-rate-web-update",
+            self.cbr_confirm_var,
+        )
+
+        diagnostics_frame = ttk.LabelFrame(tab, text="Расширенная диагностика")
+        diagnostics_frame.pack(fill="x", padx=10, pady=6)
+        self._action_row(
+            diagnostics_frame,
+            "Проверить HTML fixture",
+            "Offline dry-run по сохраненной странице Банка России.",
+            "cbr-key-rate-html-fixture",
+            condition=self._cbr_html_selected,
+        )
+        self._action_row(
+            diagnostics_frame,
+            "Проверить XLSX fallback",
+            "Аварийная проверка ручного XLSX fallback без записи reference datasets.",
+            "cbr-key-rate-xlsx-fallback",
+            condition=self._cbr_xlsx_selected,
+        )
+
+        toolbar = ttk.Frame(tab)
+        toolbar.pack(fill="x", padx=10, pady=4)
+        ttk.Button(toolbar, text="Открыть reference datasets", command=lambda: self._open_path(self.state.project_root / "data/processed/reference")).pack(side="left", padx=4)
+        ttk.Button(toolbar, text="Открыть metadata JSON", command=lambda: self._open_path(self.state.project_root / "data/processed/reference/cbr_key_rate_daily.meta.json")).pack(side="left", padx=4)
+        ttk.Button(toolbar, text="Открыть CBR contract", command=lambda: self._open_path(self.state.project_root / "docs/02_data_contracts/cbr_key_rate_contract.md")).pack(side="left", padx=4)
+        ttk.Button(toolbar, text="Открыть график ОФЗ-ПД + ставка", command=self._open_ofz_pd_key_rate_chart).pack(side="left", padx=4)
 
     def _build_pipeline_tab(self) -> None:
         tab = self._new_tab("Pipeline")
@@ -602,6 +723,15 @@ class OfzAnalyticsGui:
         self.state.no_network = self.no_network_var.get()
         self.state.html_file = self.html_file_var.get()
         self.state.manual_file = self.manual_file_var.get()
+        self.state.cbr_from_date = self.cbr_from_date_var.get().strip()
+        self.state.cbr_to_date = self.cbr_to_date_var.get().strip()
+        self.state.cbr_url = self.cbr_url_var.get().strip()
+        self.state.cbr_html_file = self.cbr_html_file_var.get().strip()
+        self.state.cbr_xlsx_file = self.cbr_xlsx_file_var.get().strip()
+        self.state.cbr_timeout_seconds = int(self.cbr_timeout_var.get())
+        self.state.cbr_retries = int(self.cbr_retries_var.get())
+        self.state.cbr_save_html_snapshot = self.cbr_save_html_snapshot_var.get()
+        self.state.cbr_no_network = self.cbr_no_network_var.get()
         self.state.stage_zero_mode = STAGE_ZERO_LABEL_TO_MODE.get(self.stage_zero_var.get(), self.stage_zero_var.get())
         self.state.run_schema_before_pipeline = self.schema_before_var.get()
         self.state.open_outputs_after_run = self.open_outputs_var.get()
@@ -719,6 +849,7 @@ class OfzAnalyticsGui:
             "minfin-annual-download": "да, controlled raw storage Минфина",
             "minfin-final-replace": "да, annual-final в controlled raw storage",
             "minfin-manual-import": "да, controlled raw storage Минфина",
+            "cbr-key-rate-web-update": "да, generated reference datasets в data/processed/reference/",
             "pipeline": "да, generated outputs в outputs/",
             "pipeline-stage-zero": "да, generated outputs; raw только если выбран download этапа 0",
             "release-build": "да, releases/",
@@ -763,6 +894,8 @@ class OfzAnalyticsGui:
             return self._minfin_dry_run_summary(plan, output_tail)
         if plan.action_id in {"minfin-monthly-download", "minfin-annual-download", "minfin-final-replace", "minfin-manual-import"}:
             return self._minfin_download_summary(plan)
+        if plan.action_id.startswith("cbr-key-rate-"):
+            return self._cbr_key_rate_summary(plan)
         if plan.action_id == "pipeline-stage-zero" and "Этап 0" in output_tail and "Exit code: 1" in output_tail:
             return "Этап 0 Минфина завершился ошибкой. Pipeline не запускался."
         if plan.action_id == "cleanup-keep":
@@ -810,6 +943,16 @@ class OfzAnalyticsGui:
             return f"Ручной импорт XLSX завершен успешно.\nRegistry: {registry_path}\nСледующий шаг: запустите pipeline."
         return f"{plan.user_success_message}\nRegistry: {registry_path}"
 
+    def _cbr_key_rate_summary(self, plan: ActionPlan) -> str:
+        if plan.action_id == "cbr-key-rate-web-update":
+            self._refresh_cbr_status(show_errors=False)
+            return (
+                "Reference datasets ключевой ставки Банка России обновлены.\n"
+                "Generated files находятся в data/processed/reference/ и не коммитятся.\n"
+                "Следующий шаг: запустите pipeline или откройте график ОФЗ-ПД + ключевая ставка."
+            )
+        return plan.user_success_message or "Проверка ключевой ставки Банка России завершена. Reference datasets не изменялись."
+
     def _extract_minfin_candidate_from_output(self, output_tail: str) -> dict:
         try:
             start = output_tail.find("{")
@@ -837,6 +980,12 @@ class OfzAnalyticsGui:
     def _manual_file_selected(self) -> bool:
         return bool(self.manual_file_var.get().strip())
 
+    def _cbr_html_selected(self) -> bool:
+        return bool(self.cbr_html_file_var.get().strip())
+
+    def _cbr_xlsx_selected(self) -> bool:
+        return bool(self.cbr_xlsx_file_var.get().strip())
+
     def _pipeline_stage_zero_ready(self) -> bool:
         mode = STAGE_ZERO_LABEL_TO_MODE.get(self.stage_zero_var.get(), self.stage_zero_var.get())
         return mode != "download" or self.pipeline_confirm_var.get() == "DOWNLOAD_MINFIN_SOURCE"
@@ -855,6 +1004,10 @@ class OfzAnalyticsGui:
             "IMPORT_MINFIN_FILE": (
                 "Операция импортирует локальный XLSX в controlled raw storage. "
                 "Проверьте год, имя файла и источник."
+            ),
+            "UPDATE_CBR_KEY_RATE": (
+                "Операция обновит generated reference datasets ключевой ставки Банка России в data/processed/reference/. "
+                "Эти файлы не коммитятся, но используются графиком ОФЗ-ПД + ключевая ставка."
             ),
             "BUILD_RELEASE_BUNDLE": "Операция создаст внешний release bundle в ignored releases/.",
             "BUILD_BI_PACKAGE": "Операция создаст внешний BI package в ignored releases/bi/.",
@@ -936,6 +1089,44 @@ class OfzAnalyticsGui:
                     return record
         return records[0] if records else None
 
+    def _refresh_cbr_status(self, show_errors: bool = True) -> None:
+        try:
+            self._sync_state()
+            reference_root = self.state.project_root / "data/processed/reference"
+            daily_path = reference_root / "cbr_key_rate_daily.csv"
+            monthly_path = reference_root / "cbr_key_rate_monthly.csv"
+            meta_path = reference_root / "cbr_key_rate_daily.meta.json"
+            self.cbr_paths_var.set(f"daily: {daily_path} | monthly: {monthly_path} | meta: {meta_path}")
+            if not daily_path.exists() or not monthly_path.exists() or not meta_path.exists():
+                self.cbr_status_var.set("Reference datasets еще не созданы")
+                self.cbr_latest_date_var.set("Latest date: -")
+                self.cbr_latest_value_var.set("Latest value: -")
+                self.cbr_row_count_var.set("Rows: -")
+                self.cbr_parser_var.set("Parser: -")
+                self.cbr_hash_var.set("HTML SHA256: -")
+                self.cbr_source_url_var.set("Source URL: -")
+                return
+
+            with daily_path.open("r", encoding="utf-8", newline="") as handle:
+                rows = list(csv.DictReader(handle))
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            latest = max(rows, key=lambda row: row.get("date", "")) if rows else {}
+            latest_value = latest.get("value", "-")
+            if latest_value != "-":
+                latest_value = f"{float(latest_value):.2f}%"
+            self.cbr_status_var.set("Reference datasets доступны")
+            self.cbr_latest_date_var.set(f"Latest date: {latest.get('date', '-')}")
+            self.cbr_latest_value_var.set(f"Latest value: {latest_value}")
+            self.cbr_row_count_var.set(f"Rows: {len(rows)}")
+            self.cbr_parser_var.set(f"Parser: {meta.get('parser', '-')}")
+            html_sha256 = str(meta.get("html_sha256") or "-")
+            self.cbr_hash_var.set(f"HTML SHA256: {html_sha256[:16] if html_sha256 != '-' else '-'}")
+            self.cbr_source_url_var.set(f"Source URL: {meta.get('source_url', '-')}")
+        except Exception as exc:
+            self.cbr_status_var.set("Reference datasets: не удалось прочитать")
+            if show_errors:
+                self._show_error(exc)
+
     def _choose_project_root(self) -> None:
         selected = filedialog.askdirectory(initialdir=self.project_root_var.get(), parent=self.root)
         if selected:
@@ -952,10 +1143,20 @@ class OfzAnalyticsGui:
         if selected:
             self.html_file_var.set(selected)
 
+    def _choose_cbr_html(self) -> None:
+        selected = filedialog.askopenfilename(filetypes=[("HTML", "*.html"), ("Все файлы", "*.*")], parent=self.root)
+        if selected:
+            self.cbr_html_file_var.set(selected)
+
     def _choose_manual(self) -> None:
         selected = filedialog.askopenfilename(filetypes=[("Excel XLSX", "*.xlsx")], parent=self.root)
         if selected:
             self.manual_file_var.set(selected)
+
+    def _choose_cbr_xlsx(self) -> None:
+        selected = filedialog.askopenfilename(filetypes=[("Excel XLSX", "*.xlsx"), ("Все файлы", "*.*")], parent=self.root)
+        if selected:
+            self.cbr_xlsx_file_var.set(selected)
 
     def _open_path(self, path: Path) -> None:
         try:
@@ -971,6 +1172,10 @@ class OfzAnalyticsGui:
     def _open_weighted_yield(self) -> None:
         self._sync_state()
         self._open_path(self.state.project_root / "outputs/charts/monthly/yield" / f"monthly_weighted_avg_yield_{self.state.output_suffix}.html")
+
+    def _open_ofz_pd_key_rate_chart(self) -> None:
+        self._sync_state()
+        self._open_path(self.state.project_root / "outputs/charts/yield/ofz_pd" / f"ofz_pd_yield_key_rate_{self.state.output_suffix}.html")
 
     def _open_run_manifest(self) -> None:
         candidates = sorted((self.state.project_root / "outputs/reports").glob("run_manifest_*.json"), key=lambda path: path.stat().st_mtime, reverse=True)
@@ -1029,11 +1234,18 @@ def run_smoke(project_root: Path) -> int:
     state = GuiState(project_root=project_root.resolve())
     state.validate()
     action_registry = ActionRegistry()
-    for action_id in ("check-environment", "minfin-monthly-offline", "pipeline-stage-zero", "quality-fast", "release-dry"):
+    for action_id in (
+        "check-environment",
+        "minfin-monthly-offline",
+        "cbr-key-rate-html-fixture",
+        "pipeline-stage-zero",
+        "quality-fast",
+        "release-dry",
+    ):
         action_registry.build(action_id, state, validate_confirmation=False)
     if not HELP_TEXT.strip():
         raise RuntimeError("Встроенная справка пуста.")
-    if len(TAB_TITLES) != 9:
+    if len(TAB_TITLES) != 10:
         raise RuntimeError("Нарушен контракт вкладок GUI.")
     print(f"OFZ GUI smoke passed. Actions: {len(action_registry.action_ids())}")
     return 0
