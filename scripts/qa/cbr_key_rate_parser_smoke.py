@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import shutil
 import subprocess
 import sys
 import uuid
@@ -97,7 +99,7 @@ def check_parser_contract(html: str) -> None:
 
     metadata = build_metadata(
         source_url=build_cbr_key_rate_url("01.01.2019", "02.07.2026"),
-        source_type="web",
+        source_type="web_table_data",
         source_file=None,
         from_date=date(2019, 1, 1),
         to_date=date(2026, 7, 2),
@@ -106,10 +108,12 @@ def check_parser_contract(html: str) -> None:
         html=html,
         row_count=len(daily),
         parser=result.parser,
+        source_rule="exact_daily_site_rows",
     )
-    assert_equal(metadata["source_type"], "web", "Metadata source_type mismatch")
+    assert_equal(metadata["source_type"], "web_table_data", "Metadata source_type mismatch")
     assert_equal(metadata["source_file"], None, "Metadata source_file mismatch")
     assert_equal(metadata["source_parser"], "html_table", "Metadata source_parser mismatch")
+    assert_equal(metadata["source_rule"], "exact_daily_site_rows", "Metadata source_rule mismatch")
     assert_true(bool(metadata["html_sha256"]), "Metadata html_sha256 is empty")
 
 
@@ -134,11 +138,52 @@ def check_dry_run_does_not_write() -> None:
         str(monthly_csv),
         "--dry-run",
     ]
-    completed = subprocess.run(command, cwd=ROOT, check=True, capture_output=True, text=True, encoding="utf-8")
+    completed = subprocess.run(command, cwd=ROOT, check=True, capture_output=True, text=True, encoding="utf-8", errors="replace")
     assert_true("dry_run=True" in completed.stdout, "Dry-run output did not confirm dry_run=True")
     for path in (daily_csv, meta_json, monthly_csv):
         assert_true(not path.exists(), f"Dry-run unexpectedly wrote {path}")
     assert_true(not temp_root.exists(), f"Dry-run unexpectedly created output directory {temp_root}")
+
+
+def check_download_writes_raw_storage() -> None:
+    temp_root = ROOT / "outputs" / "tmp" / f"cbr_key_rate_parser_download_{uuid.uuid4().hex}"
+    output_root = temp_root / "raw"
+    command = [
+        sys.executable,
+        str(ROOT / "scripts" / "reference_data" / "cbr_key_rate.py"),
+        "--source",
+        "html-file",
+        "--html-file",
+        str(FIXTURE_PATH),
+        "--output-root",
+        str(output_root),
+        "--download",
+        "--confirm",
+        "UPDATE_CBR_KEY_RATE",
+    ]
+    try:
+        first = subprocess.run(command, cwd=ROOT, check=True, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        assert_true("write_status=changed" in first.stdout, "Download output did not confirm update")
+        latest_csv = output_root / "latest" / "cbr_key_rate_daily.csv"
+        latest_meta = output_root / "latest" / "cbr_key_rate_daily.meta.json"
+        registry_csv = output_root / "registry" / "cbr_key_rate_registry.csv"
+        registry_json = output_root / "registry" / "cbr_key_rate_registry_latest.json"
+        versions = sorted((output_root / "versions").glob("cbr_key_rate_daily_*.csv"))
+        for path in (latest_csv, latest_meta, registry_csv, registry_json):
+            assert_true(path.exists(), f"Download did not write {path}")
+        assert_equal(len(versions), 1, "First download should write one version snapshot")
+        assert_equal(latest_csv.read_text(encoding="utf-8").splitlines()[0], "date,value", "Latest CSV header mismatch")
+        meta = json.loads(latest_meta.read_text(encoding="utf-8"))
+        assert_equal(meta["source_type"], "html_fixture", "HTML fixture source_type mismatch")
+        assert_equal(meta["parser"], "html_table", "Parser metadata mismatch")
+        assert_true(bool(meta["sha256"]), "Metadata sha256 is empty")
+
+        second = subprocess.run(command, cwd=ROOT, check=True, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        assert_true("write_status=unchanged" in second.stdout, "Second download should be unchanged")
+        versions_after_second = sorted((output_root / "versions").glob("cbr_key_rate_daily_*.csv"))
+        assert_equal(len(versions_after_second), 1, "Unchanged download should not add a version snapshot")
+    finally:
+        shutil.rmtree(temp_root, ignore_errors=True)
 
 
 def main() -> int:
@@ -147,6 +192,7 @@ def main() -> int:
     check_fixture_shape(html)
     check_parser_contract(html)
     check_dry_run_does_not_write()
+    check_download_writes_raw_storage()
     print("CBR key rate parser smoke passed: fixture rows=8, monthly rule=last_available_observation_in_month")
     return 0
 

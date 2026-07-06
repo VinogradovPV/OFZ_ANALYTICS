@@ -1,6 +1,6 @@
 # GUI workflow ключевой ставки Банка России
 
-Дата актуализации: 2026-07-03.
+Дата актуализации: 2026-07-06.
 
 ## Где находится вкладка
 
@@ -12,21 +12,22 @@ scripts/reference_data/cbr_key_rate.py
 
 Вкладка не создает новый источник данных и не меняет contract хранения. Она является GUI-обвязкой для уже зафиксированной модели:
 
-- daily source copy: `data/processed/reference/cbr_key_rate_daily.csv`;
-- metadata: `data/processed/reference/cbr_key_rate_daily.meta.json`;
-- monthly derived view: `data/processed/reference/cbr_key_rate_monthly.csv`.
+- raw daily source copy: `data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.csv`;
+- raw metadata: `data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.meta.json`;
+- raw registry: `data/raw/cbr/key_rate_inflation/registry/cbr_key_rate_registry.csv`;
+- raw latest registry JSON: `data/raw/cbr/key_rate_inflation/registry/cbr_key_rate_registry_latest.json`.
 
 ## Безопасные действия
 
-Безопасные кнопки ничего не записывают в `data/processed/reference/`:
+Безопасные кнопки ничего не записывают в `data/raw/cbr/key_rate_inflation/`:
 
 - `Проверить сайт Банка России` - live dry-run `--source web --dry-run`;
 - `Проверить HTML fixture` - offline dry-run `--source html-file --dry-run`;
 - `Проверить XLSX fallback` - аварийная проверка `--source xlsx --dry-run`.
 
-Эти действия можно запускать перед обновлением reference datasets и для диагностики недоступности сайта.
+Эти действия можно запускать перед обновлением raw dataset и для диагностики недоступности сайта.
 
-## Обновление reference datasets
+## Обновление raw dataset
 
 Кнопка `Обновить ключевую ставку` запускает web parser без `--dry-run` и требует точного подтверждения:
 
@@ -37,22 +38,23 @@ UPDATE_CBR_KEY_RATE
 После подтверждения GUI выполняет команду вида:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\reference_data\cbr_key_rate.py --source web --from-date 01.01.2019 --to-date 02.07.2026 ...
+.\.venv\Scripts\python.exe scripts\reference_data\cbr_key_rate.py --source web --from-date 01.01.2019 --to-date 02.07.2026 --download --confirm UPDATE_CBR_KEY_RATE ...
 ```
 
-Update пишет generated files:
+Update пишет controlled raw files:
 
 ```text
-data/processed/reference/cbr_key_rate_daily.csv
-data/processed/reference/cbr_key_rate_daily.meta.json
-data/processed/reference/cbr_key_rate_monthly.csv
+data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.csv
+data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.meta.json
+data/raw/cbr/key_rate_inflation/registry/cbr_key_rate_registry.csv
+data/raw/cbr/key_rate_inflation/registry/cbr_key_rate_registry_latest.json
 ```
 
 Эти файлы являются generated artifacts и не коммитятся.
 
 ## Статус источника
 
-Блок `Статус источника` читает daily CSV, monthly CSV и metadata JSON. Если files еще не созданы, GUI показывает `Reference datasets еще не созданы` и не падает.
+Блок `Статус источника` читает raw latest CSV, raw latest metadata JSON и registry. Если raw latest еще не создан, GUI показывает missing raw dataset и не падает.
 
 Если files существуют, GUI показывает:
 
@@ -62,11 +64,11 @@ data/processed/reference/cbr_key_rate_monthly.csv
 - parser;
 - html_sha256;
 - source_url;
-- paths до daily/monthly/meta.
+- paths до latest/meta/registry.
 
 ## График ОФЗ-ПД + ключевая ставка
 
-После обновления reference datasets можно открыть график кнопкой `Открыть график ОФЗ-ПД + ставка`. GUI открывает файл:
+После обновления raw dataset можно открыть график кнопкой `Открыть график ОФЗ-ПД + ставка`. GUI открывает файл:
 
 ```text
 outputs/charts/yield/ofz_pd/ofz_pd_yield_key_rate_<suffix>.html
@@ -78,9 +80,7 @@ outputs/charts/yield/ofz_pd/ofz_pd_yield_key_rate_<suffix>.html
 
 Не коммитятся:
 
-- `data/processed/reference/cbr_key_rate_daily.csv`;
-- `data/processed/reference/cbr_key_rate_daily.meta.json`;
-- `data/processed/reference/cbr_key_rate_monthly.csv`;
+- raw latest CSV/meta и registry;
 - generated charts и exports в `outputs/`;
 - raw XLSX fallback без отдельного approval.
 

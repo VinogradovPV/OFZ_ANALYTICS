@@ -17,7 +17,7 @@ from . import actions
 from .actions import ActionPlan, ActionRegistry
 from .command_runner import CommandRunner, RunResult, format_plan
 from .help_text import HELP_TEXT
-from .state import CbrReferenceStatus, GuiState, check_cbr_reference_status
+from .state import CbrRawStatus, GuiState, check_cbr_raw_status
 from .widgets import add_action_row, add_info_block, add_intro, add_labeled_combo, add_labeled_entry, make_scrolled_text
 
 
@@ -58,8 +58,8 @@ MINFIN_ADVANCED_CONTROL_LABELS = (
 CBR_BASIC_CONTROL_LABELS = (
     "Проверить сайт Банка России",
     "Обновить ключевую ставку",
-    "Проверить reference datasets",
-    "Открыть reference folder",
+    "Проверить raw dataset",
+    "Открыть raw CBR folder",
     "Открыть отчет/журнал проверки",
 )
 
@@ -75,7 +75,7 @@ CBR_ADVANCED_CONTROL_LABELS = (
     "HTML SHA256",
     "Source URL",
     "Source file",
-    "daily/monthly/meta paths",
+    "latest/meta/registry paths",
 )
 
 STAGE_ZERO_LABEL_TO_MODE = {
@@ -107,10 +107,10 @@ TAB_INFO = {
         "Dry-run ничего не меняет; download меняет controlled raw storage и требует подтверждения.",
     ),
     "Банк России": (
-        "Проверяет и обновляет generated reference datasets ключевой ставки Банка России.",
+        "Проверяет и обновляет raw dataset ключевой ставки Банка России.",
         "Перед построением графика ОФЗ-ПД + ключевая ставка или при обновлении справочного ряда.",
         "Сначала нажмите \"Проверить сайт Банка России\". Если данные найдены, нажмите \"Обновить ключевую ставку\".",
-        "Dry-run ничего не меняет; update пишет generated files в data/processed/reference/ и требует подтверждения.",
+        "Dry-run ничего не меняет; update пишет raw latest/version/registry в data/raw/cbr/key_rate_inflation/ и требует подтверждения.",
     ),
     "Pipeline": (
         "Запускает основной расчетный pipeline.",
@@ -254,7 +254,7 @@ class OfzAnalyticsGui:
         self.minfin_file_var = tk.StringVar(value="XLSX: -")
         self.minfin_hash_var = tk.StringVar(value="SHA256: -")
         self.minfin_paths_var = tk.StringVar(value="latest/final/registry: -")
-        self.cbr_status_var = tk.StringVar(value="Reference datasets: еще не проверялись")
+        self.cbr_status_var = tk.StringVar(value="Raw dataset: еще не проверялся")
         self.cbr_latest_date_var = tk.StringVar(value="Последняя дата ключевой ставки: -")
         self.cbr_latest_value_var = tk.StringVar(value="Последнее значение: -")
         self.cbr_row_count_var = tk.StringVar(value="Строк daily dataset: -")
@@ -266,7 +266,7 @@ class OfzAnalyticsGui:
         self.cbr_hash_var = tk.StringVar(value="HTML SHA256: -")
         self.cbr_source_url_var = tk.StringVar(value="Source URL: -")
         self.cbr_source_file_var = tk.StringVar(value="Source file: -")
-        self.cbr_paths_var = tk.StringVar(value="daily/monthly/meta: -")
+        self.cbr_paths_var = tk.StringVar(value="latest/meta/registry: -")
 
     def _configure_style(self) -> None:
         style = ttk.Style(self.root)
@@ -498,20 +498,20 @@ class OfzAnalyticsGui:
         self._action_row(
             actions_frame,
             "Обновить ключевую ставку",
-            "Пишет generated reference datasets; запуск требует UPDATE_CBR_KEY_RATE.",
+            "Пишет raw latest/version/registry; запуск требует UPDATE_CBR_KEY_RATE.",
             "cbr-key-rate-web-update",
             self.cbr_confirm_var,
         )
         self._action_row(
             actions_frame,
-            "Проверить reference datasets",
-            "Проверяет processed daily/monthly/meta и provenance.",
-            "cbr-reference-status",
+            "Проверить raw dataset",
+            "Проверяет raw latest CSV/meta/registry и provenance.",
+            "cbr-raw-status",
         )
 
         toolbar = ttk.Frame(tab)
         toolbar.pack(fill="x", padx=10, pady=4)
-        ttk.Button(toolbar, text="Открыть reference folder", command=lambda: self._open_path(self.state.project_root / "data/processed/reference")).pack(side="left", padx=4)
+        ttk.Button(toolbar, text="Открыть raw CBR folder", command=lambda: self._open_path(self.state.project_root / "data/raw/cbr/key_rate_inflation")).pack(side="left", padx=4)
         ttk.Button(toolbar, text="Открыть отчет/журнал проверки", command=self._open_last_log).pack(side="left", padx=4)
 
         advanced_toggle = ttk.Checkbutton(
@@ -569,11 +569,11 @@ class OfzAnalyticsGui:
         self._action_row(
             diagnostics_actions,
             "Проверить XLSX fallback",
-            "Аварийная проверка ручного XLSX fallback без записи reference datasets.",
+            "Аварийная проверка ручного XLSX fallback без записи raw dataset.",
             "cbr-key-rate-xlsx-fallback",
             condition=self._cbr_xlsx_selected,
         )
-        ttk.Button(self.cbr_advanced_frame, text="Открыть metadata JSON", command=lambda: self._open_path(self.state.project_root / "data/processed/reference/cbr_key_rate_daily.meta.json")).grid(row=12, column=0, sticky="w", padx=5, pady=5)
+        ttk.Button(self.cbr_advanced_frame, text="Открыть metadata JSON", command=lambda: self._open_path(self.state.project_root / "data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.meta.json")).grid(row=12, column=0, sticky="w", padx=5, pady=5)
         ttk.Button(self.cbr_advanced_frame, text="Открыть CBR contract", command=lambda: self._open_path(self.state.project_root / "docs/02_data_contracts/cbr_key_rate_contract.md")).grid(row=12, column=1, sticky="w", padx=5, pady=5)
         ttk.Button(self.cbr_advanced_frame, text="Открыть график ОФЗ-ПД + ставка", command=self._open_ofz_pd_key_rate_chart).grid(row=12, column=2, sticky="w", padx=5, pady=5)
         self._set_cbr_advanced_visibility()
@@ -934,7 +934,7 @@ class OfzAnalyticsGui:
         if plan.action_id == "cbr-key-rate-web-dry":
             return (
                 "Что будет выполнено:\n"
-                "Проверка сайта Банка России без записи reference datasets.\n\n"
+                "Проверка сайта Банка России без записи raw dataset.\n\n"
                 f"Команда:\n{command}\n\n"
                 "Изменяет ли файлы:\nНет, только проверка.\n\n"
                 "Confirm:\nНе требуется.\n\n"
@@ -943,17 +943,17 @@ class OfzAnalyticsGui:
         if plan.action_id == "cbr-key-rate-web-update":
             return (
                 "Что будет выполнено:\n"
-                "Обновление generated reference datasets ключевой ставки Банка России.\n\n"
+                "Обновление raw dataset ключевой ставки Банка России.\n\n"
                 f"Команда:\n{command}\n\n"
                 "Изменяет ли файлы:\n"
-                "Да, пишет data/processed/reference/cbr_key_rate_daily.csv, monthly.csv и meta.json.\n\n"
+                "Да, пишет data/raw/cbr/key_rate_inflation/latest, versions и registry.\n\n"
                 "Confirm:\nUPDATE_CBR_KEY_RATE\n\n"
-                "Открыть результаты:\nОткрывает data/processed/reference/."
+                "Открыть результаты:\nОткрывает data/raw/cbr/key_rate_inflation/."
             )
-        if plan.action_id == "cbr-reference-status":
+        if plan.action_id == "cbr-raw-status":
             return (
                 "Что будет выполнено:\n"
-                "Проверка processed daily/monthly/meta и source provenance.\n\n"
+                "Проверка raw latest CSV/meta/registry и source provenance.\n\n"
                 f"Команда:\n{command}\n\n"
                 "Изменяет ли файлы:\nНет, только проверка.\n\n"
                 "Confirm:\nНе требуется.\n\n"
@@ -974,7 +974,7 @@ class OfzAnalyticsGui:
             "minfin-annual-download": "да, controlled raw storage Минфина",
             "minfin-final-replace": "да, annual-final в controlled raw storage",
             "minfin-manual-import": "да, controlled raw storage Минфина",
-            "cbr-key-rate-web-update": "да, generated reference datasets в data/processed/reference/",
+            "cbr-key-rate-web-update": "да, raw latest/version/registry в data/raw/cbr/key_rate_inflation/",
             "pipeline": "да, generated outputs в outputs/",
             "pipeline-stage-zero": "да, generated outputs; raw только если выбран download этапа 0",
             "release-build": "да, releases/",
@@ -1071,6 +1071,8 @@ class OfzAnalyticsGui:
     def _cbr_key_rate_summary(self, plan: ActionPlan, output_tail: str = "") -> str:
         if plan.action_id == "cbr-key-rate-web-update":
             self._refresh_cbr_status(show_errors=False)
+            if "Данные Банка России не изменились" in output_tail:
+                return "Данные Банка России не изменились.\nRaw dataset ключевой ставки уже актуален."
             return plan.user_success_message
         if plan.action_id == "cbr-key-rate-web-dry":
             parsed = self._extract_cbr_parser_summary(output_tail)
@@ -1078,19 +1080,19 @@ class OfzAnalyticsGui:
             if parsed:
                 lines.append(f"Найдено строк: {parsed.get('rows', '-')}.")
                 lines.append(f"Период: {parsed.get('from', '-')} - {parsed.get('to', '-')}.")
-            lines.append("Reference datasets не изменялись.")
+            lines.append("Raw dataset не изменялся.")
             return "\n".join(lines)
-        if plan.action_id == "cbr-reference-status":
+        if plan.action_id == "cbr-raw-status":
             status = self._refresh_cbr_status(show_errors=False)
             return f"{status.status}\n{status.next_step}"
         if plan.action_id == "cbr-key-rate-html-fixture":
-            return "HTML fixture Банка России проверен. Reference datasets не изменялись."
+            return "HTML fixture Банка России проверен. Raw dataset не изменялся."
         if plan.action_id == "cbr-key-rate-xlsx-fallback":
             return (
-                "Reference datasets построены из XLSX fallback. Это legacy-режим. "
+                "XLSX fallback проверен. Это legacy-режим. "
                 "Рекомендуется обновить данные с сайта Банка России."
             )
-        return plan.user_success_message or "Проверка ключевой ставки Банка России завершена. Reference datasets не изменялись."
+        return plan.user_success_message or "Проверка ключевой ставки Банка России завершена. Raw dataset не изменялся."
 
     def _extract_cbr_parser_summary(self, output_tail: str) -> dict[str, str]:
         match = re.search(r"rows=(?P<rows>\d+), from=(?P<from>\d{4}-\d{2}-\d{2}), to=(?P<to>\d{4}-\d{2}-\d{2})", output_tail)
@@ -1151,8 +1153,8 @@ class OfzAnalyticsGui:
                 "Проверьте год, имя файла и источник."
             ),
             "UPDATE_CBR_KEY_RATE": (
-                "Операция обновит generated reference datasets ключевой ставки Банка России в data/processed/reference/. "
-                "Эти файлы не коммитятся, но используются графиком ОФЗ-ПД + ключевая ставка."
+                "Операция обновит raw dataset ключевой ставки Банка России в data/raw/cbr/key_rate_inflation/. "
+                "Latest CSV/meta и registry используются графиком ОФЗ-ПД + ключевая ставка."
             ),
             "BUILD_RELEASE_BUNDLE": "Операция создаст внешний release bundle в ignored releases/.",
             "BUILD_BI_PACKAGE": "Операция создаст внешний BI package в ignored releases/bi/.",
@@ -1245,20 +1247,20 @@ class OfzAnalyticsGui:
     def _refresh_cbr_status(self, show_errors: bool = True) -> None:
         try:
             self._sync_state()
-            status = check_cbr_reference_status(self.state.project_root)
+            status = check_cbr_raw_status(self.state.project_root)
             self._apply_cbr_status(status)
             return status
         except Exception as exc:
-            self.cbr_status_var.set("Reference datasets: не удалось прочитать")
+            self.cbr_status_var.set("Raw dataset: не удалось прочитать")
             if show_errors:
                 self._show_error(exc)
-            return CbrReferenceStatus(
-                status="Reference datasets: не удалось прочитать",
+            return CbrRawStatus(
+                status="Raw dataset: не удалось прочитать",
                 severity="error",
                 next_step="Проверьте log и metadata.",
             )
 
-    def _apply_cbr_status(self, status: CbrReferenceStatus) -> None:
+    def _apply_cbr_status(self, status: CbrRawStatus) -> None:
         severity_label = {
             "ok": "актуально",
             "warning": "требует внимания",
@@ -1278,7 +1280,7 @@ class OfzAnalyticsGui:
         self.cbr_hash_var.set(f"HTML SHA256: {html_sha256[:16] if html_sha256 != '-' else '-'}")
         self.cbr_source_url_var.set(f"Source URL: {status.source_url}")
         self.cbr_source_file_var.set(f"Source file: {status.source_file}")
-        self.cbr_paths_var.set(f"daily/monthly/meta paths: {status.paths_label}")
+        self.cbr_paths_var.set(f"latest/meta/registry paths: {status.paths_label}")
 
     def _choose_project_root(self) -> None:
         selected = filedialog.askdirectory(initialdir=self.project_root_var.get(), parent=self.root)

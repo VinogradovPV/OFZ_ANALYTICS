@@ -1211,14 +1211,48 @@ def ofz_pd_yield_mask(data: pd.DataFrame) -> pd.Series:
 
 
 def ensure_cbr_key_rate_processed(limitations: list[str]) -> pd.DataFrame:
-    """Load generated CBR key rate monthly data without hidden fallback writes."""
-    if not config.CBR_KEY_RATE_MONTHLY_CSV.exists():
+    """Build CBR key rate monthly data in memory from the raw daily latest CSV."""
+    daily_path = config.CBR_KEY_RATE_RAW_DAILY_CSV
+    if not daily_path.exists():
         limitations.append(
-            "CBR key rate reference dataset is missing. Update it from the Bank of Russia GUI tab "
-            "or run scripts/reference_data/cbr_key_rate.py with UPDATE_CBR_KEY_RATE confirmation in GUI."
+            "CBR key rate raw latest dataset is missing. Update it from the Bank of Russia GUI tab "
+            "or run scripts/reference_data/cbr_key_rate.py --download --confirm UPDATE_CBR_KEY_RATE."
         )
         return pd.DataFrame()
-    return pd.read_csv(config.CBR_KEY_RATE_MONTHLY_CSV)
+    try:
+        daily = pd.read_csv(daily_path)
+    except Exception as exc:
+        limitations.append(f"CBR key rate raw latest dataset is unreadable: {exc}")
+        return pd.DataFrame()
+    if list(daily.columns) != ["date", "value"]:
+        limitations.append("CBR key rate raw latest dataset must contain exactly date,value columns.")
+        return pd.DataFrame()
+    daily["date"] = pd.to_datetime(daily["date"], errors="coerce")
+    daily["value"] = pd.to_numeric(daily["value"], errors="coerce")
+    daily = daily.dropna(subset=["date", "value"]).sort_values("date")
+    if daily.empty:
+        limitations.append("CBR key rate raw latest dataset has no valid date/value rows.")
+        return pd.DataFrame()
+    daily["period_month"] = daily["date"].dt.to_period("M").dt.to_timestamp()
+    monthly = daily.groupby("period_month", as_index=False).tail(1).copy()
+    monthly["period_label"] = monthly["period_month"].map(format_ru_month_label)
+    monthly["key_rate_month_end_pct"] = monthly["value"].astype(float)
+    monthly["key_rate_date"] = monthly["date"].dt.strftime("%Y-%m-%d")
+    monthly["key_rate_source_rule"] = "last_available_observation_in_month"
+    monthly["month_end"] = monthly["period_month"] + pd.offsets.MonthEnd(0)
+    requested_to = daily["date"].max()
+    monthly["key_rate_month_is_partial"] = monthly["month_end"] > requested_to
+    monthly["period_month"] = monthly["period_month"].dt.strftime("%Y-%m-01")
+    return monthly[
+        [
+            "period_month",
+            "period_label",
+            "key_rate_month_end_pct",
+            "key_rate_date",
+            "key_rate_source_rule",
+            "key_rate_month_is_partial",
+        ]
+    ].reset_index(drop=True)
 
 
 def format_ru_month_label(value: object) -> str:

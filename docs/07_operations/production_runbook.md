@@ -97,30 +97,32 @@ git ls-files data/raw
 
 Raw hashes фиксируются через raw data registry и run manifest. При production-запуске сверять, что raw-файлы не были заменены случайно.
 
-## 6. Reference datasets Банка России
+## 6. Raw dataset Банка России
 
-Перед построением графика `ofz_pd_yield_key_rate` проверьте reference datasets ключевой ставки на вкладке GUI `Банк России`:
+Перед построением графика `ofz_pd_yield_key_rate` проверьте raw dataset ключевой ставки на вкладке GUI `Банк России`:
 
 1. `Проверить сайт Банка России`.
 2. `Обновить ключевую ставку` с confirm token `UPDATE_CBR_KEY_RATE`.
-3. `Проверить reference datasets`.
+3. `Проверить raw dataset`.
 
-Primary source - `https://cbr.ru/hd_base/KeyRate/`, HTML `table.data` с колонками `Дата` и `Ставка`. Generated files создаются в `data/processed/reference/` и не коммитятся:
+Primary source - `https://cbr.ru/hd_base/KeyRate/`, HTML `table.data` с колонками `Дата` и `Ставка`. Controlled update создает raw latest/registry:
 
 ```text
-data/processed/reference/cbr_key_rate_daily.csv
-data/processed/reference/cbr_key_rate_daily.meta.json
-data/processed/reference/cbr_key_rate_monthly.csv
+data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.csv
+data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.meta.json
+data/raw/cbr/key_rate_inflation/registry/cbr_key_rate_registry.csv
+data/raw/cbr/key_rate_inflation/registry/cbr_key_rate_registry_latest.json
 ```
 
 CLI dry-run для диагностики:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\reference_data\cbr_key_rate.py --source web --from-date 01.01.2019 --to-date 02.07.2026 --dry-run
-.\.venv\Scripts\python.exe scripts\qa\cbr_reference_status_smoke.py --check-current
+.\.venv\Scripts\python.exe scripts\reference_data\cbr_key_rate.py --source web --from-date 01.01.2019 --to-date 02.07.2026 --download --confirm UPDATE_CBR_KEY_RATE
+.\.venv\Scripts\python.exe scripts\qa\cbr_raw_status_smoke.py --check-current
 ```
 
-XLSX fallback является legacy emergency diagnostics. Если metadata указывает на `xlsx_fallback`, отсутствующий `source_file` или legacy path `key_rate_inflation`, обновите key rate с сайта Банка России перед production pipeline.
+XLSX fallback является legacy emergency diagnostics. Если metadata указывает на `xlsx_fallback` или отсутствующий `source_file`, обновите key rate с сайта Банка России перед production pipeline. Старые `data/processed/reference` файлы не считаются production source.
 
 ## 7. Month cumulative pipeline
 

@@ -12,7 +12,7 @@
   - `cbr-key-rate-xlsx-fallback`.
 - В desktop GUI добавлена вкладка `Банк России` сразу после `Исходные данные Минфина`.
 - Вкладка `Банк России` сделана прокручиваемой, чтобы нижние кнопки не обрезались при стандартной высоте окна.
-- Добавлен status reader для `data/processed/reference/cbr_key_rate_daily.csv`, `data/processed/reference/cbr_key_rate_monthly.csv` и `data/processed/reference/cbr_key_rate_daily.meta.json`.
+- Добавлен status reader для `data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.csv`, raw latest meta JSON и raw registry.
 - Добавлены pytest-тесты parser contract и GUI action builder.
 - Добавлена документация workflow: `docs/02_data_pipeline/cbr_key_rate_gui_workflow.md`.
 
@@ -35,9 +35,9 @@
 
 Не коммитились generated artifacts:
 
-- `data/processed/reference/cbr_key_rate_daily.csv`;
-- `data/processed/reference/cbr_key_rate_daily.meta.json`;
-- `data/processed/reference/cbr_key_rate_monthly.csv`;
+- `data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.csv`;
+- `data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.meta.json`;
+- `data/raw/cbr/key_rate_inflation/registry/cbr_key_rate_registry.csv`;
 - `data/processed/`;
 - `outputs/charts/`;
 - `outputs/exports/`;

@@ -34,10 +34,16 @@ CBR_KEY_RATE_BASE_URL = "https://cbr.ru/hd_base/KeyRate/"
 DEFAULT_FROM_DATE = "01.01.2019"
 DEFAULT_TO_DATE = "02.07.2026"
 DEFAULT_USER_AGENT = "OFZ_ANALYTICS/0.1 (+https://github.com/VinogradovPV/OFZ_ANALYTICS)"
-DEFAULT_DAILY_OUTPUT_CSV = config.PROCESSED_DATA_DIR / "reference" / "cbr_key_rate_daily.csv"
-DEFAULT_DAILY_META_JSON = config.PROCESSED_DATA_DIR / "reference" / "cbr_key_rate_daily.meta.json"
-DEFAULT_MONTHLY_OUTPUT_CSV = config.PROCESSED_DATA_DIR / "reference" / "cbr_key_rate_monthly.csv"
+DEFAULT_OUTPUT_ROOT = config.CBR_KEY_RATE_RAW_DIR
+DEFAULT_DAILY_OUTPUT_CSV = config.CBR_KEY_RATE_RAW_DAILY_CSV
+DEFAULT_DAILY_META_JSON = config.CBR_KEY_RATE_RAW_DAILY_META_JSON
+DEFAULT_MONTHLY_OUTPUT_CSV = config.CBR_REFERENCE_DIR / "cbr_key_rate_monthly.csv"
 DEFAULT_HTML_SNAPSHOT = config.OUTPUTS_DIR / "cache" / "cbr_key_rate_page.html"
+CONFIRM_TOKEN = "UPDATE_CBR_KEY_RATE"
+LATEST_DAILY_NAME = "cbr_key_rate_daily.csv"
+LATEST_META_NAME = "cbr_key_rate_daily.meta.json"
+REGISTRY_CSV_NAME = "cbr_key_rate_registry.csv"
+REGISTRY_LATEST_JSON_NAME = "cbr_key_rate_registry_latest.json"
 
 TABLE_HEADERS = ("Дата", "Ставка")
 XLSX_KEY_RATE_COLUMNS = (
@@ -83,6 +89,20 @@ class ParserResult:
 
     observations: list[KeyRateObservation]
     parser: str
+
+
+@dataclass(frozen=True)
+class RawWriteResult:
+    """Summary of a controlled raw dataset write."""
+
+    status: str
+    sha256: str
+    latest_csv: Path
+    latest_meta: Path
+    version_csv: Path | None
+    version_meta: Path | None
+    registry_csv: Path
+    registry_latest_json: Path
 
 
 class CbrTableParser(HTMLParser):
@@ -387,6 +407,30 @@ def format_ru_month_label(value: object) -> str:
     return f"{RU_MONTH_ABBR[int(timestamp.month)]}-{str(int(timestamp.year))[-2:]}"
 
 
+def source_type_for_result(source: str, parser: str) -> str:
+    if source == "web" and parser == "html_table":
+        return "web_table_data"
+    if source == "web" and parser == "highcharts_fallback":
+        return "web_highcharts_fallback"
+    if source == "html-file":
+        return "html_fixture"
+    if source == "xlsx":
+        return "xlsx_fallback"
+    return source
+
+
+def source_rule_for_result(source_type: str, parser: str) -> str:
+    if source_type == "web_table_data" and parser == "html_table":
+        return "exact_daily_site_rows"
+    if parser == "highcharts_fallback":
+        return "highcharts_fallback_rows"
+    if source_type == "xlsx_fallback":
+        return "xlsx_fallback_rows"
+    if source_type == "html_fixture":
+        return "fixture_daily_rows"
+    return "daily_rows"
+
+
 def build_metadata(
     *,
     source_url: str,
@@ -399,6 +443,8 @@ def build_metadata(
     html: str | None,
     row_count: int,
     parser: str,
+    source_rule: str | None = None,
+    sha256: str | None = None,
 ) -> dict[str, Any]:
     return {
         "source_url": source_url,
@@ -411,6 +457,8 @@ def build_metadata(
         "html_sha256": hashlib.sha256(html.encode("utf-8")).hexdigest() if html is not None else None,
         "row_count": row_count,
         "parser": parser,
+        "source_rule": source_rule or source_rule_for_result(source_type, parser),
+        "sha256": sha256,
         "source_parser": parser,
     }
 
@@ -430,6 +478,155 @@ def write_outputs(
     daily.to_csv(daily_output_csv, index=False, encoding="utf-8")
     daily_meta_json.write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     monthly.to_csv(monthly_output_csv, index=False, encoding="utf-8")
+
+
+def daily_csv_bytes(daily: pd.DataFrame) -> bytes:
+    if list(daily.columns) != ["date", "value"]:
+        raise ValueError("CBR key rate daily CSV must contain exactly date,value columns.")
+    return daily.to_csv(index=False, lineterminator="\n").encode("utf-8")
+
+
+def raw_paths(output_root: Path) -> dict[str, Path]:
+    root = Path(output_root)
+    return {
+        "latest_dir": root / "latest",
+        "versions_dir": root / "versions",
+        "registry_dir": root / "registry",
+        "latest_csv": root / "latest" / LATEST_DAILY_NAME,
+        "latest_meta": root / "latest" / LATEST_META_NAME,
+        "registry_csv": root / "registry" / REGISTRY_CSV_NAME,
+        "registry_latest_json": root / "registry" / REGISTRY_LATEST_JSON_NAME,
+    }
+
+
+def relative_path(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(config.PROJECT_ROOT.resolve()).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def write_raw_outputs(
+    *,
+    daily: pd.DataFrame,
+    metadata: dict[str, Any],
+    output_root: Path,
+) -> RawWriteResult:
+    paths = raw_paths(output_root)
+    csv_bytes = daily_csv_bytes(daily)
+    sha256 = hashlib.sha256(csv_bytes).hexdigest()
+    existing_sha256 = hashlib.sha256(paths["latest_csv"].read_bytes()).hexdigest() if paths["latest_csv"].exists() else ""
+    content_changed = existing_sha256 != sha256
+
+    metadata = dict(metadata)
+    metadata["sha256"] = sha256
+    metadata["row_count"] = int(len(daily))
+
+    from_label = str(metadata["from_date"])
+    to_label = str(metadata["to_date"])
+    version_csv = paths["versions_dir"] / f"cbr_key_rate_daily_{from_label}_{to_label}_{sha256[:12]}.csv"
+    version_meta = paths["versions_dir"] / f"cbr_key_rate_daily_{from_label}_{to_label}_{sha256[:12]}.meta.json"
+
+    for directory_key in ("latest_dir", "versions_dir", "registry_dir"):
+        paths[directory_key].mkdir(parents=True, exist_ok=True)
+
+    status = "changed"
+    if content_changed:
+        paths["latest_csv"].write_bytes(csv_bytes)
+        paths["latest_meta"].write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        version_csv.write_bytes(csv_bytes)
+        version_meta.write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    elif not paths["latest_meta"].exists():
+        status = "metadata_repaired"
+        paths["latest_meta"].write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        version_csv = None
+        version_meta = None
+    else:
+        status = "unchanged"
+        version_csv = None
+        version_meta = None
+
+    write_registry(
+        daily=daily,
+        metadata=metadata,
+        sha256=sha256,
+        status=status,
+        latest_csv=paths["latest_csv"],
+        version_csv=version_csv,
+        registry_csv=paths["registry_csv"],
+        registry_latest_json=paths["registry_latest_json"],
+    )
+    return RawWriteResult(
+        status=status,
+        sha256=sha256,
+        latest_csv=paths["latest_csv"],
+        latest_meta=paths["latest_meta"],
+        version_csv=version_csv,
+        version_meta=version_meta,
+        registry_csv=paths["registry_csv"],
+        registry_latest_json=paths["registry_latest_json"],
+    )
+
+
+def write_registry(
+    *,
+    daily: pd.DataFrame,
+    metadata: dict[str, Any],
+    sha256: str,
+    status: str,
+    latest_csv: Path,
+    version_csv: Path | None,
+    registry_csv: Path,
+    registry_latest_json: Path,
+) -> None:
+    latest_row = daily.sort_values("date").iloc[-1]
+    version_path_value = relative_path(version_csv) if version_csv else existing_registry_version_path(registry_csv, sha256)
+    record = {
+        "source_name": "cbr_key_rate_daily",
+        "source_type": metadata.get("source_type"),
+        "from_date": metadata.get("from_date"),
+        "to_date": metadata.get("to_date"),
+        "latest_date": str(latest_row["date"]),
+        "latest_value": float(latest_row["value"]),
+        "row_count": int(len(daily)),
+        "sha256": sha256,
+        "latest_path": relative_path(latest_csv),
+        "version_path": version_path_value,
+        "retrieved_at": metadata.get("retrieved_at"),
+        "source_url": metadata.get("source_url"),
+        "parser": metadata.get("parser"),
+        "is_active": True,
+        "status": status,
+    }
+    if registry_csv.exists():
+        existing = pd.read_csv(registry_csv)
+        existing["is_active"] = False
+        registry = pd.concat([existing, pd.DataFrame([record])], ignore_index=True)
+    else:
+        registry = pd.DataFrame([record])
+    registry.to_csv(registry_csv, index=False, encoding="utf-8", lineterminator="\n")
+    registry_latest_json.write_text(
+        json.dumps({"record": record, "metadata": metadata}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def existing_registry_version_path(registry_csv: Path, sha256: str) -> str:
+    if not registry_csv.exists():
+        return ""
+    try:
+        registry = pd.read_csv(registry_csv)
+    except Exception:
+        return ""
+    if not {"sha256", "version_path"}.issubset(registry.columns):
+        return ""
+    matches = registry.loc[
+        (registry["sha256"].astype(str) == sha256)
+        & registry["version_path"].fillna("").astype(str).ne("")
+    ]
+    if matches.empty:
+        return ""
+    return str(matches.iloc[-1]["version_path"])
 
 
 def run(args: argparse.Namespace) -> int:
@@ -468,7 +665,8 @@ def run(args: argparse.Namespace) -> int:
         raise ValueError(f"Unsupported CBR source: {args.source}")
 
     daily = make_daily_frame(result.observations)
-    monthly = make_monthly_frame(result.observations, to_date)
+    source_type = source_type_for_result(args.source, result.parser)
+    source_rule = source_rule_for_result(source_type, result.parser)
     metadata = build_metadata(
         source_url=source_url,
         source_type=source_type,
@@ -480,28 +678,43 @@ def run(args: argparse.Namespace) -> int:
         html=html,
         row_count=len(daily),
         parser=result.parser,
+        source_rule=source_rule,
     )
 
-    if args.save_html_snapshot and html is not None and not args.dry_run:
+    if args.dry_run and args.download:
+        raise ValueError("--dry-run cannot be combined with --download.")
+    if args.download and args.confirm != CONFIRM_TOKEN:
+        raise ValueError(f"--download requires --confirm {CONFIRM_TOKEN}.")
+
+    if args.save_html_snapshot and html is not None and args.download:
         snapshot_path = Path(args.save_html_snapshot)
         snapshot_path.parent.mkdir(parents=True, exist_ok=True)
         snapshot_path.write_text(html, encoding="utf-8")
 
-    if not args.dry_run:
-        write_outputs(
+    write_result: RawWriteResult | None = None
+    if args.download:
+        write_result = write_raw_outputs(
             daily=daily,
-            monthly=monthly,
             metadata=metadata,
-            daily_output_csv=Path(args.daily_output_csv),
-            daily_meta_json=Path(args.daily_meta_json),
-            monthly_output_csv=Path(args.monthly_output_csv),
+            output_root=Path(args.output_root),
         )
 
     print(
         "CBR key rate parser completed: "
-        f"source={args.source}, parser={result.parser}, rows={len(daily)}, "
-        f"from={daily['date'].min()}, to={daily['date'].max()}, dry_run={args.dry_run}"
+        f"source={args.source}, source_type={source_type}, parser={result.parser}, rows={len(daily)}, "
+        f"from={daily['date'].min()}, to={daily['date'].max()}, dry_run={not args.download}"
     )
+    if write_result is not None:
+        status_label = (
+            "Данные Банка России не изменились"
+            if write_result.status == "unchanged"
+            else "Данные Банка России обновлены"
+        )
+        print(
+            f"{status_label}: write_status={write_result.status}, sha256={write_result.sha256}, "
+            f"latest_csv={write_result.latest_csv}, latest_meta={write_result.latest_meta}, "
+            f"version_csv={write_result.version_csv or '-'}, registry={write_result.registry_csv}"
+        )
     return 0
 
 
@@ -513,10 +726,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--url", help="Override the CBR KeyRate URL.")
     parser.add_argument("--html-file", type=Path, help="Parse a saved CBR KeyRate HTML page.")
     parser.add_argument("--input-file", type=Path, help="Emergency XLSX fallback file.")
-    parser.add_argument("--daily-output-csv", type=Path, default=DEFAULT_DAILY_OUTPUT_CSV)
-    parser.add_argument("--daily-meta-json", type=Path, default=DEFAULT_DAILY_META_JSON)
-    parser.add_argument("--monthly-output-csv", type=Path, default=DEFAULT_MONTHLY_OUTPUT_CSV)
+    parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT, help="Raw CBR key rate output root.")
+    parser.add_argument("--daily-output-csv", type=Path, default=DEFAULT_DAILY_OUTPUT_CSV, help=argparse.SUPPRESS)
+    parser.add_argument("--daily-meta-json", type=Path, default=DEFAULT_DAILY_META_JSON, help=argparse.SUPPRESS)
+    parser.add_argument("--monthly-output-csv", type=Path, default=DEFAULT_MONTHLY_OUTPUT_CSV, help=argparse.SUPPRESS)
     parser.add_argument("--dry-run", action="store_true", help="Parse and validate without writing outputs.")
+    parser.add_argument("--download", action="store_true", help="Write controlled raw latest/version/registry outputs.")
+    parser.add_argument("--confirm", default="", help=f"Required confirmation token for --download: {CONFIRM_TOKEN}.")
     parser.add_argument("--timeout-seconds", type=int, default=30)
     parser.add_argument("--retries", type=int, default=2)
     parser.add_argument("--user-agent", default=DEFAULT_USER_AGENT)

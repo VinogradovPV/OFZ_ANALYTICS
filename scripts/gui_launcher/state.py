@@ -19,16 +19,13 @@ DEFAULT_CBR_HTML_FIXTURE = "scripts/qa/fixtures/cbr/key_rate_page_2019_2026.html
 DEFAULT_CBR_XLSX_FILE = "data/raw/cbr/key_rate/key_rate_fallback.xlsx"
 CBR_PREFERRED_SOURCE_URL = "https://cbr.ru/hd_base/KeyRate/"
 CBR_DAILY_COLUMNS = ("date", "value")
-CBR_MONTHLY_COLUMNS = (
-    "period_month",
-    "period_label",
-    "key_rate_month_end_pct",
-    "key_rate_date",
-    "key_rate_source_rule",
-    "key_rate_month_is_partial",
-)
 CBR_FORBIDDEN_DAILY_COLUMNS = {"inflation", "inflation_yoy", "inflation_target"}
-CBR_LEGACY_SOURCE_MARKER = "data/raw/cbr/key_rate_inflation"
+CBR_RAW_ROOT_RELATIVE = Path("data/raw/cbr/key_rate_inflation")
+CBR_LATEST_DAILY_RELATIVE = CBR_RAW_ROOT_RELATIVE / "latest/cbr_key_rate_daily.csv"
+CBR_LATEST_META_RELATIVE = CBR_RAW_ROOT_RELATIVE / "latest/cbr_key_rate_daily.meta.json"
+CBR_REGISTRY_CSV_RELATIVE = CBR_RAW_ROOT_RELATIVE / "registry/cbr_key_rate_registry.csv"
+CBR_REGISTRY_LATEST_JSON_RELATIVE = CBR_RAW_ROOT_RELATIVE / "registry/cbr_key_rate_registry_latest.json"
+CBR_LEGACY_REFERENCE_RELATIVE = Path("data/processed/reference")
 
 
 def default_report_date() -> str:
@@ -44,8 +41,8 @@ def parse_cbr_gui_date(value: str, field_name: str) -> date:
 
 
 @dataclass(frozen=True)
-class CbrReferenceStatus:
-    """User-facing status for generated Bank of Russia key-rate datasets."""
+class CbrRawStatus:
+    """User-facing status for the raw Bank of Russia key-rate dataset."""
 
     status: str
     severity: str
@@ -60,112 +57,85 @@ class CbrReferenceStatus:
     source_url: str = "-"
     source_file: str = "-"
     html_sha256: str = "-"
-    daily_path: Path | None = None
-    monthly_path: Path | None = None
+    latest_path: Path | None = None
     meta_path: Path | None = None
+    registry_path: Path | None = None
+    registry_latest_path: Path | None = None
 
     @property
     def paths_label(self) -> str:
-        if not (self.daily_path and self.monthly_path and self.meta_path):
+        if not (self.latest_path and self.meta_path and self.registry_path):
             return "-"
-        return f"daily: {self.daily_path} | monthly: {self.monthly_path} | meta: {self.meta_path}"
+        return f"latest: {self.latest_path} | meta: {self.meta_path} | registry: {self.registry_path}"
 
 
-def check_cbr_reference_status(project_root: Path, reference_root: Path | None = None) -> CbrReferenceStatus:
-    """Validate generated CBR reference datasets and their provenance."""
+CbrReferenceStatus = CbrRawStatus
+
+
+def check_cbr_raw_status(project_root: Path, raw_root: Path | None = None) -> CbrRawStatus:
+    """Validate the controlled raw CBR key-rate dataset and registry."""
     root = project_root.resolve()
-    reference_root = reference_root or root / "data/processed/reference"
-    daily_path = reference_root / "cbr_key_rate_daily.csv"
-    monthly_path = reference_root / "cbr_key_rate_monthly.csv"
-    meta_path = reference_root / "cbr_key_rate_daily.meta.json"
+    raw_root = raw_root or root / CBR_RAW_ROOT_RELATIVE
+    latest_path = raw_root / "latest/cbr_key_rate_daily.csv"
+    meta_path = raw_root / "latest/cbr_key_rate_daily.meta.json"
+    registry_path = raw_root / "registry/cbr_key_rate_registry.csv"
+    registry_latest_path = raw_root / "registry/cbr_key_rate_registry_latest.json"
+    legacy_reference_root = root / CBR_LEGACY_REFERENCE_RELATIVE
     common_paths = {
-        "daily_path": daily_path,
-        "monthly_path": monthly_path,
+        "latest_path": latest_path,
         "meta_path": meta_path,
+        "registry_path": registry_path,
+        "registry_latest_path": registry_latest_path,
     }
     checks = [
-        f"daily CSV exists: {'yes' if daily_path.exists() else 'no'}",
-        f"monthly CSV exists: {'yes' if monthly_path.exists() else 'no'}",
+        f"raw latest CSV exists: {'yes' if latest_path.exists() else 'no'}",
         f"meta exists: {'yes' if meta_path.exists() else 'no'}",
+        f"registry CSV exists: {'yes' if registry_path.exists() else 'no'}",
+        f"registry latest JSON exists: {'yes' if registry_latest_path.exists() else 'no'}",
+        f"legacy processed/reference ignored: {'yes' if legacy_reference_root.exists() else 'no'}",
     ]
-    if not daily_path.exists() or not monthly_path.exists() or not meta_path.exists():
-        return CbrReferenceStatus(
-            status="Reference datasets не найдены",
+    if not latest_path.exists():
+        return CbrRawStatus(
+            status="Raw dataset ключевой ставки не найден",
             severity="missing",
             next_step=(
                 "Нажмите 'Проверить сайт Банка России', затем "
                 "'Обновить ключевую ставку'."
             ),
-            checks=tuple(checks + ["source still valid: no"]),
+            checks=tuple(checks + ["production source: missing raw latest"]),
             **common_paths,
         )
 
     try:
-        with daily_path.open("r", encoding="utf-8", newline="") as handle:
+        with latest_path.open("r", encoding="utf-8", newline="") as handle:
             daily_reader = csv.DictReader(handle)
             daily_columns = tuple(daily_reader.fieldnames or ())
             daily_rows = list(daily_reader)
     except Exception as exc:
-        return CbrReferenceStatus(
-            status=f"Daily dataset не читается: {exc}",
+        return CbrRawStatus(
+            status=f"Raw latest CSV не читается: {exc}",
             severity="error",
-            next_step="Пересоздайте reference datasets с сайта Банка России.",
-            checks=tuple(checks + ["source still valid: unknown"]),
+            next_step="Обновите raw dataset ключевой ставки с сайта Банка России.",
+            checks=tuple(checks + ["production source: unreadable raw latest"]),
             **common_paths,
         )
 
     if set(daily_columns).intersection(CBR_FORBIDDEN_DAILY_COLUMNS):
-        return CbrReferenceStatus(
-            status="Daily dataset содержит устаревшие inflation columns",
+        return CbrRawStatus(
+            status="Raw latest CSV содержит устаревшие inflation columns",
             severity="error",
-            next_step="Пересоздайте reference datasets: daily CSV должен содержать только date,value.",
+            next_step="Обновите raw dataset: daily CSV должен содержать только date,value.",
             daily_rows=len(daily_rows),
-            checks=tuple(checks + ["daily columns: invalid", "source still valid: unknown"]),
+            checks=tuple(checks + ["daily columns: invalid"]),
             **common_paths,
         )
     if daily_columns != CBR_DAILY_COLUMNS:
-        return CbrReferenceStatus(
-            status="Daily dataset не соответствует contract",
+        return CbrRawStatus(
+            status="Raw latest CSV не соответствует contract",
             severity="error",
-            next_step="Пересоздайте reference datasets: daily CSV должен содержать строго date,value.",
+            next_step="Обновите raw dataset: daily CSV должен содержать строго date,value.",
             daily_rows=len(daily_rows),
-            checks=tuple(checks + [f"daily columns: {','.join(daily_columns) or '-'}", "source still valid: unknown"]),
-            **common_paths,
-        )
-
-    try:
-        with monthly_path.open("r", encoding="utf-8", newline="") as handle:
-            monthly_reader = csv.DictReader(handle)
-            monthly_columns = tuple(monthly_reader.fieldnames or ())
-    except Exception as exc:
-        return CbrReferenceStatus(
-            status=f"Monthly dataset не читается: {exc}",
-            severity="error",
-            next_step="Пересоздайте monthly reference dataset с сайта Банка России.",
-            daily_rows=len(daily_rows),
-            checks=tuple(checks + ["monthly columns: unreadable", "source still valid: unknown"]),
-            **common_paths,
-        )
-    missing_monthly = [column for column in CBR_MONTHLY_COLUMNS if column not in monthly_columns]
-    if missing_monthly:
-        return CbrReferenceStatus(
-            status="Monthly dataset не соответствует contract",
-            severity="error",
-            next_step="Пересоздайте monthly reference dataset с сайта Банка России.",
-            daily_rows=len(daily_rows),
-            checks=tuple(checks + [f"monthly missing: {', '.join(missing_monthly)}", "source still valid: unknown"]),
-            **common_paths,
-        )
-
-    try:
-        meta = json.loads(meta_path.read_text(encoding="utf-8"))
-    except Exception as exc:
-        return CbrReferenceStatus(
-            status=f"Meta JSON не читается: {exc}",
-            severity="error",
-            next_step="Пересоздайте metadata с сайта Банка России.",
-            daily_rows=len(daily_rows),
-            checks=tuple(checks + ["source still valid: unknown"]),
+            checks=tuple(checks + [f"daily columns: {','.join(daily_columns) or '-'}"]),
             **common_paths,
         )
 
@@ -173,41 +143,73 @@ def check_cbr_reference_status(project_root: Path, reference_root: Path | None =
     latest_value = "-"
     if latest.get("value"):
         latest_value = f"{float(latest['value']):.2f}%"
-    parser = str(meta.get("source_parser") or meta.get("parser") or "-")
+
+    if not meta_path.exists():
+        return CbrRawStatus(
+            status="Raw latest CSV есть, но meta JSON отсутствует",
+            severity="warning",
+            next_step="Повторите update ключевой ставки: он восстановит meta без смены CSV, если данные не изменились.",
+            latest_date=latest.get("date", "-"),
+            latest_value=latest_value,
+            daily_rows=len(daily_rows),
+            checks=tuple(checks + ["meta consistency: missing"]),
+            source_label="raw latest без meta",
+            **common_paths,
+        )
+
+    try:
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return CbrRawStatus(
+            status=f"Meta JSON не читается: {exc}",
+            severity="error",
+            next_step="Обновите raw dataset ключевой ставки с сайта Банка России.",
+            daily_rows=len(daily_rows),
+            checks=tuple(checks + ["meta consistency: unreadable"]),
+            **common_paths,
+        )
+
+    raw_sha256 = _sha256_file(latest_path)
+    meta_sha256 = str(meta.get("sha256") or "")
+    parser = str(meta.get("parser") or meta.get("source_parser") or "-")
     source_type = str(meta.get("source_type") or "")
     source_url = str(meta.get("source_url") or "-")
     source_file = str(meta.get("source_file") or "-")
     retrieved_at = str(meta.get("retrieved_at") or "-")
     html_sha256 = str(meta.get("html_sha256") or "-")
-    legacy_source = _contains_legacy_cbr_path(source_url) or _contains_legacy_cbr_path(source_file)
 
-    if parser == "xlsx_fallback" or source_type == "xlsx_fallback":
-        source_exists = source_file != "-" and (root / source_file).exists()
-        if source_file != "-" and Path(source_file).is_absolute():
-            source_exists = Path(source_file).exists()
-        if source_exists:
-            status = "Reference datasets построены из XLSX fallback"
-            next_step = "Предпочтительно обновить с сайта Банка России."
-            source_valid = "yes"
-        else:
-            status = "Reference datasets есть, но исходный XLSX fallback удален"
-            next_step = "Рекомендуется обновить ключевую ставку с сайта Банка России."
-            source_valid = "no"
-        if legacy_source:
-            status = (
-                "Legacy source path: key_rate_inflation. Инфляция вне scope. "
-                "Рекомендуется обновить web source."
-            ) if source_exists else status
-        return CbrReferenceStatus(
-            status=status,
+    if meta_sha256 and meta_sha256 != raw_sha256:
+        return CbrRawStatus(
+            status="Raw latest CSV и meta JSON имеют разные sha256",
+            severity="error",
+            next_step="Повторите update ключевой ставки с сайта Банка России.",
+            latest_date=latest.get("date", "-"),
+            latest_value=latest_value,
+            daily_rows=len(daily_rows),
+            source_label=source_type or "-",
+            retrieved_at=retrieved_at,
+            checks=tuple(checks + [f"meta sha256: {meta_sha256[:12]}", f"raw sha256: {raw_sha256[:12]}"]),
+            parser=parser,
+            source_url=source_url,
+            source_file=source_file,
+            html_sha256=html_sha256,
+            **common_paths,
+        )
+
+    registry_warning = _registry_warning(registry_path, registry_latest_path, raw_sha256)
+    if source_type == "xlsx_fallback" or parser == "xlsx_fallback":
+        source_exists = source_file not in {"", "-"} and _source_file_exists(root, source_file)
+        source_note = "source file exists" if source_exists else "source file missing"
+        return CbrRawStatus(
+            status=f"Raw dataset построен из XLSX fallback ({source_note})",
             severity="warning",
-            next_step=next_step,
+            next_step="Обновите ключевую ставку с сайта Банка России, чтобы получить web_table_data.",
             latest_date=latest.get("date", "-"),
             latest_value=latest_value,
             daily_rows=len(daily_rows),
             source_label="XLSX fallback legacy",
             retrieved_at=retrieved_at,
-            checks=tuple(checks + [f"source still valid: {source_valid}"]),
+            checks=tuple(checks + [f"source fallback: {source_note}"]),
             parser=parser,
             source_url=source_url,
             source_file=source_file,
@@ -215,20 +217,17 @@ def check_cbr_reference_status(project_root: Path, reference_root: Path | None =
             **common_paths,
         )
 
-    if legacy_source:
-        return CbrReferenceStatus(
-            status=(
-                "Legacy source path: key_rate_inflation. Инфляция вне scope. "
-                "Рекомендуется обновить web source."
-            ),
+    if registry_warning:
+        return CbrRawStatus(
+            status=f"Raw dataset есть, но registry требует внимания: {registry_warning}",
             severity="warning",
-            next_step="Обновите ключевую ставку с сайта Банка России.",
+            next_step="Повторите update ключевой ставки, чтобы синхронизировать registry.",
             latest_date=latest.get("date", "-"),
             latest_value=latest_value,
             daily_rows=len(daily_rows),
-            source_label="legacy source path",
+            source_label=_source_label(source_type, parser),
             retrieved_at=retrieved_at,
-            checks=tuple(checks + ["source still valid: no"]),
+            checks=tuple(checks + [registry_warning]),
             parser=parser,
             source_url=source_url,
             source_file=source_file,
@@ -236,39 +235,17 @@ def check_cbr_reference_status(project_root: Path, reference_root: Path | None =
             **common_paths,
         )
 
-    if parser in {"html_table", "highcharts_fallback"} or source_type == "web":
-        source_ok = source_url.startswith(CBR_PREFERRED_SOURCE_URL)
-        source_label = "сайт Банка России table.data" if parser == "html_table" else "сайт Банка России Highcharts fallback"
-        if source_type == "html_fixture":
-            source_ok = source_file != "-" and (root / source_file).exists()
-            source_label = "HTML fixture"
-        if not source_ok:
-            return CbrReferenceStatus(
-                status="Reference datasets требуют обновления source provenance",
-                severity="warning",
-                next_step="Обновите ключевую ставку с сайта Банка России.",
-                latest_date=latest.get("date", "-"),
-                latest_value=latest_value,
-                daily_rows=len(daily_rows),
-                source_label=source_label,
-                retrieved_at=retrieved_at,
-                checks=tuple(checks + ["source still valid: no"]),
-                parser=parser,
-                source_url=source_url,
-                source_file=source_file,
-                html_sha256=html_sha256,
-                **common_paths,
-            )
-        return CbrReferenceStatus(
-            status="Reference datasets доступны",
+    if source_type == "web_table_data" and parser == "html_table" and source_url.startswith(CBR_PREFERRED_SOURCE_URL):
+        return CbrRawStatus(
+            status="Исходные данные Банка России доступны",
             severity="ok",
             next_step="Можно строить график ОФЗ-ПД + ключевая ставка.",
             latest_date=latest.get("date", "-"),
             latest_value=latest_value,
             daily_rows=len(daily_rows),
-            source_label=source_label,
+            source_label="сайт Банка России table.data",
             retrieved_at=retrieved_at,
-            checks=tuple(checks + ["source still valid: yes"]),
+            checks=tuple(checks + ["production source: raw web_table_data"]),
             parser=parser,
             source_url=source_url,
             source_file=source_file,
@@ -276,16 +253,16 @@ def check_cbr_reference_status(project_root: Path, reference_root: Path | None =
             **common_paths,
         )
 
-    return CbrReferenceStatus(
-        status="Reference datasets требуют проверки provenance",
+    return CbrRawStatus(
+        status="Raw dataset требует проверки provenance",
         severity="warning",
         next_step="Обновите ключевую ставку с сайта Банка России.",
         latest_date=latest.get("date", "-"),
         latest_value=latest_value,
         daily_rows=len(daily_rows),
-        source_label="-",
+        source_label=_source_label(source_type, parser),
         retrieved_at=retrieved_at,
-        checks=tuple(checks + ["source still valid: unknown"]),
+        checks=tuple(checks + ["production source: unexpected provenance"]),
         parser=parser,
         source_url=source_url,
         source_file=source_file,
@@ -294,8 +271,52 @@ def check_cbr_reference_status(project_root: Path, reference_root: Path | None =
     )
 
 
-def _contains_legacy_cbr_path(value: str) -> bool:
-    return CBR_LEGACY_SOURCE_MARKER in value.replace("\\", "/")
+def check_cbr_reference_status(project_root: Path, reference_root: Path | None = None) -> CbrRawStatus:
+    """Compatibility wrapper; production status is raw CBR storage."""
+    return check_cbr_raw_status(project_root, raw_root=reference_root)
+
+
+def _sha256_file(path: Path) -> str:
+    import hashlib
+
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _source_file_exists(root: Path, value: str) -> bool:
+    path = Path(value)
+    return path.exists() if path.is_absolute() else (root / path).exists()
+
+
+def _source_label(source_type: str, parser: str) -> str:
+    if source_type == "web_table_data" and parser == "html_table":
+        return "сайт Банка России table.data"
+    if source_type == "web_highcharts_fallback":
+        return "сайт Банка России Highcharts fallback"
+    if source_type == "html_fixture":
+        return "HTML fixture"
+    if source_type == "xlsx_fallback":
+        return "XLSX fallback legacy"
+    return source_type or parser or "-"
+
+
+def _registry_warning(registry_path: Path, registry_latest_path: Path, sha256: str) -> str:
+    if not registry_path.exists():
+        return "registry CSV missing"
+    if not registry_latest_path.exists():
+        return "registry latest JSON missing"
+    try:
+        payload = json.loads(registry_latest_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return f"registry latest JSON unreadable: {exc}"
+    record = payload.get("record") if isinstance(payload, dict) else None
+    if not isinstance(record, dict):
+        return "registry latest JSON has no record"
+    registry_sha = str(record.get("sha256") or "")
+    if registry_sha != sha256:
+        return "registry sha256 mismatch"
+    if not bool(record.get("is_active", False)):
+        return "registry active flag missing"
+    return ""
 
 
 @dataclass

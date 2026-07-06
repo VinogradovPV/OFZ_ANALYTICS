@@ -52,7 +52,7 @@ def main() -> int:
         "minfin-monthly-download",
         "cbr-key-rate-web-dry",
         "cbr-key-rate-web-update",
-        "cbr-reference-status",
+        "cbr-raw-status",
         "cbr-key-rate-html-fixture",
         "cbr-key-rate-xlsx-fallback",
         "pipeline-stage-zero",
@@ -107,7 +107,9 @@ def main() -> int:
     cbr_advanced_controls = set(CBR_ADVANCED_CONTROL_LABELS)
     assert "Проверить сайт Банка России" in cbr_basic_controls
     assert "Обновить ключевую ставку" in cbr_basic_controls
-    assert "Проверить reference datasets" in cbr_basic_controls
+    assert "Проверить raw dataset" in cbr_basic_controls
+    assert "Открыть raw CBR folder" in cbr_basic_controls
+    assert "Проверить reference datasets" not in cbr_basic_controls
     assert "CBR URL override" not in cbr_basic_controls
     assert "HTML fixture" not in cbr_basic_controls
     assert "HTML SHA256" not in cbr_basic_controls
@@ -165,9 +167,12 @@ def main() -> int:
     assert cbr_web_update.required_confirm == "UPDATE_CBR_KEY_RATE"
     assert cbr_web_update.has_results
     assert "--dry-run" not in cbr_web_update.steps[0].args
-    assert cbr_web_update.result_paths == (root / "data/processed/reference",)
-    cbr_status = registry.build("cbr-reference-status", state)
-    assert any("cbr_reference_status_smoke.py" in arg for arg in cbr_status.steps[0].args)
+    assert "--download" in cbr_web_update.steps[0].args
+    assert "--confirm" in cbr_web_update.steps[0].args
+    assert "UPDATE_CBR_KEY_RATE" in cbr_web_update.steps[0].args
+    assert cbr_web_update.result_paths == (root / "data/raw/cbr/key_rate_inflation",)
+    cbr_status = registry.build("cbr-raw-status", state)
+    assert any("cbr_raw_status_smoke.py" in arg for arg in cbr_status.steps[0].args)
     assert "--check-current" in cbr_status.steps[0].args
     cbr_fixture = registry.build("cbr-key-rate-html-fixture", state)
     assert "--html-file" in cbr_fixture.steps[0].args

@@ -1,0 +1,15 @@
+{
+  "source_url": "https://cbr.ru/hd_base/KeyRate/?UniDbQuery.Posted=True&UniDbQuery.From=01.01.2019&UniDbQuery.To=02.07.2026",
+  "source_type": "web_table_data",
+  "source_file": null,
+  "from_date": "2019-01-01",
+  "to_date": "2026-07-02",
+  "retrieved_at": "2026-07-06T06:19:22Z",
+  "page_last_modified": null,
+  "html_sha256": "709c8b64e15e883f83076871d8b81f262609b2b5ea01f14377be84a1d3f9f685",
+  "row_count": 1894,
+  "parser": "html_table",
+  "source_rule": "exact_daily_site_rows",
+  "sha256": "f8d2d1d74e777c8f9f6abcfed2c8b625c1fb251ca9fe6c413d0acba5f68aa0e0",
+  "source_parser": "html_table"
+}
