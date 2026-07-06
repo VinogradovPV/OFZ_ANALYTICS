@@ -242,7 +242,7 @@ NEXT.16 добавляет controlled visual/data extension без измене�
 
 - text style policy `docs/04_visualization/line_marker_chart_style.md`;
 - primary CBR key-rate source `https://cbr.ru/hd_base/KeyRate/`;
-- web parser `scripts/reference_data/cbr_key_rate.py` с preferred `table.data`;
+- web parser `scripts/reference_data/cbr_key_rate.py` с preferred `table.data`, dynamic default `To date=today` и `latest_available_date=max(date)` из таблицы сайта;
 - raw latest/registry datasets `data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.csv`, `cbr_key_rate_daily.meta.json`, `registry/cbr_key_rate_registry.csv`;
 - legacy XLSX fallback только для аварийной диагностики; inflation вне текущего scope;
 - новый chart family `ofz_pd_yield_key_rate`;

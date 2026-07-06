@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -23,6 +24,8 @@ def test_cbr_gui_actions_build_expected_commands() -> None:
     assert "--dry-run" in web_dry_args
     assert "--from-date" in web_dry_args
     assert "--to-date" in web_dry_args
+    assert web_dry_args[web_dry_args.index("--to-date") + 1] == date.today().strftime("%d.%m.%Y")
+    assert "02.07.2026" not in web_dry_args
 
     html_fixture = registry.build("cbr-key-rate-html-fixture", state)
     html_args = html_fixture.steps[0].args
@@ -59,6 +62,7 @@ def test_cbr_web_update_requires_confirmation_and_has_reference_results() -> Non
     assert "--download" in args
     assert "--confirm" in args
     assert "UPDATE_CBR_KEY_RATE" in args
+    assert "02.07.2026" not in args
     assert plan.result_paths == (ROOT / "data/raw/cbr/key_rate_inflation",)
 
 

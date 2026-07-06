@@ -14,7 +14,6 @@ ALLOWED_AGGREGATION_MODES = {"cumulative", "point"}
 ALLOWED_REGISTRY_MODES = {"off", "warn", "strict"}
 ALLOWED_STAGE_ZERO_MODES = {"off", "dry-run", "download"}
 DEFAULT_CBR_FROM_DATE = "01.01.2019"
-DEFAULT_CBR_TO_DATE = "02.07.2026"
 DEFAULT_CBR_HTML_FIXTURE = "scripts/qa/fixtures/cbr/key_rate_page_2019_2026.html"
 DEFAULT_CBR_XLSX_FILE = "data/raw/cbr/key_rate/key_rate_fallback.xlsx"
 CBR_PREFERRED_SOURCE_URL = "https://cbr.ru/hd_base/KeyRate/"
@@ -33,6 +32,13 @@ def default_report_date() -> str:
     return today.replace(day=1).isoformat()
 
 
+def default_cbr_to_date() -> str:
+    return date.today().strftime("%d.%m.%Y")
+
+
+DEFAULT_CBR_TO_DATE = default_cbr_to_date()
+
+
 def parse_cbr_gui_date(value: str, field_name: str) -> date:
     try:
         return datetime.strptime(value.strip(), "%d.%m.%Y").date()
@@ -49,6 +55,12 @@ class CbrRawStatus:
     next_step: str
     latest_date: str = "-"
     latest_value: str = "-"
+    site_latest_date: str = "-"
+    site_latest_value: str = "-"
+    site_checked_at: str = "-"
+    raw_updated_at: str = "-"
+    requested_to_date: str = "-"
+    freshness_mode: str = "-"
     daily_rows: int = 0
     source_label: str = "-"
     retrieved_at: str = "-"
@@ -72,7 +84,17 @@ class CbrRawStatus:
 CbrReferenceStatus = CbrRawStatus
 
 
-def check_cbr_raw_status(project_root: Path, raw_root: Path | None = None) -> CbrRawStatus:
+def check_cbr_raw_status(
+    project_root: Path,
+    raw_root: Path | None = None,
+    *,
+    site_latest_date: str | None = None,
+    site_latest_value: str | float | None = None,
+    site_checked_at: str | None = None,
+    requested_to_date: str | None = None,
+    site_error: str | None = None,
+    today: date | None = None,
+) -> CbrRawStatus:
     """Validate the controlled raw CBR key-rate dataset and registry."""
     root = project_root.resolve()
     raw_root = raw_root or root / CBR_RAW_ROOT_RELATIVE
@@ -236,10 +258,7 @@ def check_cbr_raw_status(project_root: Path, raw_root: Path | None = None) -> Cb
         )
 
     if source_type == "web_table_data" and parser == "html_table" and source_url.startswith(CBR_PREFERRED_SOURCE_URL):
-        return CbrRawStatus(
-            status="Исходные данные Банка России доступны",
-            severity="ok",
-            next_step="Можно строить график ОФЗ-ПД + ключевая ставка.",
+        return _freshness_status(
             latest_date=latest.get("date", "-"),
             latest_value=latest_value,
             daily_rows=len(daily_rows),
@@ -250,6 +269,12 @@ def check_cbr_raw_status(project_root: Path, raw_root: Path | None = None) -> Cb
             source_url=source_url,
             source_file=source_file,
             html_sha256=html_sha256,
+            requested_to_date=requested_to_date or str(meta.get("requested_to_date") or meta.get("to_date") or "-"),
+            site_latest_date=site_latest_date,
+            site_latest_value=site_latest_value,
+            site_checked_at=site_checked_at,
+            site_error=site_error,
+            today=today,
             **common_paths,
         )
 
@@ -274,6 +299,136 @@ def check_cbr_raw_status(project_root: Path, raw_root: Path | None = None) -> Cb
 def check_cbr_reference_status(project_root: Path, reference_root: Path | None = None) -> CbrRawStatus:
     """Compatibility wrapper; production status is raw CBR storage."""
     return check_cbr_raw_status(project_root, raw_root=reference_root)
+
+
+def _freshness_status(
+    *,
+    latest_date: str,
+    latest_value: str,
+    daily_rows: int,
+    source_label: str,
+    retrieved_at: str,
+    checks: tuple[str, ...],
+    parser: str,
+    source_url: str,
+    source_file: str,
+    html_sha256: str,
+    requested_to_date: str,
+    site_latest_date: str | None,
+    site_latest_value: str | float | None,
+    site_checked_at: str | None,
+    site_error: str | None,
+    today: date | None,
+    latest_path: Path,
+    meta_path: Path,
+    registry_path: Path,
+    registry_latest_path: Path,
+) -> CbrRawStatus:
+    today = today or date.today()
+    parsed_requested_to = _parse_iso_date(requested_to_date)
+    site_value_label = _format_site_value(site_latest_value)
+    common = {
+        "latest_date": latest_date,
+        "latest_value": latest_value,
+        "site_latest_date": site_latest_date or "-",
+        "site_latest_value": site_value_label,
+        "site_checked_at": site_checked_at or "-",
+        "raw_updated_at": retrieved_at,
+        "requested_to_date": requested_to_date or "-",
+        "daily_rows": daily_rows,
+        "source_label": source_label,
+        "retrieved_at": retrieved_at,
+        "checks": checks,
+        "parser": parser,
+        "source_url": source_url,
+        "source_file": source_file,
+        "html_sha256": html_sha256,
+        "latest_path": latest_path,
+        "meta_path": meta_path,
+        "registry_path": registry_path,
+        "registry_latest_path": registry_latest_path,
+    }
+    if parsed_requested_to and parsed_requested_to < today:
+        return CbrRawStatus(
+            status="историческая проверка - актуальность относительно сайта не проверялась",
+            severity="historical",
+            next_step=(
+                f"Проверен диапазон до {requested_to_date}. "
+                "Для проверки актуальности используйте сегодняшнюю дату."
+            ),
+            freshness_mode="historical_range",
+            **common,
+        )
+    if site_error:
+        return CbrRawStatus(
+            status="локальные данные доступны, сайт Банка России не проверен",
+            severity="warning",
+            next_step="Повторите проверку позже.",
+            freshness_mode="site_unavailable",
+            checks=tuple(checks + (f"site check: {site_error}",)),
+            **{key: value for key, value in common.items() if key != "checks"},
+        )
+    if not site_latest_date:
+        return CbrRawStatus(
+            status="локальные данные доступны, сайт Банка России не проверен",
+            severity="warning",
+            next_step="Нажмите 'Проверить сайт Банка России', чтобы сравнить local raw с последней датой сайта.",
+            freshness_mode="site_not_checked",
+            **common,
+        )
+
+    local_date = _parse_iso_date(latest_date)
+    site_date = _parse_iso_date(site_latest_date)
+    if local_date is None or site_date is None:
+        return CbrRawStatus(
+            status="не удалось сравнить local latest date и site latest available date",
+            severity="warning",
+            next_step="Проверьте формат дат в raw latest и ответе сайта.",
+            freshness_mode="comparison_unavailable",
+            **common,
+        )
+    if local_date == site_date:
+        return CbrRawStatus(
+            status="актуально - локальные данные совпадают с последней датой на сайте Банка России",
+            severity="ok",
+            next_step="Можно строить график ОФЗ-ПД + ключевая ставка.",
+            freshness_mode="freshness",
+            **common,
+        )
+    if local_date < site_date:
+        return CbrRawStatus(
+            status="требуется обновление - на сайте Банка России есть более свежие данные",
+            severity="requires_update",
+            next_step='Нажмите "Обновить ключевую ставку".',
+            freshness_mode="freshness",
+            **common,
+        )
+    return CbrRawStatus(
+        status="локальные данные новее ответа сайта",
+        severity="warning",
+        next_step="Проверьте диапазон дат и источник.",
+        freshness_mode="freshness",
+        **common,
+    )
+
+
+def _parse_iso_date(value: str | None) -> date | None:
+    if not value or value == "-":
+        return None
+    try:
+        return date.fromisoformat(str(value)[:10])
+    except ValueError:
+        return None
+
+
+def _format_site_value(value: str | float | None) -> str:
+    if value in {None, "", "-"}:
+        return "-"
+    try:
+        return f"{float(value):.2f}%"
+    except (TypeError, ValueError):
+        text = str(value)
+        return text if text.endswith("%") else f"{text}%"
 
 
 def _sha256_file(path: Path) -> str:
@@ -342,7 +497,7 @@ class GuiState:
     run_schema_before_pipeline: bool = False
     open_outputs_after_run: bool = False
     cbr_from_date: str = DEFAULT_CBR_FROM_DATE
-    cbr_to_date: str = DEFAULT_CBR_TO_DATE
+    cbr_to_date: str = field(default_factory=default_cbr_to_date)
     cbr_url: str = ""
     cbr_html_file: str = DEFAULT_CBR_HTML_FIXTURE
     cbr_xlsx_file: str = DEFAULT_CBR_XLSX_FILE

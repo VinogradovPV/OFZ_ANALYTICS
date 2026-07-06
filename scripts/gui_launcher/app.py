@@ -8,7 +8,7 @@ import re
 import sys
 import tkinter as tk
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from typing import Callable
@@ -17,7 +17,7 @@ from . import actions
 from .actions import ActionPlan, ActionRegistry
 from .command_runner import CommandRunner, RunResult, format_plan
 from .help_text import HELP_TEXT
-from .state import CbrRawStatus, GuiState, check_cbr_raw_status
+from .state import CbrRawStatus, GuiState, check_cbr_raw_status, default_cbr_to_date, parse_cbr_gui_date
 from .widgets import add_action_row, add_info_block, add_intro, add_labeled_combo, add_labeled_entry, make_scrolled_text
 
 
@@ -67,6 +67,8 @@ CBR_ADVANCED_CONTROL_LABELS = (
     "CBR URL override",
     "HTML fixture",
     "Аварийный XLSX fallback, legacy. Не основной источник.",
+    "Сегодня",
+    "To date hint",
     "Timeout seconds",
     "Retries",
     "Save HTML snapshot",
@@ -255,8 +257,13 @@ class OfzAnalyticsGui:
         self.minfin_hash_var = tk.StringVar(value="SHA256: -")
         self.minfin_paths_var = tk.StringVar(value="latest/final/registry: -")
         self.cbr_status_var = tk.StringVar(value="Raw dataset: еще не проверялся")
-        self.cbr_latest_date_var = tk.StringVar(value="Последняя дата ключевой ставки: -")
-        self.cbr_latest_value_var = tk.StringVar(value="Последнее значение: -")
+        self.cbr_latest_date_var = tk.StringVar(value="Локальная последняя дата: -")
+        self.cbr_latest_value_var = tk.StringVar(value="Последнее значение в local raw: -")
+        self.cbr_site_latest_date_var = tk.StringVar(value="Последняя дата на сайте: -")
+        self.cbr_site_latest_value_var = tk.StringVar(value="Последнее значение на сайте: -")
+        self.cbr_site_checked_at_var = tk.StringVar(value="Дата/время последней проверки сайта: -")
+        self.cbr_raw_updated_at_var = tk.StringVar(value="Дата/время последнего обновления raw: -")
+        self.cbr_range_warning_var = tk.StringVar(value="To date: по умолчанию используется сегодняшняя дата.")
         self.cbr_row_count_var = tk.StringVar(value="Строк daily dataset: -")
         self.cbr_source_label_var = tk.StringVar(value="Источник последнего обновления: -")
         self.cbr_retrieved_at_var = tk.StringVar(value="Дата/время последнего обновления: -")
@@ -476,7 +483,12 @@ class OfzAnalyticsGui:
         for variable in (
             self.cbr_status_var,
             self.cbr_latest_date_var,
+            self.cbr_site_latest_date_var,
+            self.cbr_site_latest_value_var,
             self.cbr_latest_value_var,
+            self.cbr_site_checked_at_var,
+            self.cbr_raw_updated_at_var,
+            self.cbr_range_warning_var,
             self.cbr_row_count_var,
             self.cbr_source_label_var,
             self.cbr_retrieved_at_var,
@@ -525,24 +537,31 @@ class OfzAnalyticsGui:
         self.cbr_advanced_frame.columnconfigure(1, weight=1)
         add_labeled_entry(self.cbr_advanced_frame, 0, "From DD.MM.YYYY", self.cbr_from_date_var, 16)
         add_labeled_entry(self.cbr_advanced_frame, 0, "To DD.MM.YYYY", self.cbr_to_date_var, 16, column=2)
-        add_labeled_entry(self.cbr_advanced_frame, 1, "CBR URL override", self.cbr_url_var, 70)
-        add_labeled_entry(self.cbr_advanced_frame, 2, "HTML fixture", self.cbr_html_file_var, 70)
-        ttk.Button(self.cbr_advanced_frame, text="Выбрать HTML", command=self._choose_cbr_html).grid(row=2, column=2, padx=5)
+        ttk.Button(self.cbr_advanced_frame, text="Сегодня", command=self._set_cbr_to_today).grid(row=0, column=4, padx=5)
+        ttk.Label(
+            self.cbr_advanced_frame,
+            text="По умолчанию используется сегодняшняя дата. Для исторической проверки можно указать дату вручную.",
+            wraplength=680,
+            justify="left",
+        ).grid(row=1, column=0, columnspan=5, sticky="w", padx=5, pady=(0, 4))
+        add_labeled_entry(self.cbr_advanced_frame, 2, "CBR URL override", self.cbr_url_var, 70)
+        add_labeled_entry(self.cbr_advanced_frame, 3, "HTML fixture", self.cbr_html_file_var, 70)
+        ttk.Button(self.cbr_advanced_frame, text="Выбрать HTML", command=self._choose_cbr_html).grid(row=3, column=2, padx=5)
         add_labeled_entry(
             self.cbr_advanced_frame,
-            3,
+            4,
             "Аварийный XLSX fallback, legacy. Не основной источник.",
             self.cbr_xlsx_file_var,
             70,
         )
-        ttk.Button(self.cbr_advanced_frame, text="Выбрать XLSX", command=self._choose_cbr_xlsx).grid(row=3, column=2, padx=5)
-        add_labeled_entry(self.cbr_advanced_frame, 4, "Timeout seconds", self.cbr_timeout_var, 10)
-        add_labeled_entry(self.cbr_advanced_frame, 4, "Retries", self.cbr_retries_var, 10, column=2)
+        ttk.Button(self.cbr_advanced_frame, text="Выбрать XLSX", command=self._choose_cbr_xlsx).grid(row=4, column=2, padx=5)
+        add_labeled_entry(self.cbr_advanced_frame, 5, "Timeout seconds", self.cbr_timeout_var, 10)
+        add_labeled_entry(self.cbr_advanced_frame, 5, "Retries", self.cbr_retries_var, 10, column=2)
         ttk.Checkbutton(self.cbr_advanced_frame, text="Save HTML snapshot при web update", variable=self.cbr_save_html_snapshot_var).grid(
-            row=5, column=0, columnspan=2, sticky="w", padx=5, pady=4
+            row=6, column=0, columnspan=2, sticky="w", padx=5, pady=4
         )
         ttk.Checkbutton(self.cbr_advanced_frame, text="No network / использовать fixture", variable=self.cbr_no_network_var).grid(
-            row=5, column=2, columnspan=2, sticky="w", padx=5, pady=4
+            row=6, column=2, columnspan=2, sticky="w", padx=5, pady=4
         )
         for row, variable in enumerate(
             (
@@ -552,13 +571,13 @@ class OfzAnalyticsGui:
                 self.cbr_source_file_var,
                 self.cbr_paths_var,
             ),
-            start=6,
+            start=7,
         ):
             ttk.Label(self.cbr_advanced_frame, textvariable=variable, wraplength=1080, justify="left").grid(
                 row=row, column=0, columnspan=4, sticky="w", padx=5, pady=2
             )
         diagnostics_actions = ttk.Frame(self.cbr_advanced_frame)
-        diagnostics_actions.grid(row=11, column=0, columnspan=3, sticky="ew", padx=0, pady=4)
+        diagnostics_actions.grid(row=12, column=0, columnspan=3, sticky="ew", padx=0, pady=4)
         self._action_row(
             diagnostics_actions,
             "Проверить HTML fixture",
@@ -573,9 +592,9 @@ class OfzAnalyticsGui:
             "cbr-key-rate-xlsx-fallback",
             condition=self._cbr_xlsx_selected,
         )
-        ttk.Button(self.cbr_advanced_frame, text="Открыть metadata JSON", command=lambda: self._open_path(self.state.project_root / "data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.meta.json")).grid(row=12, column=0, sticky="w", padx=5, pady=5)
-        ttk.Button(self.cbr_advanced_frame, text="Открыть CBR contract", command=lambda: self._open_path(self.state.project_root / "docs/02_data_contracts/cbr_key_rate_contract.md")).grid(row=12, column=1, sticky="w", padx=5, pady=5)
-        ttk.Button(self.cbr_advanced_frame, text="Открыть график ОФЗ-ПД + ставка", command=self._open_ofz_pd_key_rate_chart).grid(row=12, column=2, sticky="w", padx=5, pady=5)
+        ttk.Button(self.cbr_advanced_frame, text="Открыть metadata JSON", command=lambda: self._open_path(self.state.project_root / "data/raw/cbr/key_rate_inflation/latest/cbr_key_rate_daily.meta.json")).grid(row=13, column=0, sticky="w", padx=5, pady=5)
+        ttk.Button(self.cbr_advanced_frame, text="Открыть CBR contract", command=lambda: self._open_path(self.state.project_root / "docs/02_data_contracts/cbr_key_rate_contract.md")).grid(row=13, column=1, sticky="w", padx=5, pady=5)
+        ttk.Button(self.cbr_advanced_frame, text="Открыть график ОФЗ-ПД + ставка", command=self._open_ofz_pd_key_rate_chart).grid(row=13, column=2, sticky="w", padx=5, pady=5)
         self._set_cbr_advanced_visibility()
 
     def _build_pipeline_tab(self) -> None:
@@ -808,7 +827,8 @@ class OfzAnalyticsGui:
         self.state.html_file = self.html_file_var.get()
         self.state.manual_file = self.manual_file_var.get()
         self.state.cbr_from_date = self.cbr_from_date_var.get().strip()
-        self.state.cbr_to_date = self.cbr_to_date_var.get().strip()
+        self.state.cbr_to_date = self.cbr_to_date_var.get().strip() or default_cbr_to_date()
+        self.cbr_to_date_var.set(self.state.cbr_to_date)
         self.state.cbr_url = self.cbr_url_var.get().strip()
         self.state.cbr_html_file = self.cbr_html_file_var.get().strip()
         self.state.cbr_xlsx_file = self.cbr_xlsx_file_var.get().strip()
@@ -820,6 +840,7 @@ class OfzAnalyticsGui:
         self.state.run_schema_before_pipeline = self.schema_before_var.get()
         self.state.open_outputs_after_run = self.open_outputs_var.get()
         self.state.validate()
+        self._update_cbr_range_hint()
 
     def _prepare_action(self, action_id: str, confirm_var: tk.StringVar | None = None) -> None:
         try:
@@ -1070,16 +1091,33 @@ class OfzAnalyticsGui:
 
     def _cbr_key_rate_summary(self, plan: ActionPlan, output_tail: str = "") -> str:
         if plan.action_id == "cbr-key-rate-web-update":
-            self._refresh_cbr_status(show_errors=False)
+            parsed = self._extract_cbr_parser_summary(output_tail)
+            self._refresh_cbr_status(
+                show_errors=False,
+                site_latest_date=parsed.get("latest_available_date"),
+                site_latest_value=parsed.get("latest_available_value"),
+                site_checked_at=datetime.now().replace(microsecond=0).isoformat(),
+                requested_to_date=parsed.get("requested_to_date"),
+            )
             if "Данные Банка России не изменились" in output_tail:
                 return "Данные Банка России не изменились.\nRaw dataset ключевой ставки уже актуален."
             return plan.user_success_message
         if plan.action_id == "cbr-key-rate-web-dry":
             parsed = self._extract_cbr_parser_summary(output_tail)
+            if parsed:
+                self._refresh_cbr_status(
+                    show_errors=False,
+                    site_latest_date=parsed.get("latest_available_date"),
+                    site_latest_value=parsed.get("latest_available_value"),
+                    site_checked_at=datetime.now().replace(microsecond=0).isoformat(),
+                    requested_to_date=parsed.get("requested_to_date"),
+                )
             lines = ["Проверка сайта Банка России завершена успешно."]
             if parsed:
                 lines.append(f"Найдено строк: {parsed.get('rows', '-')}.")
                 lines.append(f"Период: {parsed.get('from', '-')} - {parsed.get('to', '-')}.")
+                lines.append(f"Последняя дата на сайте: {parsed.get('latest_available_date', '-')}.")
+                lines.append(f"Последнее значение на сайте: {parsed.get('latest_available_value', '-')}%.")
             lines.append("Raw dataset не изменялся.")
             return "\n".join(lines)
         if plan.action_id == "cbr-raw-status":
@@ -1095,8 +1133,22 @@ class OfzAnalyticsGui:
         return plan.user_success_message or "Проверка ключевой ставки Банка России завершена. Raw dataset не изменялся."
 
     def _extract_cbr_parser_summary(self, output_tail: str) -> dict[str, str]:
-        match = re.search(r"rows=(?P<rows>\d+), from=(?P<from>\d{4}-\d{2}-\d{2}), to=(?P<to>\d{4}-\d{2}-\d{2})", output_tail)
-        return match.groupdict() if match else {}
+        keys = (
+            "rows",
+            "from",
+            "to",
+            "requested_from_date",
+            "requested_to_date",
+            "latest_available_date",
+            "latest_available_value",
+            "check_mode",
+        )
+        parsed: dict[str, str] = {}
+        for key in keys:
+            match = re.search(rf"{key}=(?P<value>[^,\s]+)", output_tail)
+            if match:
+                parsed[key] = match.group("value")
+        return parsed
 
     def _extract_minfin_candidate_from_output(self, output_tail: str) -> dict:
         try:
@@ -1132,6 +1184,31 @@ class OfzAnalyticsGui:
 
     def _cbr_xlsx_selected(self) -> bool:
         return bool(self.cbr_xlsx_file_var.get().strip())
+
+    def _set_cbr_to_today(self) -> None:
+        self.cbr_to_date_var.set(default_cbr_to_date())
+        self._update_cbr_range_hint()
+
+    def _update_cbr_range_hint(self) -> None:
+        raw_value = self.cbr_to_date_var.get().strip()
+        try:
+            parsed = parse_cbr_gui_date(raw_value, "CBR to date")
+        except ValueError:
+            self.cbr_range_warning_var.set("To date: укажите дату в формате DD.MM.YYYY.")
+            return
+        today = date.today()
+        if parsed < today:
+            self.cbr_range_warning_var.set(
+                "Вы проверяете исторический диапазон, не текущую актуальность."
+            )
+        elif parsed > today:
+            self.cbr_range_warning_var.set(
+                "To date позже сегодняшней даты: используйте это только как ручной override."
+            )
+        else:
+            self.cbr_range_warning_var.set(
+                "To date: сегодня; будет проверена актуальность относительно сайта Банка России."
+            )
 
     def _pipeline_stage_zero_ready(self) -> bool:
         mode = STAGE_ZERO_LABEL_TO_MODE.get(self.stage_zero_var.get(), self.stage_zero_var.get())
@@ -1244,10 +1321,26 @@ class OfzAnalyticsGui:
                     return record
         return records[0] if records else None
 
-    def _refresh_cbr_status(self, show_errors: bool = True) -> None:
+    def _refresh_cbr_status(
+        self,
+        show_errors: bool = True,
+        *,
+        site_latest_date: str | None = None,
+        site_latest_value: str | None = None,
+        site_checked_at: str | None = None,
+        requested_to_date: str | None = None,
+        site_error: str | None = None,
+    ) -> CbrRawStatus:
         try:
             self._sync_state()
-            status = check_cbr_raw_status(self.state.project_root)
+            status = check_cbr_raw_status(
+                self.state.project_root,
+                site_latest_date=site_latest_date,
+                site_latest_value=site_latest_value,
+                site_checked_at=site_checked_at,
+                requested_to_date=requested_to_date,
+                site_error=site_error,
+            )
             self._apply_cbr_status(status)
             return status
         except Exception as exc:
@@ -1266,10 +1359,16 @@ class OfzAnalyticsGui:
             "warning": "требует внимания",
             "error": "ошибка",
             "missing": "требует обновления",
+            "requires_update": "требуется обновление",
+            "historical": "историческая проверка",
         }.get(status.severity, status.severity)
         self.cbr_status_var.set(f"Статус: {severity_label} - {status.status}")
-        self.cbr_latest_date_var.set(f"Последняя дата ключевой ставки: {status.latest_date}")
-        self.cbr_latest_value_var.set(f"Последнее значение: {status.latest_value}")
+        self.cbr_latest_date_var.set(f"Локальная последняя дата: {status.latest_date}")
+        self.cbr_site_latest_date_var.set(f"Последняя дата на сайте: {status.site_latest_date}")
+        self.cbr_site_latest_value_var.set(f"Последнее значение на сайте: {status.site_latest_value}")
+        self.cbr_latest_value_var.set(f"Последнее значение в local raw: {status.latest_value}")
+        self.cbr_site_checked_at_var.set(f"Дата/время последней проверки сайта: {status.site_checked_at}")
+        self.cbr_raw_updated_at_var.set(f"Дата/время последнего обновления raw: {status.raw_updated_at or status.retrieved_at}")
         self.cbr_row_count_var.set(f"Строк daily dataset: {status.daily_rows if status.daily_rows else '-'}")
         self.cbr_source_label_var.set(f"Источник последнего обновления: {status.source_label}")
         self.cbr_retrieved_at_var.set(f"Дата/время последнего обновления: {status.retrieved_at}")

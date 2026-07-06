@@ -116,7 +116,9 @@ Pipeline stage 0 показывает radio buttons:
 3. `Проверить raw dataset` - проверяет raw latest CSV/meta/registry и source provenance.
 4. `Открыть raw CBR folder` - открывает `data/raw/cbr/key_rate_inflation/`.
 
-Основной статус показывает: актуальность, последнюю дату и значение ставки, количество строк daily dataset, источник последнего обновления, время обновления, краткую проверку файлов и следующий шаг.
+`To date` по умолчанию заполняется сегодняшней локальной датой. Кнопка `Сегодня` возвращает поле к текущей дате. Если оператор вручную указывает прошлую дату, GUI показывает предупреждение: это historical range check, а не проверка текущей актуальности.
+
+Основной статус показывает: актуальность, локальную последнюю дату, последнюю дату на сайте, последнее значение на сайте, последнее значение в local raw, время последней проверки сайта, время обновления raw, количество строк daily dataset, источник последнего обновления, краткую проверку файлов и следующий шаг.
 
 `Показать расширенную диагностику` раскрывает технические поля: `CBR URL override`, `HTML fixture`, аварийный `XLSX fallback`, timeout, retries, HTML snapshot, no-network fixture mode, parser, HTML SHA256, source URL/source file и пути latest/meta/registry. XLSX fallback подписан как legacy emergency mode и не является основным источником.
 
@@ -128,6 +130,9 @@ Status validation проверяет не только наличие raw CSV/JS
 - если fallback XLSX удален после генерации datasets, GUI показывает warning и рекомендует обновить web source;
 - old `data/processed/reference` является только диагностикой и не может дать production OK при отсутствующем raw latest;
 - daily CSV должен содержать строго `date,value`;
+- статус `актуально` появляется только после сравнения local latest date с latest available date из `table.data` сайта Банка России;
+- если сайт недоступен, GUI пишет warning и не называет raw актуальным;
+- если local latest date меньше site latest available date, GUI пишет `требуется обновление`.
 
 Нижняя панель для CBR dry-run явно пишет, что raw dataset не изменяется и `Открыть результаты` недоступно. Для update она показывает raw latest/version/registry, confirm token и открывает папку `data/raw/cbr/key_rate_inflation/`.
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import inspect
+from datetime import date
 from pathlib import Path
 
 if __package__ in {None, ""}:
@@ -116,6 +117,8 @@ def main() -> int:
     assert "CBR URL override" in cbr_advanced_controls
     assert "HTML fixture" in cbr_advanced_controls
     assert "Аварийный XLSX fallback, legacy. Не основной источник." in cbr_advanced_controls
+    assert "Сегодня" in cbr_advanced_controls
+    assert "To date hint" in cbr_advanced_controls
     assert "Timeout seconds" in cbr_advanced_controls
     assert "Retries" in cbr_advanced_controls
     assert "HTML SHA256" in cbr_advanced_controls
@@ -157,6 +160,8 @@ def main() -> int:
     assert cbr_web_dry.steps[0].args[:3] == (str(state.python_executable), "scripts/reference_data/cbr_key_rate.py", "--source")
     assert "web" in cbr_web_dry.steps[0].args
     assert "--dry-run" in cbr_web_dry.steps[0].args
+    assert cbr_web_dry.steps[0].args[cbr_web_dry.steps[0].args.index("--to-date") + 1] == date.today().strftime("%d.%m.%Y")
+    assert "02.07.2026" not in cbr_web_dry.steps[0].args
     assert not cbr_web_dry.has_results
     expect_error(
         ConfirmationRequiredError,
@@ -170,7 +175,12 @@ def main() -> int:
     assert "--download" in cbr_web_update.steps[0].args
     assert "--confirm" in cbr_web_update.steps[0].args
     assert "UPDATE_CBR_KEY_RATE" in cbr_web_update.steps[0].args
+    assert "02.07.2026" not in cbr_web_update.steps[0].args
     assert cbr_web_update.result_paths == (root / "data/raw/cbr/key_rate_inflation",)
+    state.cbr_to_date = "02.07.2026"
+    historical = registry.build("cbr-key-rate-web-dry", state)
+    assert historical.steps[0].args[historical.steps[0].args.index("--to-date") + 1] == "02.07.2026"
+    state.cbr_to_date = date.today().strftime("%d.%m.%Y")
     cbr_status = registry.build("cbr-raw-status", state)
     assert any("cbr_raw_status_smoke.py" in arg for arg in cbr_status.steps[0].args)
     assert "--check-current" in cbr_status.steps[0].args

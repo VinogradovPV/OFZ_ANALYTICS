@@ -32,7 +32,6 @@ from scripts import config  # noqa: E402
 
 CBR_KEY_RATE_BASE_URL = "https://cbr.ru/hd_base/KeyRate/"
 DEFAULT_FROM_DATE = "01.01.2019"
-DEFAULT_TO_DATE = "02.07.2026"
 DEFAULT_USER_AGENT = "OFZ_ANALYTICS/0.1 (+https://github.com/VinogradovPV/OFZ_ANALYTICS)"
 DEFAULT_OUTPUT_ROOT = config.CBR_KEY_RATE_RAW_DIR
 DEFAULT_DAILY_OUTPUT_CSV = config.CBR_KEY_RATE_RAW_DAILY_CSV
@@ -89,6 +88,14 @@ class ParserResult:
 
     observations: list[KeyRateObservation]
     parser: str
+
+
+@dataclass(frozen=True)
+class LatestAvailable:
+    """Latest available key-rate observation detected in the parsed source."""
+
+    date: date
+    value: float
 
 
 @dataclass(frozen=True)
@@ -176,6 +183,11 @@ def build_cbr_key_rate_url(from_date: str, to_date: str) -> str:
         }
     )
     return f"{CBR_KEY_RATE_BASE_URL}?{query}"
+
+
+def default_to_date() -> str:
+    """Return the local operator date in CBR query format."""
+    return date.today().strftime("%d.%m.%Y")
 
 
 def parse_cbr_query_date(value: str) -> date:
@@ -328,6 +340,20 @@ def validate_observations(observations: list[KeyRateObservation]) -> list[KeyRat
     return sorted(observations, key=lambda item: item.date)
 
 
+def latest_available(observations: list[KeyRateObservation]) -> LatestAvailable:
+    if not observations:
+        raise ValueError("CBR key rate observations are empty.")
+    latest = max(observations, key=lambda item: item.date)
+    return LatestAvailable(latest.date, latest.value)
+
+
+def check_mode_for_to_date(to_date: date, today: date | None = None) -> str:
+    today = today or date.today()
+    if to_date < today:
+        return "historical_range"
+    return "freshness"
+
+
 def cross_check_observations(
     table_observations: list[KeyRateObservation],
     chart_observations: list[KeyRateObservation],
@@ -443,6 +469,8 @@ def build_metadata(
     html: str | None,
     row_count: int,
     parser: str,
+    latest_available_date: date | None = None,
+    latest_available_value: float | None = None,
     source_rule: str | None = None,
     sha256: str | None = None,
 ) -> dict[str, Any]:
@@ -452,6 +480,9 @@ def build_metadata(
         "source_file": source_file,
         "from_date": from_date.isoformat(),
         "to_date": to_date.isoformat(),
+        "requested_to_date": to_date.isoformat(),
+        "latest_available_date": latest_available_date.isoformat() if latest_available_date else None,
+        "latest_available_value": latest_available_value,
         "retrieved_at": retrieved_at.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "page_last_modified": page_last_modified,
         "html_sha256": hashlib.sha256(html.encode("utf-8")).hexdigest() if html is not None else None,
@@ -665,6 +696,8 @@ def run(args: argparse.Namespace) -> int:
         raise ValueError(f"Unsupported CBR source: {args.source}")
 
     daily = make_daily_frame(result.observations)
+    latest_on_site = latest_available(result.observations)
+    check_mode = check_mode_for_to_date(to_date)
     source_type = source_type_for_result(args.source, result.parser)
     source_rule = source_rule_for_result(source_type, result.parser)
     metadata = build_metadata(
@@ -678,6 +711,8 @@ def run(args: argparse.Namespace) -> int:
         html=html,
         row_count=len(daily),
         parser=result.parser,
+        latest_available_date=latest_on_site.date,
+        latest_available_value=latest_on_site.value,
         source_rule=source_rule,
     )
 
@@ -702,7 +737,11 @@ def run(args: argparse.Namespace) -> int:
     print(
         "CBR key rate parser completed: "
         f"source={args.source}, source_type={source_type}, parser={result.parser}, rows={len(daily)}, "
-        f"from={daily['date'].min()}, to={daily['date'].max()}, dry_run={not args.download}"
+        f"from={daily['date'].min()}, to={daily['date'].max()}, "
+        f"requested_from_date={from_date.isoformat()}, requested_to_date={to_date.isoformat()}, "
+        f"latest_available_date={latest_on_site.date.isoformat()}, "
+        f"latest_available_value={latest_on_site.value:.2f}, check_mode={check_mode}, "
+        f"dry_run={not args.download}"
     )
     if write_result is not None:
         status_label = (
@@ -722,7 +761,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Fetch and normalize Bank of Russia key rate data.")
     parser.add_argument("--source", choices=["web", "html-file", "xlsx"], default="web")
     parser.add_argument("--from-date", default=DEFAULT_FROM_DATE, help="Start date in DD.MM.YYYY format.")
-    parser.add_argument("--to-date", default=DEFAULT_TO_DATE, help="End date in DD.MM.YYYY format.")
+    parser.add_argument("--to-date", default=default_to_date(), help="End date in DD.MM.YYYY format; default is today.")
     parser.add_argument("--url", help="Override the CBR KeyRate URL.")
     parser.add_argument("--html-file", type=Path, help="Parse a saved CBR KeyRate HTML page.")
     parser.add_argument("--input-file", type=Path, help="Emergency XLSX fallback file.")

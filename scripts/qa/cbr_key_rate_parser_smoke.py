@@ -18,6 +18,9 @@ from scripts.reference_data.cbr_key_rate import (  # noqa: E402
     TABLE_HEADERS,
     build_metadata,
     build_cbr_key_rate_url,
+    check_mode_for_to_date,
+    default_to_date,
+    latest_available,
     make_daily_frame,
     make_monthly_frame,
     parse_cbr_key_rate_html,
@@ -75,6 +78,9 @@ def check_parser_contract(html: str) -> None:
 
     values_by_date = {item.date: item.value for item in observations}
     assert_equal(values_by_date[date(2026, 7, 2)], 14.25, "Decimal comma was not parsed as 14.25")
+    latest = latest_available(observations)
+    assert_equal(latest.date, date(2026, 7, 2), "Latest available date must be max(date)")
+    assert_equal(latest.value, 14.25, "Latest available value mismatch")
 
     daily = make_daily_frame(observations)
     assert_equal(list(daily.columns), ["date", "value"], "Daily columns must be exactly date,value")
@@ -108,13 +114,43 @@ def check_parser_contract(html: str) -> None:
         html=html,
         row_count=len(daily),
         parser=result.parser,
+        latest_available_date=latest.date,
+        latest_available_value=latest.value,
         source_rule="exact_daily_site_rows",
     )
     assert_equal(metadata["source_type"], "web_table_data", "Metadata source_type mismatch")
     assert_equal(metadata["source_file"], None, "Metadata source_file mismatch")
     assert_equal(metadata["source_parser"], "html_table", "Metadata source_parser mismatch")
+    assert_equal(metadata["requested_to_date"], "2026-07-02", "Metadata requested_to_date mismatch")
+    assert_equal(metadata["latest_available_date"], "2026-07-02", "Metadata latest_available_date mismatch")
+    assert_equal(metadata["latest_available_value"], 14.25, "Metadata latest_available_value mismatch")
     assert_equal(metadata["source_rule"], "exact_daily_site_rows", "Metadata source_rule mismatch")
     assert_true(bool(metadata["html_sha256"]), "Metadata html_sha256 is empty")
+
+
+def check_latest_available_from_table_data() -> None:
+    html = f"""
+    <html><body>
+      <table class="data">
+        <tr><th>{TABLE_HEADERS[0]}</th><th>{TABLE_HEADERS[1]}</th></tr>
+        <tr><td>02.07.2026</td><td>14,25</td></tr>
+        <tr><td>06.07.2026</td><td>14,25</td></tr>
+        <tr><td>03.07.2026</td><td>14,25</td></tr>
+      </table>
+    </body></html>
+    """
+    result = parse_cbr_key_rate_html(html)
+    dates = [item.date for item in result.observations]
+    assert_equal(dates, sorted(dates), "Parser must sort table rows ascending")
+    latest = latest_available(result.observations)
+    assert_equal(latest.date, date(2026, 7, 6), "Parser did not detect max table.data date")
+    assert_equal(latest.value, 14.25, "Latest available value must come from max(date) row")
+
+
+def check_dynamic_to_date_and_modes() -> None:
+    assert_equal(default_to_date(), date.today().strftime("%d.%m.%Y"), "Default CBR To date must be today")
+    assert_equal(check_mode_for_to_date(date(2026, 7, 2), date(2026, 7, 6)), "historical_range", "Historical mode mismatch")
+    assert_equal(check_mode_for_to_date(date(2026, 7, 6), date(2026, 7, 6)), "freshness", "Freshness mode mismatch")
 
 
 def check_dry_run_does_not_write() -> None:
@@ -176,6 +212,8 @@ def check_download_writes_raw_storage() -> None:
         meta = json.loads(latest_meta.read_text(encoding="utf-8"))
         assert_equal(meta["source_type"], "html_fixture", "HTML fixture source_type mismatch")
         assert_equal(meta["parser"], "html_table", "Parser metadata mismatch")
+        assert_equal(meta["latest_available_date"], "2026-07-02", "Latest available metadata mismatch")
+        assert_equal(meta["latest_available_value"], 14.25, "Latest available value metadata mismatch")
         assert_true(bool(meta["sha256"]), "Metadata sha256 is empty")
 
         second = subprocess.run(command, cwd=ROOT, check=True, capture_output=True, text=True, encoding="utf-8", errors="replace")
@@ -191,6 +229,8 @@ def main() -> int:
     check_url_builder()
     check_fixture_shape(html)
     check_parser_contract(html)
+    check_latest_available_from_table_data()
+    check_dynamic_to_date_and_modes()
     check_dry_run_does_not_write()
     check_download_writes_raw_storage()
     print("CBR key rate parser smoke passed: fixture rows=8, monthly rule=last_available_observation_in_month")

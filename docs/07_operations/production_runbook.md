@@ -117,10 +117,12 @@ data/raw/cbr/key_rate_inflation/registry/cbr_key_rate_registry_latest.json
 CLI dry-run для диагностики:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\reference_data\cbr_key_rate.py --source web --from-date 01.01.2019 --to-date 02.07.2026 --dry-run
-.\.venv\Scripts\python.exe scripts\reference_data\cbr_key_rate.py --source web --from-date 01.01.2019 --to-date 02.07.2026 --download --confirm UPDATE_CBR_KEY_RATE
+.\.venv\Scripts\python.exe scripts\reference_data\cbr_key_rate.py --source web --from-date 01.01.2019 --to-date <TODAY_DD.MM.YYYY> --dry-run
+.\.venv\Scripts\python.exe scripts\reference_data\cbr_key_rate.py --source web --from-date 01.01.2019 --to-date <TODAY_DD.MM.YYYY> --download --confirm UPDATE_CBR_KEY_RATE
 .\.venv\Scripts\python.exe scripts\qa\cbr_raw_status_smoke.py --check-current
 ```
+
+`To date` по умолчанию равен сегодняшней локальной дате. Parser сообщает `latest_available_date` и `latest_available_value` из HTML `table.data`; GUI считает raw актуальным только если local latest date совпадает с latest available date сайта. Historical `To date` допустим для проверки диапазона, но не подтверждает текущую актуальность.
 
 XLSX fallback является legacy emergency diagnostics. Если metadata указывает на `xlsx_fallback` или отсутствующий `source_file`, обновите key rate с сайта Банка России перед production pipeline. Старые `data/processed/reference` файлы не считаются production source.
 

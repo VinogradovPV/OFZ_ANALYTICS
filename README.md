@@ -84,6 +84,8 @@ Parser поддерживает источники `web`, `html-file` и emergen
 
 В desktop GUI workflow ключевой ставки доступен на вкладке `Банк России`, сразу после вкладки `Исходные данные Минфина`. Основной сценарий: `Проверить сайт Банка России` -> `Обновить ключевую ставку` -> `Проверить raw dataset`. Действие `Обновить ключевую ставку` требует точного подтверждения `UPDATE_CBR_KEY_RATE` и создает raw latest/registry files в `data/raw/cbr/key_rate_inflation/`.
 
+`To date` по умолчанию равен сегодняшней локальной дате оператора. Parser определяет `latest_available_date` и `latest_available_value` как строку с максимальной датой в HTML `table.data`; именно эти поля используются для проверки актуальности. GUI пишет `актуально` только если local raw latest date совпадает с latest date сайта Банка России. Если сайт не проверен или недоступен, статус остается warning, а historical `To date` помечается как проверка диапазона, не как текущая актуальность.
+
 Вкладка показывает статус source provenance: web `table.data`, HTML fixture, XLSX fallback legacy, missing fallback source и legacy processed/reference diagnostics различаются явно. Если raw latest отсутствует, старые `data/processed/reference` файлы не считаются production OK. Если raw latest построен из fallback XLSX, GUI показывает warning и рекомендует обновить ключевую ставку с сайта Банка России.
 
 Offline QA fixture и smoke для parser-а:
