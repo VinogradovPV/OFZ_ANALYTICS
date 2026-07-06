@@ -390,6 +390,8 @@ def format_ru_month_label(value: object) -> str:
 def build_metadata(
     *,
     source_url: str,
+    source_type: str,
+    source_file: str | None = None,
     from_date: date,
     to_date: date,
     retrieved_at: datetime,
@@ -400,6 +402,8 @@ def build_metadata(
 ) -> dict[str, Any]:
     return {
         "source_url": source_url,
+        "source_type": source_type,
+        "source_file": source_file,
         "from_date": from_date.isoformat(),
         "to_date": to_date.isoformat(),
         "retrieved_at": retrieved_at.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
@@ -407,6 +411,7 @@ def build_metadata(
         "html_sha256": hashlib.sha256(html.encode("utf-8")).hexdigest() if html is not None else None,
         "row_count": row_count,
         "parser": parser,
+        "source_parser": parser,
     }
 
 
@@ -434,6 +439,8 @@ def run(args: argparse.Namespace) -> int:
         raise ValueError("--from-date must be less than or equal to --to-date.")
 
     source_url = args.url or build_cbr_key_rate_url(args.from_date, args.to_date)
+    source_type = "web"
+    source_file: str | None = None
     retrieved_at = datetime.now(UTC)
     page_last_modified = None
     html: str | None = None
@@ -446,11 +453,16 @@ def run(args: argparse.Namespace) -> int:
     elif args.source == "html-file":
         if args.html_file is None:
             raise ValueError("--html-file is required when --source html-file.")
+        source_type = "html_fixture"
+        source_file = Path(args.html_file).as_posix()
         html = Path(args.html_file).read_text(encoding="utf-8")
         result = parse_cbr_key_rate_html(html)
     elif args.source == "xlsx":
         if args.input_file is None:
             raise ValueError("--input-file is required when --source xlsx.")
+        source_type = "xlsx_fallback"
+        source_file = Path(args.input_file).as_posix()
+        source_url = ""
         result = read_xlsx_key_rate(Path(args.input_file))
     else:
         raise ValueError(f"Unsupported CBR source: {args.source}")
@@ -459,6 +471,8 @@ def run(args: argparse.Namespace) -> int:
     monthly = make_monthly_frame(result.observations, to_date)
     metadata = build_metadata(
         source_url=source_url,
+        source_type=source_type,
+        source_file=source_file,
         from_date=from_date,
         to_date=to_date,
         retrieved_at=retrieved_at,

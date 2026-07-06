@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 import re
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Sequence
 
@@ -42,13 +42,6 @@ if __package__ in {None, ""}:
         apply_reference_line_marker_trace,
         build_collision_safe_value_annotations,
     )
-    from scripts.reference_data.cbr_key_rate import (
-        build_metadata as build_cbr_key_rate_metadata,
-        make_daily_frame as make_cbr_key_rate_daily_frame,
-        make_monthly_frame as make_cbr_key_rate_monthly_frame,
-        read_xlsx_key_rate,
-        write_outputs as write_cbr_key_rate_outputs,
-    )
 else:
     from . import config, palette, report_params, scatter_chart_policy, utils
     from .charts.common import (
@@ -68,13 +61,6 @@ else:
         apply_reference_line_marker_layout,
         apply_reference_line_marker_trace,
         build_collision_safe_value_annotations,
-    )
-    from .reference_data.cbr_key_rate import (
-        build_metadata as build_cbr_key_rate_metadata,
-        make_daily_frame as make_cbr_key_rate_daily_frame,
-        make_monthly_frame as make_cbr_key_rate_monthly_frame,
-        read_xlsx_key_rate,
-        write_outputs as write_cbr_key_rate_outputs,
     )
 
 
@@ -1162,17 +1148,6 @@ def build_ofz_pd_yield_key_rate_chart(
                     "key_rate_available",
                 ]
             ],
-            hovertemplate=(
-                "Месяц: %{customdata[0]}<br>"
-                "Максимальная доходность ОФЗ-ПД: %{customdata[1]:.2f}%<br>"
-                "Минимальная доходность ОФЗ-ПД: %{customdata[2]:.2f}%<br>"
-                "Ключевая ставка Банка России: %{customdata[3]:.1f}%<br>"
-                "Инфляция, г/г: %{customdata[4]:.2f}%<br>"
-                "Цель по инфляции: %{customdata[5]:.1f}%<br>"
-                "Наблюдений ОФЗ-ПД: %{customdata[6]}<br>"
-                "Контур доходности: %{customdata[7]}<br>"
-                "Ключевая ставка доступна: %{customdata[8]}<extra></extra>"
-            ),
         )
         trace.update(
             hovertemplate=(
@@ -1236,38 +1211,13 @@ def ofz_pd_yield_mask(data: pd.DataFrame) -> pd.Series:
 
 
 def ensure_cbr_key_rate_processed(limitations: list[str]) -> pd.DataFrame:
-    """Load reference CBR key rate monthly data, creating XLSX fallback outputs when needed."""
+    """Load generated CBR key rate monthly data without hidden fallback writes."""
     if not config.CBR_KEY_RATE_MONTHLY_CSV.exists():
-        if not config.CBR_KEY_RATE_RAW_XLSX.exists():
-            limitations.append(f"CBR key rate raw XLSX not found: {config.CBR_KEY_RATE_RAW_XLSX}.")
-            return pd.DataFrame()
-        result = read_xlsx_key_rate(config.CBR_KEY_RATE_RAW_XLSX)
-        daily = make_cbr_key_rate_daily_frame(result.observations)
-        to_date = max(observation.date for observation in result.observations)
-        from_date = min(observation.date for observation in result.observations)
-        monthly = make_cbr_key_rate_monthly_frame(result.observations, to_date)
-        metadata = build_cbr_key_rate_metadata(
-            source_url=config.CBR_KEY_RATE_RAW_XLSX.as_posix(),
-            from_date=from_date,
-            to_date=to_date,
-            retrieved_at=datetime.now(UTC),
-            page_last_modified=None,
-            html=None,
-            row_count=len(daily),
-            parser=result.parser,
-        )
-        write_cbr_key_rate_outputs(
-            daily=daily,
-            monthly=monthly,
-            metadata=metadata,
-            daily_output_csv=config.CBR_KEY_RATE_DAILY_CSV,
-            daily_meta_json=config.CBR_KEY_RATE_DAILY_META_JSON,
-            monthly_output_csv=config.CBR_KEY_RATE_MONTHLY_CSV,
-        )
         limitations.append(
-            "CBR key rate reference datasets were generated lazily from the emergency XLSX fallback; "
-            "processed reference CSV/JSON files are generated artifacts and must not be staged."
+            "CBR key rate reference dataset is missing. Update it from the Bank of Russia GUI tab "
+            "or run scripts/reference_data/cbr_key_rate.py with UPDATE_CBR_KEY_RATE confirmation in GUI."
         )
+        return pd.DataFrame()
     return pd.read_csv(config.CBR_KEY_RATE_MONTHLY_CSV)
 
 

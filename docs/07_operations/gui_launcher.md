@@ -1,6 +1,6 @@
 # Desktop GUI launcher OFZ Analytics
 
-Дата актуализации: 2026-06-22.
+Дата актуализации: 2026-07-06.
 
 ## Установка и запуск
 
@@ -39,13 +39,14 @@ Wrappers содержат только поиск project root/entry point, UTF-
 
 1. `Обзор`: папка проекта, дата отчета, параметры расчета, статус окружения, environment check и read-only Git status.
 2. `Исходные данные Минфина`: простой сценарий проверки сайта, monthly update, annual-final, registry review и отдельные advanced-блоки для manual import/debug.
-3. `Pipeline`: один основной запуск pipeline и понятный выбор этапа 0 Минфина через radio buttons.
-4. `Проверки качества`: базовые, расширенные и source acquisition проверки, сгруппированные по назначению.
-5. `Отчеты и графики`: основные результаты, ключевые ручные проверки и диагностические артефакты.
-6. `Release и пакеты`: отдельные карточки release bundle и BI package.
-7. `Обслуживание`: безопасная диагностика, открытие папок и отдельная зона очистки outputs.
-8. `Журнал`: live output, время старта/завершения, exit code, log path, stop/copy/open actions.
-9. `Справка`: русское объяснение workflow, параметров, confirm tokens и artifact policy.
+3. `Банк России`: сценарий проверки и обновления reference datasets ключевой ставки.
+4. `Pipeline`: один основной запуск pipeline и понятный выбор этапа 0 Минфина через radio buttons.
+5. `Проверки качества`: базовые, расширенные и source acquisition проверки, сгруппированные по назначению.
+6. `Отчеты и графики`: основные результаты, ключевые ручные проверки и диагностические артефакты.
+7. `Release и пакеты`: отдельные карточки release bundle и BI package.
+8. `Обслуживание`: безопасная диагностика, открытие папок и отдельная зона очистки outputs.
+9. `Журнал`: live output, время старта/завершения, exit code, log path, stop/copy/open actions.
+10. `Справка`: русское объяснение workflow, параметров, confirm tokens и artifact policy.
 
 Кнопки на вкладках запускают выбранные действия напрямую. Нижняя панель показывает технические детали: что будет выполнено, команда, изменяет ли action файлы, нужен ли confirm, log path и ожидаемый результат. Нижняя кнопка `Повторить выбранное действие` нужна только для повторного запуска уже выбранного action; копировать команду в консоль не требуется.
 
@@ -74,6 +75,7 @@ Typed confirm tokens:
 | Monthly/annual-final download | `DOWNLOAD_MINFIN_SOURCE` |
 | Changed final replacement | `REPLACE_MINFIN_FINAL` |
 | Manual import | `IMPORT_MINFIN_FILE` |
+| CBR key rate update | `UPDATE_CBR_KEY_RATE` |
 | Release bundle build | `BUILD_RELEASE_BUNDLE` |
 | BI package build | `BUILD_BI_PACKAGE` |
 | Delete outputs | `DELETE_OUTPUTS` |
@@ -102,6 +104,33 @@ Pipeline stage 0 показывает radio buttons:
 - `Download с подтверждением`.
 
 Если stage 0 или optional schema validation завершились с ошибкой, pipeline не запускается.
+
+## Банк России
+
+Вкладка `Банк России` работает только с ключевой ставкой Банка России. Инфляция и цель по инфляции вне scope. Primary source - страница `https://cbr.ru/hd_base/KeyRate/`, preferred parser source - HTML `table.data` с колонками `Дата` и `Ставка`.
+
+Основной сценарий:
+
+1. `Проверить сайт Банка России` - dry-run web parser, ничего не пишет.
+2. `Обновить ключевую ставку` - пишет generated files в `data/processed/reference/` и требует `UPDATE_CBR_KEY_RATE`.
+3. `Проверить reference datasets` - проверяет daily/monthly/meta и source provenance.
+4. `Открыть reference folder` - открывает `data/processed/reference/`.
+
+Основной статус показывает: актуальность, последнюю дату и значение ставки, количество строк daily dataset, источник последнего обновления, время обновления, краткую проверку файлов и следующий шаг.
+
+`Показать расширенную диагностику` раскрывает технические поля: `CBR URL override`, `HTML fixture`, аварийный `XLSX fallback`, timeout, retries, HTML snapshot, no-network fixture mode, parser, HTML SHA256, source URL/source file и пути daily/monthly/meta. XLSX fallback подписан как legacy emergency mode и не является основным источником.
+
+Status validation проверяет не только наличие generated CSV/JSON, но и provenance:
+
+- web `table.data` считается нормальным source, если metadata указывает на `cbr.ru/hd_base/KeyRate/`;
+- HTML fixture показывается отдельно как diagnostic source;
+- `xlsx_fallback` всегда warning;
+- если fallback XLSX удален после генерации datasets, GUI показывает warning и рекомендует обновить web source;
+- legacy path `key_rate_inflation` помечается как warning, потому что inflation вне текущего scope;
+- daily CSV должен содержать строго `date,value`;
+- monthly CSV должен содержать `period_month`, `period_label`, `key_rate_month_end_pct`, `key_rate_date`, `key_rate_source_rule`, `key_rate_month_is_partial`.
+
+Нижняя панель для CBR dry-run явно пишет, что файлы не изменяются и `Открыть результаты` недоступно. Для update она показывает generated files, confirm token и открывает папку `data/processed/reference/`.
 
 ## Проверки качества
 

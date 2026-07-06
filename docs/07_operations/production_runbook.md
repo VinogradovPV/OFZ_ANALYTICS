@@ -1,6 +1,6 @@
 # Production runbook
 
-Дата актуализации: 2026-06-08.
+Дата актуализации: 2026-07-06.
 
 Runbook описывает повторяемый production-запуск OFZ_ANALYTICS после стабилизации Git, artifact policy, CLI entry points и cleanup workflow.
 
@@ -97,7 +97,32 @@ git ls-files data/raw
 
 Raw hashes фиксируются через raw data registry и run manifest. При production-запуске сверять, что raw-файлы не были заменены случайно.
 
-## 6. Month cumulative pipeline
+## 6. Reference datasets Банка России
+
+Перед построением графика `ofz_pd_yield_key_rate` проверьте reference datasets ключевой ставки на вкладке GUI `Банк России`:
+
+1. `Проверить сайт Банка России`.
+2. `Обновить ключевую ставку` с confirm token `UPDATE_CBR_KEY_RATE`.
+3. `Проверить reference datasets`.
+
+Primary source - `https://cbr.ru/hd_base/KeyRate/`, HTML `table.data` с колонками `Дата` и `Ставка`. Generated files создаются в `data/processed/reference/` и не коммитятся:
+
+```text
+data/processed/reference/cbr_key_rate_daily.csv
+data/processed/reference/cbr_key_rate_daily.meta.json
+data/processed/reference/cbr_key_rate_monthly.csv
+```
+
+CLI dry-run для диагностики:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\reference_data\cbr_key_rate.py --source web --from-date 01.01.2019 --to-date 02.07.2026 --dry-run
+.\.venv\Scripts\python.exe scripts\qa\cbr_reference_status_smoke.py --check-current
+```
+
+XLSX fallback является legacy emergency diagnostics. Если metadata указывает на `xlsx_fallback`, отсутствующий `source_file` или legacy path `key_rate_inflation`, обновите key rate с сайта Банка России перед production pipeline.
+
+## 7. Month cumulative pipeline
 
 Базовый production-сценарий:
 
@@ -111,7 +136,7 @@ Fallback:
 .\.venv\Scripts\python.exe scripts\run_pipeline.py --all --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-## 7. Year cumulative pipeline
+## 8. Year cumulative pipeline
 
 ```powershell
 ofz-run --all --report-date 2026-01-01 --retrospective-years 4 --period-type year --aggregation-mode cumulative
@@ -123,7 +148,7 @@ Fallback:
 .\.venv\Scripts\python.exe scripts\run_pipeline.py --all --report-date 2026-01-01 --retrospective-years 4 --period-type year --aggregation-mode cumulative
 ```
 
-## 8. Interactive pipeline
+## 9. Interactive pipeline
 
 ```powershell
 ofz-interactive
@@ -137,7 +162,7 @@ Fallback:
 
 Interactive launcher перед запуском проверяет generated outputs. Если outputs не пустые, он предлагает оставить outputs, выполнить dry-run cleanup, архивировать и очистить, очистить без архива или отменить запуск. Launcher не удаляет файлы напрямую: cleanup делегируется `scripts/maintenance/cleanup_outputs.py`.
 
-## 9. Очистка outputs
+## 10. Очистка outputs
 
 Dry-run:
 
@@ -167,7 +192,7 @@ Fallback:
 
 Полная очистка outputs удаляет generated artifacts, кроме сохраненного archive. Запускать только после dry-run и проверки archive policy.
 
-## 10. Quality gate
+## 11. Quality gate
 
 Schema validation:
 
@@ -194,7 +219,7 @@ Fallback:
 .\.venv\Scripts\python.exe scripts\quality_gate.py --fast --report-date 2026-05-01 --retrospective-years 4 --period-type month --aggregation-mode cumulative
 ```
 
-## 11. Если `schema_validation` failed
+## 12. Если `schema_validation` failed
 
 1. Не править generated CSV вручную.
 2. Открыть `docs/02_data_contracts/` и `scripts/schema_validation.py`.
@@ -205,7 +230,7 @@ Fallback:
 
 Особое правило: поля `*_volume_bln` должны иметь unit-поля со значением `млрд рублей`.
 
-## 12. Если `quality_gate` failed
+## 13. Если `quality_gate` failed
 
 1. Прочитать `docs/06_quality/quality_gate_report.md`.
 2. Разделить ошибку на data/schema/chart/visual/docs/scripts.
@@ -214,7 +239,7 @@ Fallback:
 5. Не коммитить generated outputs.
 6. Повторить `ofz-quality --fast`.
 
-## 13. Если `visual_regression` failed
+## 14. Если `visual_regression` failed
 
 1. Проверить, это screenshot backend или fallback Plotly JSON inspection.
 2. Открыть failing HTML chart локально.
@@ -222,14 +247,14 @@ Fallback:
 4. Исправить chart generator.
 5. Пересобрать графики и повторить `ofz-quality --fast`.
 
-## 14. Если Excel заблокирован
+## 15. Если Excel заблокирован
 
 1. Закрыть Excel/LibreOffice/preview pane.
 2. Убедиться, что нет временных файлов `~$*.xlsx`.
 3. Не менять `data/raw/` вручную.
 4. Повторить stage после снятия блокировки.
 
-## 15. Процедура обновления raw data
+## 16. Процедура обновления raw data
 
 1. Добавить новый raw-файл в `data/raw/`.
 2. Проверить размер и отсутствие временных файлов.
@@ -238,7 +263,7 @@ Fallback:
 5. Запустить pipeline и quality gate.
 6. Коммитить raw source dataset только если данные не конфиденциальны и нужны для воспроизводимости.
 
-## 16. Run manifest
+## 17. Run manifest
 
 Искать в:
 
@@ -283,7 +308,7 @@ Telemetry counters after NEXT.5:
 
 Old broad counters such as `generated_artifacts_count` and `input_row_counts.raw_files` remain for backward compatibility, but operator performance review should prefer the scoped counters above.
 
-## 17. Релизный пакет
+## 18. Релизный пакет
 
 Generated outputs не коммитятся. Для аудита конкретного запуска собрать release bundle / external artifact:
 
@@ -319,7 +344,7 @@ Fallback:
 
 Bundle creates `release_manifest.json` and `release_manifest.md` under ignored `releases/`. Manifest records Git commit, branch, dirty flag, raw file hashes, included file checksums, QA/schema status, visual regression mode and warning summary.
 
-## 17.2 Использование UI launcher
+## 18.2 Использование UI launcher
 
 CLI remains the main supported production interface. UI launchers are convenience wrappers and must call only approved CLI entry points:
 
@@ -361,7 +386,7 @@ outputs/reports/launcher/launcher_run_<timestamp>.log
 
 UI launchers do not replace quality gate. Before release, run the checklist QA commands directly through CLI or through an explicitly selected launcher action. Do not run fast and full quality gates in parallel.
 
-## 18. Статус docs cleanup
+## 19. Статус docs cleanup
 
 Физическое архивирование docs отложено.
 
@@ -371,7 +396,7 @@ UI launchers do not replace quality gate. Before release, run the checklist QA c
 - archive only after references are resolved;
 - `--delete-archived` запрещен до production-ready v1.
 
-## 19. Статус scripts archive
+## 20. Статус scripts archive
 
 Физическое архивирование legacy scripts отложено.
 
@@ -381,7 +406,7 @@ UI launchers do not replace quality gate. Before release, run the checklist QA c
 - 5 archive candidates kept until P2;
 - no physical moves before production-ready v1.
 
-## 20. Статус module decomposition
+## 21. Статус module decomposition
 
 План существует:
 
@@ -389,7 +414,7 @@ UI launchers do not replace quality gate. Before release, run the checklist QA c
 
 Физическая декомпозиция является P2-only. До P2 не переносить основные scripts и не ломать wrapper compatibility.
 
-## 21. Git workflow
+## 22. Git workflow
 
 Перед каждым этапом:
 

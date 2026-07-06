@@ -259,7 +259,10 @@ def registry() -> dict[str, ActionDefinition]:
             "Проверить сайт Банка России без записи reference datasets.",
             lambda state: (cbr_key_rate_step(state, "CBR key rate web dry-run", "web", dry_run=True),),
             user_success_message="Проверка сайта Банка России завершена. Reference datasets не изменялись.",
-            user_failure_hint="Проверка сайта Банка России завершилась ошибкой. Используйте HTML fixture или XLSX fallback для offline-диагностики.",
+            user_failure_hint=(
+                "Сайт Банка России недоступен. Reference datasets не изменялись. "
+                "Можно использовать HTML fixture в расширенной диагностике."
+            ),
         ),
         "cbr-key-rate-web-update": ActionDefinition(
             "cbr-key-rate-web-update",
@@ -267,14 +270,29 @@ def registry() -> dict[str, ActionDefinition]:
             lambda state: (cbr_key_rate_step(state, "CBR key rate web update", "web", dry_run=False),),
             "UPDATE_CBR_KEY_RATE",
             result_paths=lambda state: (
-                state.project_root / "data/processed/reference/cbr_key_rate_daily.csv",
-                state.project_root / "data/processed/reference/cbr_key_rate_monthly.csv",
-                state.project_root / "data/processed/reference/cbr_key_rate_daily.meta.json",
+                state.project_root / "data/processed/reference",
             ),
             result_label="CBR reference datasets",
-            user_success_message="Reference datasets ключевой ставки Банка России обновлены.",
+            user_success_message=(
+                "Ключевая ставка Банка России обновлена.\n"
+                "Daily dataset: date/value.\n"
+                "Monthly dataset: последнее доступное наблюдение месяца.\n"
+                "Следующий шаг: построить график ОФЗ-ПД + ключевая ставка."
+            ),
             user_failure_hint="Обновление ключевой ставки Банка России завершилось ошибкой. Проверьте журнал и при необходимости используйте fixture/fallback.",
             mutation_summary="Создает generated reference datasets в data/processed/reference/.",
+        ),
+        "cbr-reference-status": ActionDefinition(
+            "cbr-reference-status",
+            "Проверить generated reference datasets ключевой ставки Банка России и provenance.",
+            lambda state: (
+                python_step(state, "CBR reference status", "scripts/qa/cbr_reference_status_smoke.py", "--check-current"),
+            ),
+            user_success_message="Reference datasets ключевой ставки Банка России проверены.",
+            user_failure_hint=(
+                "Проверка reference datasets завершилась ошибкой. "
+                "Обновите ключевую ставку с сайта Банка России или проверьте metadata."
+            ),
         ),
         "cbr-key-rate-html-fixture": ActionDefinition(
             "cbr-key-rate-html-fixture",
@@ -287,7 +305,10 @@ def registry() -> dict[str, ActionDefinition]:
             "cbr-key-rate-xlsx-fallback",
             "Проверить аварийный XLSX fallback Банка России без записи reference datasets.",
             lambda state: (cbr_key_rate_step(state, "CBR key rate XLSX fallback", "xlsx", dry_run=True),),
-            user_success_message="XLSX fallback Банка России успешно проверен. Reference datasets не изменялись.",
+            user_success_message=(
+                "Reference datasets построены из XLSX fallback. Это legacy-режим. "
+                "Рекомендуется обновить данные с сайта Банка России."
+            ),
             user_failure_hint="XLSX fallback Банка России не прошел проверку. Проверьте путь и обязательные колонки.",
         ),
         "pipeline": ActionDefinition(

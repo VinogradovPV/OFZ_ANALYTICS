@@ -736,6 +736,12 @@
 |---|---|---|---|
 | 2026-07-02 | Подписи значений `ofz_pd_yield_key_rate` переведены на shared collision-aware annotations в `scripts/charts/line_marker_style.py`: порог `max(0.25 п.п., 2.5% диапазона Y)`, верхние близкие подписи разводятся по разным lanes, минимальная доходность остается снизу, key rate форматируется с двумя знаками. | OK: прошли `py_compile`, `line_marker_style_smoke.py`, `line_marker_label_collision_smoke.py`, `ofz-run`, `html_chart_qa.py`, `visual_regression.py --mode auto` для текущего report scope, `ofz_pd_yield_metrics_regression.py`, `compileall`, `check_text_encoding.py`, `ofz-quality --fast`. | Изменяется только placement labels line-marker графика. Visual regression использовал fallback из-за недоступного screenshot backend в managed-среде. Source registry default policy не менялась. Generated outputs, logs, releases, `.ofz_launcher`, `data/processed`, raw CBR XLSX и raw versions не staging. |
 
+## 2026-07-06 - CBR GUI workflow and status provenance
+
+| Дата | Что проверено | Результат | Ограничения |
+|---|---|---|---|
+| 2026-07-06 | Вкладка `Банк России` переведена на сценарий web source -> update -> reference status; технические поля перенесены в `Расширенную диагностику`; status validation проверяет daily/monthly/meta, web/html/xlsx provenance, missing fallback source и legacy `key_rate_inflation` path. Chart flow больше не создает reference datasets скрыто из legacy XLSX fallback. | OK: прошли `py_compile`, `compileall`, `check_text_encoding.py`, `cbr_key_rate_parser_smoke.py`, `cbr_reference_status_smoke.py`, `gui_launcher_smoke.py`, `gui_command_runner_smoke.py`, `gui_launcher_wrapper_smoke.py`, `ofz-gui --smoke`, pytest для CBR GUI/parser и live CBR web dry-run вне sandbox (`rows=1894`, `parser=html_table`). | Generated `data/processed/reference`, outputs, logs, releases, `.ofz_launcher`, raw fallback XLSX и untracked local outputs не staging. GitHub Actions не проверяются в рамках этой инструкции. |
+
 ## 2026-07-02 - Этап I OFZ-PD single-period boxplot fallback
 
 | Дата | Что проверено | Результат | Ограничения |

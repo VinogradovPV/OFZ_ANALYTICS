@@ -1,6 +1,6 @@
 # Контракт источника ключевой ставки Банка России
 
-Дата актуализации: 2026-07-02.
+Дата актуализации: 2026-07-06.
 
 ## Назначение
 
@@ -8,7 +8,7 @@
 
 В scope входит только ключевая ставка Банка России. Инфляция, цель по инфляции и любые поля `inflation_yoy` / `inflation_target` не входят в этот контракт.
 
-Текущий pipeline может временно использовать ручной XLSX fallback, но целевая модель хранения web parser должна соответствовать этому документу.
+XLSX fallback остается только аварийным legacy-режимом диагностики. Основной workflow использует web parser страницы Банка России и не должен скрыто генерировать reference datasets из legacy XLSX.
 
 Desktop GUI использует этот же contract на вкладке `Банк России`, расположенной сразу после вкладки `Исходные данные Минфина`. GUI не вводит отдельную модель данных: dry-run действия только проверяют источник, а update с подтверждением `UPDATE_CBR_KEY_RATE` пишет generated reference datasets в `data/processed/reference/`.
 
@@ -146,6 +146,8 @@ data/processed/reference/cbr_key_rate_daily.meta.json
 | Поле | Тип | Nullable | Правило |
 |---|---|---:|---|
 | `source_url` | string | no | Фактический URL страницы Банка России с параметрами периода. |
+| `source_type` | string | no | `web`, `html_fixture` или `xlsx_fallback`. |
+| `source_file` | string | yes | Локальный fixture/fallback path, если source не web. |
 | `from_date` | date | no | Начало requested period, ISO `YYYY-MM-DD`. |
 | `to_date` | date | no | Конец requested period, ISO `YYYY-MM-DD`. |
 | `retrieved_at` | datetime | no | UTC-время получения источника. |
@@ -153,6 +155,7 @@ data/processed/reference/cbr_key_rate_daily.meta.json
 | `html_sha256` | string | yes | SHA256 HTML-снимка, если source web/html. |
 | `row_count` | integer | no | Количество строк в daily CSV. |
 | `parser` | string | no | `html_table` или `highcharts_fallback`. |
+| `source_parser` | string | no | Дублирует parser для GUI/status checks; для legacy fallback значение `xlsx_fallback`. |
 
 Metadata JSON является generated artifact и не коммитится.
 
@@ -238,7 +241,7 @@ Hover/note графика должны явно сообщать:
 
 ## Fallback XLSX
 
-XLSX допускается только как временный manual fallback до завершения web parser или при недоступности сайта Банка России.
+XLSX допускается только как аварийная ручная диагностика при недоступности сайта Банка России или изменении HTML. Он не является основным source и не должен быть visible default workflow.
 
 Fallback не меняет целевую модель хранения:
 
@@ -246,6 +249,22 @@ Fallback не меняет целевую модель хранения:
 - monthly derived view строится по `last_available_observation_in_month`;
 - inflation-поля не входят в контракт key rate;
 - raw XLSX не добавляется в Git без отдельного approval.
+
+Если datasets были построены из `xlsx_fallback`, metadata должна содержать `source_type=xlsx_fallback`, `source_parser=xlsx_fallback` и `source_file`. GUI/status validation обязан проверить, существует ли `source_file`. Если source file удален после генерации datasets, статус должен быть warning: processed datasets есть, но provenance больше невалиден.
+
+Legacy path `data/raw/cbr/key_rate_inflation/...` является историческим source path для модели key rate + inflation. В текущем контракте он должен отображаться только как legacy/out-of-scope warning.
+
+## GUI status validation
+
+Вкладка `Банк России` проверяет:
+
+- наличие `cbr_key_rate_daily.csv`, `cbr_key_rate_monthly.csv`, `cbr_key_rate_daily.meta.json`;
+- daily columns строго `date,value`;
+- отсутствие daily columns `inflation`, `inflation_yoy`, `inflation_target`;
+- monthly columns `period_month`, `period_label`, `key_rate_month_end_pct`, `key_rate_date`, `key_rate_source_rule`, `key_rate_month_is_partial`;
+- source provenance: web URL Банка России, HTML fixture, XLSX fallback, missing fallback source и legacy `key_rate_inflation` path.
+
+Статус не должен писать, что datasets "не изменились", если проверялось только наличие processed files. Для dry-run сайта допустим текст: `Reference datasets не изменялись`.
 
 ## QA expectations
 

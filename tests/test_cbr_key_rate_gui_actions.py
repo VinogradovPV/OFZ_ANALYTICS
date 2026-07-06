@@ -38,6 +38,12 @@ def test_cbr_gui_actions_build_expected_commands() -> None:
     assert "--input-file" in xlsx_args
     assert "--dry-run" in xlsx_args
 
+    status = registry.build("cbr-reference-status", state)
+    status_args = status.steps[0].args
+    assert "scripts/qa/cbr_reference_status_smoke.py" in status_args
+    assert "--check-current" in status_args
+    assert not status.has_results
+
 
 def test_cbr_web_update_requires_confirmation_and_has_reference_results() -> None:
     state = GuiState(project_root=ROOT)
@@ -50,11 +56,7 @@ def test_cbr_web_update_requires_confirmation_and_has_reference_results() -> Non
     args = plan.steps[0].args
     assert plan.required_confirm == "UPDATE_CBR_KEY_RATE"
     assert "--dry-run" not in args
-    assert plan.result_paths == (
-        ROOT / "data/processed/reference/cbr_key_rate_daily.csv",
-        ROOT / "data/processed/reference/cbr_key_rate_monthly.csv",
-        ROOT / "data/processed/reference/cbr_key_rate_daily.meta.json",
-    )
+    assert plan.result_paths == (ROOT / "data/processed/reference",)
 
 
 def test_importing_gui_app_does_not_start_network() -> None:

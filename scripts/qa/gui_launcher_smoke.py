@@ -15,6 +15,8 @@ from scripts.gui_launcher.actions import (
     UnknownActionError,
 )
 from scripts.gui_launcher.app import (
+    CBR_ADVANCED_CONTROL_LABELS,
+    CBR_BASIC_CONTROL_LABELS,
     MINFIN_ADVANCED_CONTROL_LABELS,
     MINFIN_BASIC_CONTROL_LABELS,
     NO_RESULT_POPUP_TEXT,
@@ -50,6 +52,7 @@ def main() -> int:
         "minfin-monthly-download",
         "cbr-key-rate-web-dry",
         "cbr-key-rate-web-update",
+        "cbr-reference-status",
         "cbr-key-rate-html-fixture",
         "cbr-key-rate-xlsx-fallback",
         "pipeline-stage-zero",
@@ -100,6 +103,22 @@ def main() -> int:
     assert "No network" in advanced_controls
     assert "Max pages" in advanced_controls
     assert "Replace changed final" in advanced_controls
+    cbr_basic_controls = set(CBR_BASIC_CONTROL_LABELS)
+    cbr_advanced_controls = set(CBR_ADVANCED_CONTROL_LABELS)
+    assert "Проверить сайт Банка России" in cbr_basic_controls
+    assert "Обновить ключевую ставку" in cbr_basic_controls
+    assert "Проверить reference datasets" in cbr_basic_controls
+    assert "CBR URL override" not in cbr_basic_controls
+    assert "HTML fixture" not in cbr_basic_controls
+    assert "HTML SHA256" not in cbr_basic_controls
+    assert "CBR URL override" in cbr_advanced_controls
+    assert "HTML fixture" in cbr_advanced_controls
+    assert "Аварийный XLSX fallback, legacy. Не основной источник." in cbr_advanced_controls
+    assert "Timeout seconds" in cbr_advanced_controls
+    assert "Retries" in cbr_advanced_controls
+    assert "HTML SHA256" in cbr_advanced_controls
+    assert "key_rate_inflation" not in " ".join(cbr_basic_controls)
+    assert "inflation" not in " ".join(cbr_basic_controls).lower()
 
     monthly = registry.build("minfin-monthly-offline", state)
     assert "--no-network" in monthly.steps[0].args
@@ -136,6 +155,7 @@ def main() -> int:
     assert cbr_web_dry.steps[0].args[:3] == (str(state.python_executable), "scripts/reference_data/cbr_key_rate.py", "--source")
     assert "web" in cbr_web_dry.steps[0].args
     assert "--dry-run" in cbr_web_dry.steps[0].args
+    assert not cbr_web_dry.has_results
     expect_error(
         ConfirmationRequiredError,
         lambda: registry.build("cbr-key-rate-web-update", state),
@@ -145,6 +165,10 @@ def main() -> int:
     assert cbr_web_update.required_confirm == "UPDATE_CBR_KEY_RATE"
     assert cbr_web_update.has_results
     assert "--dry-run" not in cbr_web_update.steps[0].args
+    assert cbr_web_update.result_paths == (root / "data/processed/reference",)
+    cbr_status = registry.build("cbr-reference-status", state)
+    assert any("cbr_reference_status_smoke.py" in arg for arg in cbr_status.steps[0].args)
+    assert "--check-current" in cbr_status.steps[0].args
     cbr_fixture = registry.build("cbr-key-rate-html-fixture", state)
     assert "--html-file" in cbr_fixture.steps[0].args
     assert "--dry-run" in cbr_fixture.steps[0].args

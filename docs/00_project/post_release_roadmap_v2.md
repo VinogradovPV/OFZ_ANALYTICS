@@ -241,9 +241,10 @@ Raw/source mutation выполняется только через controlled so
 NEXT.16 добавляет controlled visual/data extension без изменения source registry default policy:
 
 - text style policy `docs/04_visualization/line_marker_chart_style.md`;
-- ручной CBR source `data/raw/cbr/key_rate_inflation/cbr_key_rate_inflation_2019-01_2026-05.xlsx`;
-- parser `scripts/source_acquisition/cbr_key_rate_inflation.py`;
-- processed generated dataset `data/processed/cbr_key_rate_inflation_monthly.csv`;
+- primary CBR key-rate source `https://cbr.ru/hd_base/KeyRate/`;
+- web parser `scripts/reference_data/cbr_key_rate.py` с preferred `table.data`;
+- generated reference datasets `data/processed/reference/cbr_key_rate_daily.csv`, `cbr_key_rate_daily.meta.json`, `cbr_key_rate_monthly.csv`;
+- legacy XLSX fallback только для аварийной диагностики; historical `data/raw/cbr/key_rate_inflation/...` вне текущего scope;
 - новый chart family `ofz_pd_yield_key_rate`;
 - общий helper `scripts/charts/line_marker_style.py` для line+markers charts;
 - HTML QA и visual fallback contracts для нового chart family.

@@ -81,7 +81,9 @@ scripts/reference_data/cbr_key_rate.py
 
 Parser поддерживает источники `web`, `html-file` и emergency fallback `xlsx`. Для web/html источника preferred parser source - `table.data`; Highcharts используется только как fallback/cross-check. При обычном запуске parser пишет daily CSV, metadata JSON и monthly derived view в `data/processed/reference/`; эти файлы являются generated artifacts и не коммитятся.
 
-В desktop GUI workflow ключевой ставки доступен на вкладке `Банк России`, сразу после вкладки `Исходные данные Минфина`. Безопасные действия вкладки: `Проверить сайт Банка России`, `Проверить HTML fixture`, `Проверить XLSX fallback` - они запускают dry-run и не пишут generated files. Действие `Обновить ключевую ставку` требует точного подтверждения `UPDATE_CBR_KEY_RATE` и создает generated files `data/processed/reference/cbr_key_rate_daily.csv`, `data/processed/reference/cbr_key_rate_monthly.csv`, `data/processed/reference/cbr_key_rate_daily.meta.json`; эти файлы не коммитятся.
+В desktop GUI workflow ключевой ставки доступен на вкладке `Банк России`, сразу после вкладки `Исходные данные Минфина`. Основной сценарий: `Проверить сайт Банка России` -> `Обновить ключевую ставку` -> `Проверить reference datasets`. Действие `Обновить ключевую ставку` требует точного подтверждения `UPDATE_CBR_KEY_RATE` и создает generated files `data/processed/reference/cbr_key_rate_daily.csv`, `data/processed/reference/cbr_key_rate_monthly.csv`, `data/processed/reference/cbr_key_rate_daily.meta.json`; эти файлы не коммитятся.
+
+Вкладка показывает статус source provenance: web `table.data`, HTML fixture, XLSX fallback legacy, missing fallback source и legacy path `key_rate_inflation` различаются явно. Если processed datasets были построены из fallback XLSX, а исходный XLSX удален, GUI показывает warning и рекомендует обновить ключевую ставку с сайта Банка России.
 
 Offline QA fixture и smoke для parser-а:
 
@@ -90,27 +92,7 @@ scripts/qa/fixtures/cbr/key_rate_page_2019_2026.html
 scripts/qa/cbr_key_rate_parser_smoke.py
 ```
 
-Текущий pipeline временно использует ручной XLSX fallback Банка России и текстовую style policy для line+marker графиков. Fallback не меняет целевую модель хранения.
-
-Временный ручной raw source:
-
-```text
-data/raw/cbr/key_rate_inflation/cbr_key_rate_inflation_2019-01_2026-05.xlsx
-```
-
-Parser:
-
-```text
-scripts/source_acquisition/cbr_key_rate_inflation.py
-```
-
-Processed dataset создается воспроизводимо как generated artifact:
-
-```text
-data/processed/cbr_key_rate_inflation_monthly.csv
-```
-
-Этот файл является временным generated dataset текущего fallback-процесса. Он не заменяет целевые `data/processed/reference/cbr_key_rate_daily.csv` и `data/processed/reference/cbr_key_rate_monthly.csv`.
+XLSX fallback остается только аварийным legacy-режимом диагностики. Он не является основным источником, не должен скрыто создавать reference datasets в chart flow и не заменяет web source `https://cbr.ru/hd_base/KeyRate/`. Legacy path `data/raw/cbr/key_rate_inflation/...` относится к исторической модели key rate + inflation и находится вне текущего scope.
 
 Новый график:
 
@@ -141,7 +123,7 @@ docs/04_visualization/line_marker_chart_style.md
 
 Подписи значений строятся как collision-aware annotations: близкие значения в одном месяце разводятся по разным lanes с порогом `max(0.25 п.п., 2.5% диапазона Y)`, а ключевая ставка всегда подписывается с двумя знаками после запятой.
 
-График использует только `yield_scope=ofz_pd_only`, соединяет ключевую ставку по месяцу и не интерполирует пропуски CBR ряда. Default source registry policy не менялась: `source-registry-mode=warn`, `allow-legacy-raw=true`.
+График использует только `yield_scope=ofz_pd_only`, соединяет ключевую ставку по месяцу и не интерполирует пропуски CBR ряда. Если `data/processed/reference/cbr_key_rate_monthly.csv` отсутствует, chart flow не создает fallback silently; сначала обновите reference datasets на вкладке `Банк России`. Default source registry policy не менялась: `source-registry-mode=warn`, `allow-legacy-raw=true`.
 
 ## Структура проекта
 

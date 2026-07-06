@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import uuid
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 if __package__ in {None, ""}:
@@ -14,6 +14,7 @@ if __package__ in {None, ""}:
 from scripts.reference_data.cbr_key_rate import (  # noqa: E402
     CbrTableParser,
     TABLE_HEADERS,
+    build_metadata,
     build_cbr_key_rate_url,
     make_daily_frame,
     make_monthly_frame,
@@ -93,6 +94,23 @@ def check_parser_contract(html: str) -> None:
     assert_equal(july["key_rate_date"], "2026-07-02", "July 2026 key rate date mismatch")
     assert_true(bool(july["key_rate_month_is_partial"]), "July 2026 must be marked as partial")
     assert_equal(july["key_rate_source_rule"], "last_available_observation_in_month", "Monthly source rule mismatch")
+
+    metadata = build_metadata(
+        source_url=build_cbr_key_rate_url("01.01.2019", "02.07.2026"),
+        source_type="web",
+        source_file=None,
+        from_date=date(2019, 1, 1),
+        to_date=date(2026, 7, 2),
+        retrieved_at=datetime(2026, 7, 3, tzinfo=UTC),
+        page_last_modified=None,
+        html=html,
+        row_count=len(daily),
+        parser=result.parser,
+    )
+    assert_equal(metadata["source_type"], "web", "Metadata source_type mismatch")
+    assert_equal(metadata["source_file"], None, "Metadata source_file mismatch")
+    assert_equal(metadata["source_parser"], "html_table", "Metadata source_parser mismatch")
+    assert_true(bool(metadata["html_sha256"]), "Metadata html_sha256 is empty")
 
 
 def check_dry_run_does_not_write() -> None:
