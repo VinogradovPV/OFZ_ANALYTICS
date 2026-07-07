@@ -185,7 +185,11 @@ def _pagination_page_count(pagination: dict[str, object] | None) -> int | None:
     value = pagination.get("page_count")
     if value is None:
         return None
-    return int(value)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        return int(value)
+    raise TypeError(f"unexpected pagination page_count type: {type(value).__name__}")
 
 
 def _registry_record(
