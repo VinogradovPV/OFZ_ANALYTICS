@@ -54,9 +54,9 @@ DISCOVERY_METHODS = {"html", "manual-import", "observation"}
 
 @dataclass(frozen=True)
 class SourceDocumentRecord:
-    section_id: int
-    page_param: str
-    page_number: int
+    section_id: int | None
+    page_param: str | None
+    page_number: int | None
     document_id: str | None
     document_page_url: str | None
     document_title: str
@@ -74,7 +74,7 @@ class SourceDocumentRecord:
     as_of_date: str | None
     discovery_method: str = "html"
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> dict[str, Any]:
         result = asdict(self)
         result["tags"] = list(self.tags)
         return result
@@ -87,12 +87,12 @@ class AcquisitionPlan:
     dry_run: bool
     download_requested: bool
     source_url: str
-    selected_candidate: dict[str, object] | None
+    selected_candidate: dict[str, Any] | None
     candidate_count: int
     warnings: tuple[str, ...]
     planned_paths: dict[str, str]
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> dict[str, Any]:
         result = asdict(self)
         result["warnings"] = list(self.warnings)
         return result
@@ -187,10 +187,17 @@ def _parse_int(value: Any) -> int | None:
     return int(value)
 
 
+def _parse_required_int(value: Any, field: str) -> int:
+    parsed = _parse_int(value)
+    if parsed is None:
+        raise ValueError(f"registry field {field} is required")
+    return parsed
+
+
 def _normalize_record_dict(row: dict[str, Any]) -> dict[str, Any]:
     normalized = {field: row.get(field) for field in REGISTRY_FIELDS}
-    normalized["year"] = int(normalized["year"])
-    normalized["file_size_bytes"] = int(normalized["file_size_bytes"])
+    normalized["year"] = _parse_required_int(normalized["year"], "year")
+    normalized["file_size_bytes"] = _parse_required_int(normalized["file_size_bytes"], "file_size_bytes")
     normalized["is_active_for_pipeline"] = _parse_bool(normalized["is_active_for_pipeline"])
     normalized["change_detected"] = _parse_bool(normalized["change_detected"])
     normalized["section_id"] = _parse_int(normalized["section_id"])

@@ -1256,7 +1256,8 @@ def ensure_cbr_key_rate_processed(limitations: list[str]) -> pd.DataFrame:
 
 
 def format_ru_month_label(value: object) -> str:
-    timestamp = pd.to_datetime(value, errors="coerce")
+    value_text = "" if value is None else str(value)
+    timestamp = pd.to_datetime(value_text, errors="coerce")
     if pd.isna(timestamp):
         return ""
     return f"{RU_MONTH_ABBR[int(timestamp.month)]}-{str(int(timestamp.year))[-2:]}"
@@ -2136,8 +2137,8 @@ def aggregate_format_terms_comparison_data(
             else pd.Series(pd.NA, index=group.index, dtype="Float64")
         )
         revenue_sum = float(revenue_values.sum()) if revenue_values.notna().any() else pd.NA
-        demand_sum = pd.to_numeric(group.get("_demand"), errors="coerce").sum() if "_demand" in group else pd.NA
-        supply_sum = pd.to_numeric(group.get("_supply"), errors="coerce").sum() if "_supply" in group else pd.NA
+        demand_sum = pd.to_numeric(group["_demand"], errors="coerce").sum() if "_demand" in group else pd.NA
+        supply_sum = pd.to_numeric(group["_supply"], errors="coerce").sum() if "_supply" in group else pd.NA
         yield_source = "_weighted_avg_yield" if "_weighted_avg_yield" in group.columns else "_yield"
         yield_weighted = weighted_average_or_na(group[yield_source], placement)
         discount_weighted = weighted_average_or_na(group["_discount_to_nominal"], placement)

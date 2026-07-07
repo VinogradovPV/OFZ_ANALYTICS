@@ -10,6 +10,8 @@ import uuid
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+import pandas as pd
+
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
@@ -34,7 +36,7 @@ def assert_equal(actual: object, expected: object, message: str) -> None:
         raise AssertionError(f"{message}: expected {expected!r}, got {actual!r}")
 
 
-def assert_true(condition: bool, message: str) -> None:
+def assert_true(condition: object, message: str) -> None:
     if not condition:
         raise AssertionError(message)
 
@@ -46,7 +48,7 @@ def make_project_root() -> tuple[Path, Path]:
     return root, raw_root
 
 
-def fixture_daily() -> tuple[object, object]:
+def fixture_daily() -> tuple[pd.DataFrame, str]:
     html = FIXTURE_PATH.read_text(encoding="utf-8")
     result = parse_cbr_key_rate_html(html)
     daily = make_daily_frame(result.observations)

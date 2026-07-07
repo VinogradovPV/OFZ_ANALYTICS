@@ -34,7 +34,7 @@ FIXTURES = ROOT / "tests" / "fixtures"
 BASE_URL = "https://minfin.gov.ru"
 
 
-def _assert(condition: bool, message: str) -> None:
+def _assert(condition: object, message: str) -> None:
     if not condition:
         raise AssertionError(message)
 
@@ -110,11 +110,11 @@ def test_parser_and_selection() -> None:
 
     monthly = select_candidate(all_records, 2026, "monthly")
     annual = select_candidate(all_records, 2025, "annual-final")
-    _assert(monthly is not None, "monthly candidate should be selected")
+    assert monthly is not None, "monthly candidate should be selected"
     _assert(monthly.file_name == expected["monthly"]["file_name"], "current-year monthly candidate mismatch")
     _assert(monthly.as_of_date == expected["monthly"]["as_of_date"], "monthly as_of_date should be parsed")
     _assert(monthly.absolute_file_url == expected["monthly"]["absolute_file_url"], "relative XLSX URL should resolve")
-    _assert(annual is not None, "annual-final candidate should be selected")
+    assert annual is not None, "annual-final candidate should be selected"
     _assert(annual.file_name == expected["annual_final"]["file_name"], "annual-final candidate mismatch")
     _assert("20251230" in annual.file_name, "annual-final must not require YYYY1231")
     _assert(annual.as_of_date is None, "annual-final should not have monthly as_of_date")
@@ -253,7 +253,7 @@ def test_workflow_failure_modes() -> None:
 
         registry = load_registry_csv(smoke_root / "data" / "raw" / "minfin" / "ofz_auction_results" / "registry" / "minfin_ofz_auction_sources.csv")
         active_final = find_active_record(registry, 2025, "final")
-        _assert(active_final is not None, "annual-final workflow should leave active final in temp registry")
+        assert active_final is not None, "annual-final workflow should leave active final in temp registry"
     finally:
         if smoke_root.exists():
             shutil.rmtree(smoke_root)

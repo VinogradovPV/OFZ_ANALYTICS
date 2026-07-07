@@ -8,6 +8,7 @@ import shutil
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from scripts.source_acquisition.http_client import HttpClientError, download_file, fetch_page
@@ -178,6 +179,15 @@ def _manual_candidate(path: str | Path, year: int) -> SourceDocumentRecord:
     )
 
 
+def _pagination_page_count(pagination: dict[str, object] | None) -> int | None:
+    if not pagination:
+        return None
+    value = pagination.get("page_count")
+    if value is None:
+        return None
+    return int(value)
+
+
 def _registry_record(
     *,
     candidate: SourceDocumentRecord,
@@ -230,7 +240,7 @@ def _registry_record(
     )
 
 
-def _write_report(path: str | Path, payload: dict[str, object]) -> None:
+def _write_report(path: str | Path, payload: dict[str, Any]) -> None:
     report_path = Path(path)
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
@@ -243,7 +253,7 @@ def _promote_monthly_download(
     output_root: str,
     year: int,
     pagination: dict[str, object] | None,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     _validate_monthly_candidate(candidate, year)
     paths = build_storage_paths(output_root, year).to_dict()
     candidate_sha = compute_sha256(downloaded_path)
@@ -271,7 +281,7 @@ def _promote_monthly_download(
             is_active_for_pipeline=True,
             supersedes_sha256=previous.sha256 if previous else None,
             change_detected=True,
-            pagination_page_count=pagination.get("page_count") if pagination else None,
+            pagination_page_count=_pagination_page_count(pagination),
             notes=f"monthly download promoted; version_snapshot={version_path}",
         )
         records.append(new_record)
@@ -287,7 +297,7 @@ def _promote_monthly_download(
             is_active_for_pipeline=False,
             supersedes_sha256=None,
             change_detected=False,
-            pagination_page_count=pagination.get("page_count") if pagination else None,
+            pagination_page_count=_pagination_page_count(pagination),
             notes="monthly download observed unchanged; no version snapshot created",
         )
         records.append(new_record)
@@ -319,7 +329,7 @@ def _promote_annual_final_download(
     year: int,
     pagination: dict[str, object] | None,
     replace_final: bool,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     _validate_annual_final_candidate(candidate, year)
     paths = build_storage_paths(output_root, year).to_dict()
     final_path = Path(paths["final_path"])
@@ -364,7 +374,7 @@ def _promote_annual_final_download(
         is_active_for_pipeline=active,
         supersedes_sha256=existing_sha if replaced else None,
         change_detected=changed,
-        pagination_page_count=pagination.get("page_count") if pagination else None,
+        pagination_page_count=_pagination_page_count(pagination),
         notes=(
             "annual final promoted"
             if promoted and not replaced
@@ -400,7 +410,7 @@ def _promote_manual_import(
     original_path: Path,
     output_root: str,
     year: int,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     _validate_candidate_file(candidate, year)
     paths = build_storage_paths(output_root, year).to_dict()
     candidate_sha = compute_sha256(imported_path)
@@ -482,7 +492,7 @@ def run_monthly_download(
     max_pages: int,
     page_fetcher=fetch_page,
     file_downloader=download_file,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     candidates, pagination = _discover_records(
         source_url=source_url,
         year=year,
@@ -530,7 +540,7 @@ def run_annual_final_download(
     replace_final: bool = False,
     page_fetcher=fetch_page,
     file_downloader=download_file,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     candidates, pagination = _discover_records(
         source_url=source_url,
         year=year,
@@ -572,7 +582,7 @@ def run_manual_import(
     year: int,
     manual_file: str | Path,
     output_root: str,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     original_path = _validate_manual_file(manual_file, year).resolve()
     candidate = _manual_candidate(original_path, year)
     paths = build_storage_paths(output_root, year).to_dict()

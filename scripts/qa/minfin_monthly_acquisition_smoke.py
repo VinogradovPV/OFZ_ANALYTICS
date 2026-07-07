@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "tests" / "fixtures" / "minfin_auction_page_section_66_sample.html"
 
 
-def _assert(condition: bool, message: str) -> None:
+def _assert(condition: object, message: str) -> None:
     if not condition:
         raise AssertionError(message)
 

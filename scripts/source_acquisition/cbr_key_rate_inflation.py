@@ -128,7 +128,8 @@ def parse_cbr_month(value: object) -> str:
 
 
 def format_ru_month_label(value: object) -> str:
-    timestamp = pd.to_datetime(value, errors="coerce")
+    value_text = "" if value is None else str(value)
+    timestamp = pd.to_datetime(value_text, errors="coerce")
     if pd.isna(timestamp):
         return ""
     return f"{RU_MONTH_ABBR[int(timestamp.month)]}-{str(int(timestamp.year))[-2:]}"

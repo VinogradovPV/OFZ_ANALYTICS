@@ -20,7 +20,9 @@ def security_type_series(df: pd.DataFrame) -> pd.Series:
 
 
 def _normalize_security_type(value: object) -> object:
-    if pd.isna(value):
+    if value is None or value is pd.NA or value is pd.NaT:
+        return pd.NA
+    if isinstance(value, float) and pd.isna(value):
         return pd.NA
     normalized = str(value).strip().upper()
     if normalized in {OFZ_PD, OFZ_PK, OFZ_IN}:

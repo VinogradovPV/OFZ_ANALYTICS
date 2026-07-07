@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from html.parser import HTMLParser
 from pathlib import PurePosixPath
+from typing import cast
 from urllib.parse import parse_qs, urljoin, urlparse
 
 from scripts.source_acquisition.minfin_patterns import (
@@ -125,7 +126,8 @@ class _SectionParser(HTMLParser):
         if tag == "div":
             if self.current_card is not None and self.div_stack:
                 top = self.div_stack[-1]
-                if "document_card" in top.get("classes", set()):
+                classes = cast(set[str], top.get("classes", set()))
+                if "document_card" in classes:
                     self.cards.append(self.current_card)
                     self.current_card = None
                     self.capture = None

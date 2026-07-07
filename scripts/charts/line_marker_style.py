@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping, Sequence, cast
 
 import pandas as pd
 
@@ -178,7 +178,8 @@ def build_collision_safe_value_annotations(
 
 
 def _collision_threshold(data: pd.DataFrame, y_columns: Sequence[str]) -> float:
-    values = pd.to_numeric(data[list(y_columns)].stack(), errors="coerce").dropna()
+    stacked = cast(pd.Series, data.loc[:, list(y_columns)].stack())
+    values = pd.to_numeric(stacked, errors="coerce").dropna()
     if values.empty:
         return 0.25
     y_span = float(values.max() - values.min())

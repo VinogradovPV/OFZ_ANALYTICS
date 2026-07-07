@@ -12,7 +12,7 @@ from scripts.source_acquisition.source_registry import compute_sha256, load_regi
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def _assert(condition: bool, message: str) -> None:
+def _assert(condition: object, message: str) -> None:
     if not condition:
         raise AssertionError(message)
 

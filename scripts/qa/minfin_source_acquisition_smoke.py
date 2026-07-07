@@ -18,7 +18,7 @@ FIXTURE = ROOT / "tests" / "fixtures" / "minfin_auction_page_section_66_sample.h
 EXPECTED = ROOT / "tests" / "fixtures" / "minfin_auction_candidates_expected.json"
 
 
-def _assert(condition: bool, message: str) -> None:
+def _assert(condition: object, message: str) -> None:
     if not condition:
         raise AssertionError(message)
 
@@ -42,7 +42,7 @@ def main() -> int:
     _assert(pagination["container"] == expected["pagination"]["container"], "container must be parsed")
 
     monthly = select_candidate(records, 2026, "monthly")
-    _assert(monthly is not None, "monthly candidate expected")
+    assert monthly is not None, "monthly candidate expected"
     expected_monthly = expected["monthly_page1"]
     _assert(monthly.file_name == expected_monthly["file_name"], "latest monthly candidate mismatch")
     _assert(monthly.as_of_date == expected_monthly["as_of_date"], "monthly as_of_date mismatch")
@@ -52,7 +52,7 @@ def main() -> int:
     )
 
     annual = select_candidate(records, 2025, "annual-final")
-    _assert(annual is not None, "annual-final candidate expected")
+    assert annual is not None, "annual-final candidate expected"
     _assert(annual.file_name == expected["annual_final"]["file_name"], "annual-final candidate mismatch")
     _assert(annual.as_of_date is None, "annual-final should prefer title without as_of_date")
 

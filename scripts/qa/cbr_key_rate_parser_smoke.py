@@ -36,7 +36,7 @@ def assert_equal(actual: object, expected: object, message: str) -> None:
         raise AssertionError(f"{message}: expected {expected!r}, got {actual!r}")
 
 
-def assert_true(condition: bool, message: str) -> None:
+def assert_true(condition: object, message: str) -> None:
     if not condition:
         raise AssertionError(message)
 
